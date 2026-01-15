@@ -79,10 +79,12 @@ export default function FlowsPage() {
         </div>
       ) : flows.size === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Network className="h-12 w-12 text-muted-foreground mb-4" />
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <Network className="h-8 w-8 text-muted-foreground" />
+            </div>
             <h3 className="text-lg font-semibold mb-2">No flows found</h3>
-            <p className="text-sm text-muted-foreground text-center mb-4">
+            <p className="text-sm text-muted-foreground text-center max-w-md">
               There are no flows available on the server.
             </p>
           </CardContent>
@@ -92,7 +94,7 @@ export default function FlowsPage() {
           {Array.from(flows.values()).map((flow) => (
             <Card
               key={flow.flow_id}
-              className="hover:shadow-md transition-shadow cursor-pointer"
+              className="group hover:shadow-lg transition-all duration-200 cursor-pointer hover:border-primary/50"
               onClick={() => router.push(`/flows/${flow.flow_id}`)}
             >
               <CardHeader>

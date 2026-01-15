@@ -162,41 +162,45 @@ export default function JobsPage() {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div>
-          <Label>Filter by Flow</Label>
-          <Select value={filterFlowId} onValueChange={setFilterFlowId}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Flows</SelectItem>
-              {Array.from(flows.values()).map(flow => (
-                <SelectItem key={flow.flow_id} value={flow.flow_id}>
-                  {flow.flow_id}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Filter by Flow</Label>
+              <Select value={filterFlowId} onValueChange={setFilterFlowId}>
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="All Flows" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Flows</SelectItem>
+                  {Array.from(flows.values()).map(flow => (
+                    <SelectItem key={flow.flow_id} value={flow.flow_id}>
+                      {flow.flow_id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div>
-          <Label>Filter by Status</Label>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="running">Running</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
-              <SelectItem value="paused">Paused</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Filter by Status</Label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="running">Running</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Jobs List */}
       {loading ? (
@@ -205,10 +209,16 @@ export default function JobsPage() {
         </div>
       ) : jobs.size === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center min-h-[200px]">
-            <p className="text-muted-foreground mb-4">No jobs yet</p>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <Play className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">No jobs yet</h3>
+            <p className="text-sm text-muted-foreground text-center mb-6 max-w-md">
+              Get started by creating a job from one of your flows.
+            </p>
             <Link href="/flows">
-              <Button>
+              <Button size="lg">
                 <Play className="mr-2 h-4 w-4" />
                 Start a Job
               </Button>
@@ -220,7 +230,7 @@ export default function JobsPage() {
           {[...jobs.values()].map((job) => (
             <Card
               key={job.job_id}
-              className="hover:shadow-md transition-shadow cursor-pointer"
+              className="group hover:shadow-lg transition-all duration-200 cursor-pointer hover:border-primary/50"
               onClick={() => router.push(`/jobs/${job.job_id}`)}
             >
               <CardHeader>
