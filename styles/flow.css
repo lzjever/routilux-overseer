@@ -1,0 +1,62 @@
+/* ReactFlow Styles */
+@import "reactflow/dist/style.css";
+
+/* Custom ReactFlow styles */
+.react-flow {
+  background-color: hsl(var(--muted) / 0.3);
+}
+
+.react-flow__node {
+  border-radius: var(--radius);
+}
+
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.react-flow__handle.left {
+  left: -4px;
+}
+
+.react-flow__handle.right {
+  right: -4px;
+}
+
+/* Custom node styles */
+.routine-node {
+  font-size: 12px;
+}
+
+/* Edge animation */
+.animated-edge {
+  stroke-dasharray: 5;
+  animation: dash 1s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+/* Minimap styles */
+.react-flow__minimap {
+  background-color: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+}
+
+/* Controls styles */
+.react-flow__controls {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.react-flow__controls-button {
+  background-color: hsl(var(--background));
+  border-color: hsl(var(--border));
+}
+
+.react-flow__controls-button:hover {
+  background-color: hsl(var(--accent));
+}
