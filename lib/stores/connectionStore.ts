@@ -16,6 +16,7 @@ export interface ConnectionState {
   setError: (error: string | null) => void;
   setLastConnected: (timestamp: string) => void;
   reset: () => void;
+  disconnect: () => void;
 }
 
 export const useConnectionStore = create<ConnectionState>()(
@@ -45,6 +46,13 @@ export const useConnectionStore = create<ConnectionState>()(
           connecting: false,
           error: null,
           lastConnected: null,
+        }),
+
+      disconnect: () =>
+        set({
+          connected: false,
+          connecting: false,
+          error: null,
         }),
     }),
     {

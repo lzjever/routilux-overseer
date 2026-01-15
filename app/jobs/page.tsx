@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useJobStore } from "@/lib/stores/jobStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
+import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Play, Wifi, WifiOff, RefreshCw } from "lucide-react";
+import { ArrowLeft, Loader2, Play, Wifi, WifiOff, RefreshCw, Plug } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -18,17 +19,14 @@ export default function JobsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    if (!connected) {
-      router.push("/connect");
-      return;
-    }
-
     if (serverUrl) {
       // Load initial jobs
       loadJobs(serverUrl);
 
       // Connect to WebSocket for real-time updates
-      connectWebSocket(serverUrl);
+      if (connected) {
+        connectWebSocket(serverUrl);
+      }
     }
 
     // Cleanup on unmount
@@ -37,7 +35,7 @@ export default function JobsPage() {
         disconnectWebSocket();
       }
     };
-  }, [connected, serverUrl]);
+  }, [serverUrl, connected]);
 
   const handleRefresh = async () => {
     if (!serverUrl) return;
@@ -63,11 +61,35 @@ export default function JobsPage() {
   };
 
   if (!connected) {
-    return null;
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <Card className="max-w-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plug className="h-5 w-5" />
+                Not Connected
+              </CardTitle>
+              <CardDescription>
+                Connect to a Routilux server to view jobs
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => router.push("/connect")} className="w-full">
+                Connect to Server
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <div className="container mx-auto px-4 py-8 flex-1">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -179,6 +201,7 @@ export default function JobsPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

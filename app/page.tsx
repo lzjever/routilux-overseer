@@ -9,7 +9,8 @@ import { useJobStore } from "@/lib/stores/jobStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Zap, Settings, ArrowRight, Play, TrendingUp, Clock } from "lucide-react";
+import { Navbar } from "@/components/layout/Navbar";
+import { Activity, Zap, ArrowRight, Play, TrendingUp, Clock, Plug } from "lucide-react";
 
 export default function HomePage() {
   const router = useRouter();
@@ -20,11 +21,6 @@ export default function HomePage() {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!connected) {
-        router.push("/connect");
-        return;
-      }
-
       if (serverUrl) {
         setLoading(true);
         try {
@@ -42,10 +38,33 @@ export default function HomePage() {
     };
 
     loadData();
-  }, [connected, serverUrl, router]);
+  }, [serverUrl]);
 
+  // Show connection prompt if not connected
   if (!connected) {
-    return null;
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <Card className="max-w-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plug className="h-5 w-5" />
+                Not Connected
+              </CardTitle>
+              <CardDescription>
+                Connect to a Routilux server to view flows and jobs
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => router.push("/connect")} className="w-full">
+                Connect to Server
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   // Calculate statistics
@@ -66,6 +85,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <Navbar />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">

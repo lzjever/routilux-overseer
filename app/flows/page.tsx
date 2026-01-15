@@ -4,11 +4,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
+import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Activity, Network, ArrowRight, Loader2 } from "lucide-react";
+import { Activity, Network, ArrowRight, Loader2, Plug } from "lucide-react";
 import Link from "next/link";
 
 export default function FlowsPage() {
@@ -17,21 +18,41 @@ export default function FlowsPage() {
   const { flows, loading, loadFlows } = useFlowStore();
 
   useEffect(() => {
-    if (!connected) {
-      router.push("/connect");
-      return;
-    }
     if (serverUrl) {
       loadFlows(serverUrl);
     }
-  }, [connected, serverUrl, loadFlows]);
+  }, [serverUrl, loadFlows]);
 
   if (!connected) {
-    return null;
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <Card className="max-w-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plug className="h-5 w-5" />
+                Not Connected
+              </CardTitle>
+              <CardDescription>
+                Connect to a Routilux server to view flows
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => router.push("/connect")} className="w-full">
+                Connect to Server
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <div className="container mx-auto px-4 py-8 flex-1">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Flows</h1>
         <p className="text-muted-foreground">
@@ -115,6 +136,7 @@ export default function FlowsPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
