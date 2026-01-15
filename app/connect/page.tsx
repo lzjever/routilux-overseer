@@ -21,7 +21,7 @@ export default function ConnectPage() {
   const { serverUrl, setServerUrl, setConnected, setLastConnected } =
     useConnectionStore();
 
-  const [url, setUrl] = useState(serverUrl);
+  const [url, setUrl] = useState(serverUrl || "http://localhost:20555");
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,31 +29,39 @@ export default function ConnectPage() {
     setError(null);
     setConnecting(true);
 
+    console.log("Attempting to connect to:", url);
+
     try {
       // Validate URL format
       const validUrl = url.startsWith("http")
         ? url
         : `http://${url}`;
 
+      console.log("Validated URL:", validUrl);
+
       setServerUrl(validUrl);
 
       // Test connection
       const api = createAPI(validUrl);
+      console.log("Testing connection...");
       const isConnected = await api.testConnection();
+      console.log("Connection result:", isConnected);
 
       if (isConnected) {
         setConnected(true);
         setLastConnected(new Date().toISOString());
+        console.log("Connected successfully, redirecting to home...");
         router.push("/");
       } else {
         setError("Failed to connect to server. Please check the URL and try again.");
+        console.error("Connection test failed");
       }
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to connect. Please check the URL and try again."
-      );
+      const errorMsg = err instanceof Error
+        ? err.message
+        : "Failed to connect. Please check the URL and try again.";
+      setError(errorMsg);
+      console.error("Connection error:", err);
     } finally {
       setConnecting(false);
     }
