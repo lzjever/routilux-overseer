@@ -1,7 +1,9 @@
 import { getWebSocketManager, WebSocketMessage } from "./websocket-manager";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useJobStore } from "@/lib/stores/jobStore";
+import { useJobEventsStore } from "@/lib/stores/jobEventsStore";
 import type { ExecutionStatus } from "@/lib/types/flow";
+import type { ExecutionRecord } from "@/lib/types/api";
 
 export interface JobEventData {
   job_id: string;
@@ -54,6 +56,7 @@ export class JobMonitor {
     const unsubscribeStarted = wsManager.on("job_started", (message: WebSocketMessage) => {
       console.log("Job started:", message);
       this.updateJobStatus("running");
+      this.addEventToStore("job_start", this.jobId, message.data);
     });
     this.unsubscribeCallbacks.push(unsubscribeStarted);
 
@@ -61,6 +64,7 @@ export class JobMonitor {
     const unsubscribeCompleted = wsManager.on("job_completed", (message: WebSocketMessage) => {
       console.log("Job completed:", message);
       this.updateJobStatus("completed");
+      this.addEventToStore("job_end", this.jobId, message.data);
     });
     this.unsubscribeCallbacks.push(unsubscribeCompleted);
 
@@ -68,6 +72,7 @@ export class JobMonitor {
     const unsubscribeFailed = wsManager.on("job_failed", (message: WebSocketMessage) => {
       console.log("Job failed:", message);
       this.updateJobStatus("failed");
+      this.addEventToStore("error", this.jobId, message.data);
     });
     this.unsubscribeCallbacks.push(unsubscribeFailed);
 
@@ -76,6 +81,7 @@ export class JobMonitor {
       console.log("Routine started:", message);
       this.updateRoutineStatus(message.data.routine_id, "running");
       this.highlightConnection(message.data.routine_id, message.data.event_name);
+      this.addEventToStore("routine_start", message.data.routine_id, message.data);
     });
     this.unsubscribeCallbacks.push(unsubscribeRoutineStarted);
 
@@ -84,6 +90,7 @@ export class JobMonitor {
       console.log("Routine completed:", message);
       this.updateRoutineStatus(message.data.routine_id, "completed");
       this.incrementExecutionCount(message.data.routine_id);
+      this.addEventToStore("routine_end", message.data.routine_id, message.data);
     });
     this.unsubscribeCallbacks.push(unsubscribeRoutineCompleted);
 
@@ -91,6 +98,7 @@ export class JobMonitor {
     const unsubscribeRoutineFailed = wsManager.on("routine_failed", (message: WebSocketMessage) => {
       console.log("Routine failed:", message);
       this.updateRoutineStatus(message.data.routine_id, "failed");
+      this.addEventToStore("error", message.data.routine_id, message.data);
     });
     this.unsubscribeCallbacks.push(unsubscribeRoutineFailed);
 
@@ -98,6 +106,10 @@ export class JobMonitor {
     const unsubscribeEventEmitted = wsManager.on("event_emitted", (message: WebSocketMessage) => {
       console.log("Event emitted:", message);
       this.highlightEdge(message.data.routine_id, message.data.event_name);
+      this.addEventToStore("event_emit", message.data.routine_id, {
+        event_name: message.data.event_name,
+        ...message.data,
+      });
     });
     this.unsubscribeCallbacks.push(unsubscribeEventEmitted);
 
@@ -105,6 +117,10 @@ export class JobMonitor {
     const unsubscribeSlotCalled = wsManager.on("slot_called", (message: WebSocketMessage) => {
       console.log("Slot called:", message);
       this.highlightEdge(message.data.routine_id, message.data.slot_name);
+      this.addEventToStore("slot_call", message.data.routine_id, {
+        slot_name: message.data.slot_name,
+        ...message.data,
+      });
     });
     this.unsubscribeCallbacks.push(unsubscribeSlotCalled);
 
@@ -112,6 +128,7 @@ export class JobMonitor {
     const unsubscribeBreakpointHit = wsManager.on("breakpoint_hit", (message: WebSocketMessage) => {
       console.log("Breakpoint hit:", message);
       this.updateRoutineStatus(message.data.routine_id, "paused");
+      this.addEventToStore("breakpoint", message.data.routine_id, message.data);
     });
     this.unsubscribeCallbacks.push(unsubscribeBreakpointHit);
 
@@ -119,6 +136,7 @@ export class JobMonitor {
     const unsubscribeError = wsManager.on("error", (message: WebSocketMessage) => {
       console.error("Job error:", message);
       this.updateRoutineStatus(message.data.routine_id, "failed");
+      this.addEventToStore("error", message.data.routine_id || this.jobId, message.data);
     });
     this.unsubscribeCallbacks.push(unsubscribeError);
   }
@@ -189,6 +207,17 @@ export class JobMonitor {
 
   private highlightEdge(routineId: string, handleName?: string): void {
     this.highlightConnection(routineId, handleName);
+  }
+
+  private addEventToStore(eventType: string, routineId: string, data: any): void {
+    const eventRecord: ExecutionRecord = {
+      event_name: eventType,
+      routine_id: routineId,
+      timestamp: new Date().toISOString(),
+      data: data || {},
+    };
+
+    useJobEventsStore.getState().addEvent(this.jobId, eventRecord);
   }
 }
 

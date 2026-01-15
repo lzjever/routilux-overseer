@@ -1,12 +1,14 @@
 import { create } from "zustand";
 import type { JobResponse, JobStartRequest } from "@/lib/types/api";
 import { createAPI } from "@/lib/api";
+import { getWebSocketManager, disposeWebSocketManager, WebSocketMessage } from "@/lib/websocket/websocket-manager";
 
 interface JobState {
   jobs: Map<string, JobResponse>;
   loading: boolean;
   error: string | null;
   serverUrl: string | null;
+  wsConnected: boolean;
 
   // Actions
   loadJobs: (serverUrl: string) => Promise<void>;
@@ -15,13 +17,19 @@ interface JobState {
   pauseJob: (jobId: string, serverUrl: string) => Promise<void>;
   resumeJob: (jobId: string, serverUrl: string) => Promise<void>;
   cancelJob: (jobId: string, serverUrl: string) => Promise<void>;
+
+  // WebSocket actions
+  connectWebSocket: (serverUrl: string) => Promise<void>;
+  disconnectWebSocket: () => void;
+  updateJobFromWS: (message: WebSocketMessage) => void;
 }
 
-export const useJobStore = create<JobState>((set) => ({
+export const useJobStore = create<JobState>((set, get) => ({
   jobs: new Map(),
   loading: false,
   error: null,
   serverUrl: null,
+  wsConnected: false,
 
   loadJobs: async (serverUrl: string) => {
     set({ loading: true, error: null, serverUrl });
@@ -78,7 +86,11 @@ export const useJobStore = create<JobState>((set) => ({
     try {
       const api = createAPI(serverUrl);
       await api.jobs.pause(jobId);
-      await api.jobs.get(jobId); // Refresh job state
+      // Refresh job state via API
+      const job = await api.jobs.get(jobId);
+      set((state) => ({
+        jobs: new Map(state.jobs).set(jobId, job),
+      }));
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : "Failed to pause job",
@@ -90,7 +102,11 @@ export const useJobStore = create<JobState>((set) => ({
     try {
       const api = createAPI(serverUrl);
       await api.jobs.resume(jobId);
-      await api.jobs.get(jobId); // Refresh job state
+      // Refresh job state via API
+      const job = await api.jobs.get(jobId);
+      set((state) => ({
+        jobs: new Map(state.jobs).set(jobId, job),
+      }));
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : "Failed to resume job",
@@ -102,11 +118,74 @@ export const useJobStore = create<JobState>((set) => ({
     try {
       const api = createAPI(serverUrl);
       await api.jobs.cancel(jobId);
-      await api.jobs.get(jobId); // Refresh job state
+      // Refresh job state via API
+      const job = await api.jobs.get(jobId);
+      set((state) => ({
+        jobs: new Map(state.jobs).set(jobId, job),
+      }));
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : "Failed to cancel job",
       });
+    }
+  },
+
+  // WebSocket methods
+  connectWebSocket: async (serverUrl: string) => {
+    try {
+      const wsManager = getWebSocketManager(serverUrl);
+
+      if (!wsManager.isConnected()) {
+        await wsManager.connect();
+      }
+
+      // Subscribe to all job events
+      const events = [
+        "job_started",
+        "job_completed",
+        "job_failed",
+        "job_paused",
+        "job_resumed",
+        "job_cancelled",
+        "routine_started",
+        "routine_completed",
+        "routine_failed",
+      ] as const;
+
+      events.forEach((eventType) => {
+        wsManager.on(eventType, (message: WebSocketMessage) => {
+          get().updateJobFromWS(message);
+        });
+      });
+
+      set({ wsConnected: true, serverUrl });
+    } catch (error) {
+      console.error("Failed to connect WebSocket:", error);
+      set({ wsConnected: false });
+    }
+  },
+
+  disconnectWebSocket: () => {
+    disposeWebSocketManager();
+    set({ wsConnected: false });
+  },
+
+  updateJobFromWS: (message: WebSocketMessage) => {
+    const { jobs, serverUrl } = get();
+
+    // Handle job-level events
+    if (message.type.startsWith("job_")) {
+      // Reload the job from API to get full state
+      if (serverUrl) {
+        const api = createAPI(serverUrl);
+        api.jobs.get(message.job_id).then((job) => {
+          set((state) => ({
+            jobs: new Map(state.jobs).set(message.job_id, job),
+          }));
+        }).catch((error) => {
+          console.error("Failed to refresh job after WS event:", error);
+        });
+      }
     }
   },
 }));

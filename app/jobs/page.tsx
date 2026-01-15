@@ -1,20 +1,21 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useJobStore } from "@/lib/stores/jobStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Play } from "lucide-react";
+import { ArrowLeft, Loader2, Play, Wifi, WifiOff, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
 export default function JobsPage() {
   const router = useRouter();
   const { connected, serverUrl } = useConnectionStore();
-  const { jobs, loading, loadJobs } = useJobStore();
+  const { jobs, loading, loadJobs, wsConnected, connectWebSocket, disconnectWebSocket } = useJobStore();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (!connected) {
@@ -23,9 +24,30 @@ export default function JobsPage() {
     }
 
     if (serverUrl) {
+      // Load initial jobs
       loadJobs(serverUrl);
+
+      // Connect to WebSocket for real-time updates
+      connectWebSocket(serverUrl);
     }
-  }, [connected, serverUrl, loadJobs, router]);
+
+    // Cleanup on unmount
+    return () => {
+      if (wsConnected) {
+        disconnectWebSocket();
+      }
+    };
+  }, [connected, serverUrl]);
+
+  const handleRefresh = async () => {
+    if (!serverUrl) return;
+    setIsRefreshing(true);
+    try {
+      await loadJobs(serverUrl);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
@@ -57,11 +79,36 @@ export default function JobsPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold">Jobs</h1>
-            <p className="text-muted-foreground">
-              {jobs.size} job{jobs.size !== 1 ? "s" : ""}
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-muted-foreground">
+                {jobs.size} job{jobs.size !== 1 ? "s" : ""}
+              </p>
+              <span className="text-muted-foreground">•</span>
+              <div className="flex items-center gap-1">
+                {wsConnected ? (
+                  <>
+                    <Wifi className="h-3 w-3 text-green-500" />
+                    <span className="text-xs text-green-600">Live</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="h-3 w-3 text-gray-400" />
+                    <span className="text-xs text-muted-foreground">Offline</span>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing || loading}
+        >
+          <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
       </div>
 
       {/* Jobs List */}
