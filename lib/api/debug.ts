@@ -4,6 +4,9 @@ import type {
   VariablesResponse,
   VariableSetResponse,
   CallStackResponse,
+  ExpressionEvalRequest,
+  ExpressionEvalResponse,
+  DebugSessionInfo,
 } from "../types/api";
 
 export class DebugAPI {
@@ -47,5 +50,12 @@ export class DebugAPI {
 
   async getCallStack(jobId: string): Promise<CallStackResponse> {
     return this.client.get<CallStackResponse>(`/api/jobs/${jobId}/debug/call-stack`);
+  }
+
+  async evaluateExpression(jobId: string, request: ExpressionEvalRequest): Promise<ExpressionEvalResponse> {
+    return this.client.post<ExpressionEvalResponse>(
+      `/api/jobs/${jobId}/debug/evaluate`,
+      request
+    );
   }
 }

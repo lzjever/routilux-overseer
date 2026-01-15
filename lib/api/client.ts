@@ -50,7 +50,14 @@ class APIClient {
     path: string,
     params?: Record<string, string | number>
   ): Promise<T> {
-    const url = new URL(this.getEndpointURL(path), window.location.origin);
+    let url: URL;
+
+    try {
+      url = new URL(this.getEndpointURL(path));
+    } catch {
+      // If path is not an absolute URL, use window.location.origin as base
+      url = new URL(this.getEndpointURL(path), window.location.origin);
+    }
 
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -66,8 +73,26 @@ class APIClient {
     return this.handleResponse<T>(response);
   }
 
-  async post<T>(path: string, data?: any): Promise<T> {
-    const response = await fetch(this.getEndpointURL(path), {
+  async post<T>(
+    path: string,
+    data?: any,
+    params?: Record<string, string | number>
+  ): Promise<T> {
+    let url: URL;
+
+    try {
+      url = new URL(this.getEndpointURL(path));
+    } catch {
+      url = new URL(this.getEndpointURL(path), window.location.origin);
+    }
+
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        url.searchParams.append(key, String(value));
+      });
+    }
+
+    const response = await fetch(url.toString(), {
       method: "POST",
       headers: this.defaultHeaders,
       body: data ? JSON.stringify(data) : undefined,
@@ -76,8 +101,26 @@ class APIClient {
     return this.handleResponse<T>(response);
   }
 
-  async put<T>(path: string, data?: any): Promise<T> {
-    const response = await fetch(this.getEndpointURL(path), {
+  async put<T>(
+    path: string,
+    data?: any,
+    params?: Record<string, string | number>
+  ): Promise<T> {
+    let url: URL;
+
+    try {
+      url = new URL(this.getEndpointURL(path));
+    } catch {
+      url = new URL(this.getEndpointURL(path), window.location.origin);
+    }
+
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        url.searchParams.append(key, String(value));
+      });
+    }
+
+    const response = await fetch(url.toString(), {
       method: "PUT",
       headers: this.defaultHeaders,
       body: data ? JSON.stringify(data) : undefined,

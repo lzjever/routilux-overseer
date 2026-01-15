@@ -90,10 +90,10 @@ export default function HomePage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="mb-4 text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
-            Routilux Debugger
+            Routilux Overseer
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Modern web-based debugger and monitor for Routilux workflows
+            Comprehensive observability, debugging, and control for Routilux workflows
           </p>
         </div>
 

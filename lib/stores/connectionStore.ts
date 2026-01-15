@@ -56,7 +56,7 @@ export const useConnectionStore = create<ConnectionState>()(
         }),
     }),
     {
-      name: "routilux-connection-storage",
+      name: "overseer-connection-storage",
       partialize: (state) => ({
         serverUrl: state.serverUrl,
         lastConnected: state.lastConnected,

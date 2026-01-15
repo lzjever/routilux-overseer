@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlowCanvas } from "@/components/flow/FlowCanvas";
+import { FlowMetadata } from "@/components/flow/FlowMetadata";
+import { RoutineDetails } from "@/components/flow/RoutineDetails";
+import { FlowDSLExport } from "@/components/flow/FlowDSLExport";
 import { ArrowLeft, Play, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useJobStore } from "@/lib/stores/jobStore";
@@ -19,6 +23,7 @@ export default function FlowDetailPage() {
   const { connected, serverUrl } = useConnectionStore();
   const { selectedFlowId, nodes, selectFlow, loading, flows } = useFlowStore();
   const { startJob } = useJobStore();
+  const [activeTab, setActiveTab] = useState<"overview" | "routines" | "export">("overview");
 
   const flow = flows.get(flowId);
 
@@ -104,42 +109,50 @@ export default function FlowDetailPage() {
         </Button>
       </div>
 
-      {/* Flow Info Cards */}
-      <div className="grid gap-4 md:grid-cols-3 mb-6">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Execution Strategy</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Badge variant="outline">{flow.execution_strategy}</Badge>
-          </CardContent>
-        </Card>
+      {/* Tabs Content */}
+      <div className="flex-1 min-h-0">
+        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="h-full flex flex-col">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="routines">Routines</TabsTrigger>
+            <TabsTrigger value="export">Export</TabsTrigger>
+          </TabsList>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Max Workers</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{flow.max_workers}</div>
-          </CardContent>
-        </Card>
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="flex-1 min-h-0 overflow-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Flow Metadata */}
+              <div className="lg:col-span-1">
+                <FlowMetadata flow={flow} />
+              </div>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Badge variant="default">Ready</Badge>
-          </CardContent>
-        </Card>
+              {/* Flow Canvas */}
+              <div className="lg:col-span-2">
+                <Card className="h-full flex flex-col">
+                  <CardHeader>
+                    <CardTitle>Flow Visualization</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-1 p-0 min-h-[500px]">
+                    <FlowCanvas flowId={flowId} editable={false} />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Routines Tab */}
+          <TabsContent value="routines" className="flex-1 min-h-0 overflow-auto">
+            <RoutineDetails routines={flow.routines} />
+          </TabsContent>
+
+          {/* Export Tab */}
+          <TabsContent value="export" className="flex-1 min-h-0 overflow-auto">
+            {serverUrl && (
+              <FlowDSLExport flowId={flowId} serverUrl={serverUrl} />
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
-
-      {/* Flow Canvas */}
-      <Card className="flex-1 flex flex-col min-h-0">
-        <CardContent className="flex-1 p-0">
-          <FlowCanvas flowId={flowId} editable={false} />
-        </CardContent>
-      </Card>
     </div>
   );
 }

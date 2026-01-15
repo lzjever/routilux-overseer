@@ -23,7 +23,7 @@ export function Navbar() {
           {/* Logo / Title */}
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2">
-              <h1 className="text-xl font-bold">Routilux Debugger</h1>
+              <h1 className="text-xl font-bold">Routilux Overseer</h1>
             </Link>
 
             <div className="flex items-center gap-4">

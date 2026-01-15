@@ -46,4 +46,49 @@ export class FlowsAPI {
       `/api/flows/${flowId}/validate`
     );
   }
+
+  async addRoutine(
+    flowId: string,
+    routineId: string,
+    classPath: string,
+    config?: Record<string, any>
+  ): Promise<{ routine_id: string; status: string }> {
+    return this.client.post<{ routine_id: string; status: string }>(
+      `/api/flows/${flowId}/routines`,
+      config,
+      { routine_id: routineId, class_path: classPath }
+    );
+  }
+
+  async removeRoutine(flowId: string, routineId: string): Promise<void> {
+    return this.client.delete(`/api/flows/${flowId}/routines/${routineId}`);
+  }
+
+  async addConnection(
+    flowId: string,
+    sourceRoutine: string,
+    sourceEvent: string,
+    targetRoutine: string,
+    targetSlot: string,
+    paramMapping?: Record<string, string>
+  ): Promise<{ status: string }> {
+    return this.client.post<{ status: string }>(
+      `/api/flows/${flowId}/connections`,
+      paramMapping,
+      {
+        source_routine: sourceRoutine,
+        source_event: sourceEvent,
+        target_routine: targetRoutine,
+        target_slot: targetSlot
+      }
+    );
+  }
+
+  async removeConnection(flowId: string, connectionIndex: number): Promise<void> {
+    return this.client.delete(`/api/flows/${flowId}/connections/${connectionIndex}`);
+  }
+
+  async getMetrics(flowId: string): Promise<any> {
+    return this.client.get<any>(`/api/flows/${flowId}/metrics`);
+  }
 }

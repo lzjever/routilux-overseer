@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { PluginSystemProvider } from "@/components/providers/PluginSystemProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Routilux Debugger",
-  description: "Modern web debugger and monitor for routilux workflow orchestration",
+  title: "Routilux Overseer",
+  description: "A small, beautiful, and extensible debugger for Routilux workflows",
 };
 
 export default function RootLayout({
@@ -16,7 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <PluginSystemProvider>{children}</PluginSystemProvider>
+      </body>
     </html>
   );
 }

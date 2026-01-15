@@ -4,6 +4,9 @@ import { JobsAPI } from "./jobs";
 import { DebugAPI } from "./debug";
 import { BreakpointsAPI } from "./breakpoints";
 
+// Export API classes for use in plugins
+export { APIClient, FlowsAPI, JobsAPI, DebugAPI, BreakpointsAPI };
+
 export function createAPI(baseURL: string) {
   const client = new APIClient(baseURL);
 

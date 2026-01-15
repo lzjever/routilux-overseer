@@ -3,25 +3,32 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useJobStore } from "@/lib/stores/jobStore";
+import { useFlowStore } from "@/lib/stores/flowStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Loader2, Play, Wifi, WifiOff, RefreshCw, Plug } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
+import { createAPI } from "@/lib/api";
 
 export default function JobsPage() {
   const router = useRouter();
   const { connected, serverUrl } = useConnectionStore();
   const { jobs, loading, loadJobs, wsConnected, connectWebSocket, disconnectWebSocket } = useJobStore();
+  const { flows } = useFlowStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [filterFlowId, setFilterFlowId] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
 
   useEffect(() => {
     if (serverUrl) {
       // Load initial jobs
-      loadJobs(serverUrl);
+      loadJobsWithFilters();
 
       // Connect to WebSocket for real-time updates
       if (connected) {
@@ -35,13 +42,34 @@ export default function JobsPage() {
         disconnectWebSocket();
       }
     };
-  }, [serverUrl, connected]);
+  }, [serverUrl, connected, filterFlowId, filterStatus]);
+
+  const loadJobsWithFilters = async () => {
+    if (!serverUrl) return;
+
+    try {
+      const api = createAPI(serverUrl);
+      const params: any = {};
+      if (filterFlowId !== "all") params.flow_id = filterFlowId;
+      if (filterStatus !== "all") params.status = filterStatus;
+
+      const response = await api.jobs.list(params);
+
+      // Update jobs in store
+      jobs.clear();
+      response.jobs.forEach((job: any) => {
+        jobs.set(job.job_id, job);
+      });
+    } catch (error) {
+      console.error("Failed to load jobs:", error);
+    }
+  };
 
   const handleRefresh = async () => {
     if (!serverUrl) return;
     setIsRefreshing(true);
     try {
-      await loadJobs(serverUrl);
+      await loadJobsWithFilters();
     } finally {
       setIsRefreshing(false);
     }
@@ -131,6 +159,43 @@ export default function JobsPage() {
           <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           Refresh
         </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+          <Label>Filter by Flow</Label>
+          <Select value={filterFlowId} onValueChange={setFilterFlowId}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Flows</SelectItem>
+              {Array.from(flows.values()).map(flow => (
+                <SelectItem key={flow.flow_id} value={flow.flow_id}>
+                  {flow.flow_id}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Filter by Status</Label>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="running">Running</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="paused">Paused</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Jobs List */}

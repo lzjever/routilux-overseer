@@ -23,7 +23,8 @@ export class BreakpointsAPI {
   async update(jobId: string, breakpointId: string, enabled: boolean): Promise<Breakpoint> {
     return this.client.put<Breakpoint>(
       `/api/jobs/${jobId}/breakpoints/${breakpointId}`,
-      { enabled }
+      undefined,  // no body
+      { enabled: enabled.toString() }  // query parameter (convert boolean to string)
     );
   }
 }
