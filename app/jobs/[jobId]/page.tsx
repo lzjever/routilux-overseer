@@ -276,11 +276,10 @@ export default function JobDetailPage() {
 
               {!jobState && (
                 <Card>
-                    <CardContent className="flex items-center justify-center min-h-[200px]">
-                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </CardContent>
-                  </Card>
-                </div>
+                  <CardContent className="flex items-center justify-center min-h-[200px]">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </CardContent>
+                </Card>
               )}
             </div>
           </TabsContent>
@@ -341,8 +340,8 @@ export default function JobDetailPage() {
                           <VariableInspector
                             jobId={jobId}
                             serverUrl={serverUrl}
-                              availableRoutines={availableRoutines}
-                            />
+                            availableRoutines={availableRoutines}
+                          />
                           </div>
 
                           <div>
@@ -362,7 +361,6 @@ export default function JobDetailPage() {
                     </div>
                   </CardContent>
                 </Card>
-              </div>
             </div>
           </TabsContent>
         </Tabs>
