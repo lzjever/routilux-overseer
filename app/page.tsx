@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/layout/Navbar";
-import { Activity, Zap, ArrowRight, Play, TrendingUp, Clock, Plug } from "lucide-react";
+import { Activity, Zap, ArrowRight, Play, TrendingUp, Clock, Plug, Settings } from "lucide-react";
 
 export default function HomePage() {
   const router = useRouter();
