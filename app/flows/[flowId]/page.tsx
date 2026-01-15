@@ -120,16 +120,16 @@ export default function FlowDetailPage() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="flex-1 min-h-0 overflow-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Flow Metadata */}
-              <div className="lg:col-span-1">
+            <div className="flex flex-col gap-6 h-full">
+              {/* Flow Metadata - Full width at top */}
+              <div>
                 <FlowMetadata flow={flow} />
               </div>
 
-              {/* Flow Canvas */}
-              <div className="lg:col-span-2">
+              {/* Flow Canvas - Full width below */}
+              <div className="flex-1 min-h-0">
                 <Card className="h-full flex flex-col">
-                  <CardHeader>
+                  <CardHeader className="pb-4">
                     <CardTitle>Flow Visualization</CardTitle>
                   </CardHeader>
                   <CardContent className="flex-1 p-0 min-h-[500px]">
