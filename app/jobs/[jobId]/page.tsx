@@ -240,11 +240,11 @@ export default function JobDetailPage() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="flex-1 min-h-0 overflow-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Flow Canvas */}
-              <div className="lg:col-span-2">
+            <div className="flex flex-col gap-6 h-full">
+              {/* Flow Canvas - Full width */}
+              <div className="flex-1 min-h-0">
                 <Card className="h-full flex flex-col">
-                  <CardHeader>
+                  <CardHeader className="pb-4">
                     <CardTitle>Flow Visualization</CardTitle>
                   </CardHeader>
                   <CardContent className="flex-1 p-0 min-h-[500px]">
@@ -263,7 +263,7 @@ export default function JobDetailPage() {
 
           {/* State Tab */}
           <TabsContent value="state" className="flex-1 min-h-0 overflow-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex flex-col gap-6">
               {jobState && (
                 <>
                   <JobStateSummary jobState={jobState} />
@@ -275,8 +275,7 @@ export default function JobDetailPage() {
               )}
 
               {!jobState && (
-                <div className="col-span-2">
-                  <Card>
+                <Card>
                     <CardContent className="flex items-center justify-center min-h-[200px]">
                       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </CardContent>
@@ -305,7 +304,7 @@ export default function JobDetailPage() {
 
           {/* Debug Tab */}
           <TabsContent value="debug" className="flex-1 min-h-0 overflow-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex flex-col gap-6">
               {/* Debug Session Monitor */}
               <DebugSessionMonitor jobId={jobId} serverUrl={serverUrl} />
 
@@ -320,29 +319,28 @@ export default function JobDetailPage() {
               )}
 
               {/* Legacy Debug Tools */}
-              <div className="lg:col-span-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Debug Tools</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {serverUrl && (
-                        <>
-                          <div>
-                            <h3 className="font-medium mb-2">Breakpoints</h3>
-                            <BreakpointControls
-                              jobId={jobId}
-                              serverUrl={serverUrl}
-                              availableRoutines={availableRoutines}
-                            />
-                          </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Debug Tools</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {serverUrl && (
+                      <>
+                        <div>
+                          <h3 className="font-medium mb-2">Breakpoints</h3>
+                          <BreakpointControls
+                            jobId={jobId}
+                            serverUrl={serverUrl}
+                            availableRoutines={availableRoutines}
+                          />
+                        </div>
 
-                          <div>
-                            <h3 className="font-medium mb-2">Variables</h3>
-                            <VariableInspector
-                              jobId={jobId}
-                              serverUrl={serverUrl}
+                        <div>
+                          <h3 className="font-medium mb-2">Variables</h3>
+                          <VariableInspector
+                            jobId={jobId}
+                            serverUrl={serverUrl}
                               availableRoutines={availableRoutines}
                             />
                           </div>
