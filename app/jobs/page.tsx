@@ -10,8 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Loader2, Play, Wifi, WifiOff, RefreshCw, Plug } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ArrowLeft, Loader2, Play, Wifi, WifiOff, RefreshCw, Plug, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { createAPI } from "@/lib/api";
@@ -24,6 +26,10 @@ export default function JobsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filterFlowId, setFilterFlowId] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [cleanupDialogOpen, setCleanupDialogOpen] = useState(false);
+  const [cleanupAge, setCleanupAge] = useState(24);
+  const [cleanupStatus, setCleanupStatus] = useState<string>("completed");
+  const [isCleaning, setIsCleaning] = useState(false);
 
   useEffect(() => {
     if (serverUrl) {
@@ -72,6 +78,27 @@ export default function JobsPage() {
       await loadJobsWithFilters();
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const handleCleanup = async () => {
+    if (!serverUrl) return;
+    setIsCleaning(true);
+    try {
+      const api = createAPI(serverUrl);
+      const statuses = cleanupStatus === "all" ? undefined : [cleanupStatus];
+
+      await api.jobs.cleanup(cleanupAge, statuses);
+
+      // Reload jobs after cleanup
+      await loadJobsWithFilters();
+
+      setCleanupDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to cleanup jobs:", error);
+      alert("Failed to cleanup jobs: " + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsCleaning(false);
     }
   };
 
@@ -150,15 +177,75 @@ export default function JobsPage() {
             </div>
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={isRefreshing || loading}
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Dialog open={cleanupDialogOpen} onOpenChange={setCleanupDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Cleanup
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Cleanup Old Jobs</DialogTitle>
+                <DialogDescription>
+                  Delete jobs that are older than the specified age. This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Maximum Age (hours)</Label>
+                  <Input
+                    type="number"
+                    value={cleanupAge}
+                    onChange={(e) => setCleanupAge(Number(e.target.value))}
+                    min={1}
+                    max={720}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Jobs older than {cleanupAge} hours will be deleted
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Status Filter (Optional)</Label>
+                  <Select value={cleanupStatus} onValueChange={setCleanupStatus}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="completed">Completed Only</SelectItem>
+                      <SelectItem value="failed">Failed Only</SelectItem>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setCleanupDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCleanup} disabled={isCleaning}>
+                  {isCleaning ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="mr-2 h-4 w-4" />
+                  )}
+                  Cleanup Jobs
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing || loading}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

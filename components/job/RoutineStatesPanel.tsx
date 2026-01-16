@@ -72,7 +72,8 @@ export function RoutineStatesPanel({ jobState }: RoutineStatesPanelProps) {
   );
 }
 
-function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+function getStatusVariant(status: string | undefined): "default" | "secondary" | "destructive" | "outline" {
+  if (!status) return "outline";
   switch (status.toLowerCase()) {
     case "running":
       return "default";

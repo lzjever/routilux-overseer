@@ -44,17 +44,22 @@ export default function ConnectPage() {
       // Test connection
       const api = createAPI(validUrl);
       console.log("Testing connection...");
-      const isConnected = await api.testConnection();
-      console.log("Connection result:", isConnected);
+      try {
+        const isConnected = await api.testConnection();
+        console.log("Connection result:", isConnected);
 
-      if (isConnected) {
-        setConnected(true);
-        setLastConnected(new Date().toISOString());
-        console.log("Connected successfully, redirecting to home...");
-        router.push("/");
-      } else {
-        setError("Failed to connect to server. Please check the URL and try again.");
-        console.error("Connection test failed");
+        if (isConnected) {
+          setConnected(true);
+          setLastConnected(new Date().toISOString());
+          console.log("Connected successfully, redirecting to home...");
+          router.push("/");
+        } else {
+          setError("Failed to connect to server. Please check the URL and try again.");
+          console.error("Connection test failed");
+        }
+      } catch (testError: any) {
+        // This will be caught by outer catch block, but we can provide more context
+        throw testError;
       }
     } catch (err) {
       const errorMsg = err instanceof Error

@@ -13,13 +13,34 @@ class APIError extends Error {
 class APIClient {
   private baseURL: string;
   private defaultHeaders: HeadersInit;
+  private apiKey: string | null = null;
 
-  constructor(baseURL: string) {
+  constructor(baseURL: string, apiKey?: string) {
     // Remove trailing slash and ensure valid URL format
     this.baseURL = baseURL.replace(/\/$/, "");
+    this.apiKey = apiKey || null;
     this.defaultHeaders = {
       "Content-Type": "application/json",
     };
+    if (this.apiKey) {
+      this.defaultHeaders = {
+        ...this.defaultHeaders,
+        "X-API-Key": this.apiKey,
+      };
+    }
+  }
+
+  setApiKey(apiKey: string | null): void {
+    this.apiKey = apiKey;
+    this.defaultHeaders = {
+      "Content-Type": "application/json",
+    };
+    if (this.apiKey) {
+      this.defaultHeaders = {
+        ...this.defaultHeaders,
+        "X-API-Key": this.apiKey,
+      };
+    }
   }
 
   private getEndpointURL(path: string): string {

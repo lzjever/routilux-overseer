@@ -72,7 +72,12 @@ export default function HomePage() {
   const jobCount = jobs.size;
   const runningJobs = [...jobs.values()].filter((j) => j.status === "running").length;
   const recentJobs = [...jobs.values()]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .filter((j) => j.created_at)
+    .sort((a, b) => {
+      const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return timeB - timeA;
+    })
     .slice(0, 5);
 
   if (loading) {

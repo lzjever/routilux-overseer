@@ -155,7 +155,7 @@ export class WebSocketManager {
 let wsManagerInstance: WebSocketManager | null = null;
 
 export function getWebSocketManager(serverUrl: string): WebSocketManager {
-  const wsUrl = serverUrl.replace("http", "ws") + "/ws";
+  const wsUrl = serverUrl.replace("http", "ws") + "/api/ws";
 
   if (!wsManagerInstance || wsManagerInstance["url"] !== wsUrl) {
     if (wsManagerInstance) {

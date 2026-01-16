@@ -87,3 +87,66 @@
   background-color: hsl(var(--background));
   border: 1px solid hsl(var(--border));
 }
+
+/* Debug Interface Animations */
+@keyframes pulse-border {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+}
+
+@keyframes breakpoint-flash {
+  0%, 100% {
+    background-color: rgb(168, 85, 247, 0.1);
+  }
+  50% {
+    background-color: rgb(168, 85, 247, 0.3);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes data-flow {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Apply animations */
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+/* Node states */
+.node-running {
+  animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.node-breakpoint-hit {
+  animation: breakpoint-flash 1s ease-in-out 3;
+}
+
+.edge-active {
+  stroke-dasharray: 4;
+  animation: data-flow 1s linear infinite;
+}
+
+/* Smooth transitions */
+.transition-transform {
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}

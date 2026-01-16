@@ -1,61 +1,66 @@
-import { APIClient } from "./client";
-import type {
-  DebugSessionResponse,
-  VariablesResponse,
-  VariableSetResponse,
-  CallStackResponse,
-  ExpressionEvalRequest,
-  ExpressionEvalResponse,
-  DebugSessionInfo,
-} from "../types/api";
+import {
+  DebugService,
+  OpenAPI,
+  type ExpressionEvalRequest,
+  type ExpressionEvalResponse,
+  type VariableSetRequest,
+} from "./generated";
 
 export class DebugAPI {
-  constructor(private client: APIClient) {}
+  constructor(private baseURL: string, private apiKey?: string) {
+    // Configure OpenAPI base URL and headers
+    OpenAPI.BASE = baseURL.replace(/\/$/, "");
+    if (apiKey) {
+      OpenAPI.HEADERS = {
+        "X-API-Key": apiKey,
+      };
+    }
+  }
 
-  async getSession(jobId: string): Promise<DebugSessionResponse> {
-    return this.client.get<DebugSessionResponse>(`/api/jobs/${jobId}/debug/session`);
+  async getSession(jobId: string): Promise<any> {
+    return DebugService.getDebugSessionApiJobsJobIdDebugSessionGet(jobId);
   }
 
   async resume(jobId: string): Promise<{ status: string; job_id: string }> {
-    return this.client.post<{ status: string; job_id: string }>(
-      `/api/jobs/${jobId}/debug/resume`
-    );
+    return DebugService.resumeDebugApiJobsJobIdDebugResumePost(jobId) as Promise<{
+      status: string;
+      job_id: string;
+    }>;
   }
 
   async stepOver(jobId: string): Promise<{ status: string; job_id: string; step_mode: string }> {
-    return this.client.post<{ status: string; job_id: string; step_mode: string }>(
-      `/api/jobs/${jobId}/debug/step-over`
-    );
+    return DebugService.stepOverApiJobsJobIdDebugStepOverPost(jobId) as Promise<{
+      status: string;
+      job_id: string;
+      step_mode: string;
+    }>;
   }
 
   async stepInto(jobId: string): Promise<{ status: string; job_id: string; step_mode: string }> {
-    return this.client.post<{ status: string; job_id: string; step_mode: string }>(
-      `/api/jobs/${jobId}/debug/step-into`
-    );
+    return DebugService.stepIntoApiJobsJobIdDebugStepIntoPost(jobId) as Promise<{
+      status: string;
+      job_id: string;
+      step_mode: string;
+    }>;
   }
 
-  async getVariables(jobId: string, routineId?: string): Promise<VariablesResponse> {
-    return this.client.get<VariablesResponse>(
-      `/api/jobs/${jobId}/debug/variables`,
-      routineId ? { routine_id: routineId } : undefined
-    );
+  async getVariables(jobId: string, routineId?: string): Promise<any> {
+    return DebugService.getVariablesApiJobsJobIdDebugVariablesGet(jobId, routineId);
   }
 
-  async setVariable(jobId: string, name: string, value: any): Promise<VariableSetResponse> {
-    return this.client.put<VariableSetResponse>(
-      `/api/jobs/${jobId}/debug/variables/${name}`,
-      { value }
-    );
+  async setVariable(jobId: string, name: string, value: any): Promise<any> {
+    const request: VariableSetRequest = { value };
+    return DebugService.setVariableApiJobsJobIdDebugVariablesNamePut(jobId, name, request);
   }
 
-  async getCallStack(jobId: string): Promise<CallStackResponse> {
-    return this.client.get<CallStackResponse>(`/api/jobs/${jobId}/debug/call-stack`);
+  async getCallStack(jobId: string): Promise<any> {
+    return DebugService.getCallStackApiJobsJobIdDebugCallStackGet(jobId);
   }
 
-  async evaluateExpression(jobId: string, request: ExpressionEvalRequest): Promise<ExpressionEvalResponse> {
-    return this.client.post<ExpressionEvalResponse>(
-      `/api/jobs/${jobId}/debug/evaluate`,
-      request
-    );
+  async evaluateExpression(
+    jobId: string,
+    request: ExpressionEvalRequest
+  ): Promise<ExpressionEvalResponse> {
+    return DebugService.evaluateExpressionApiJobsJobIdDebugEvaluatePost(jobId, request);
   }
 }

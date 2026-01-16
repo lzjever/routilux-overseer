@@ -21,6 +21,10 @@ export interface RoutineNodeData {
   executionCount: number;
   lastExecutionTime: number | null;
   breakpoints: Breakpoint[];
+  routineState?: any; // Routine state from job state
+  onToggleBreakpoint?: () => void;
+  onViewDetails?: () => void;
+  onPauseAtRoutine?: () => void;
 }
 
 export interface Slot {

@@ -1,50 +1,60 @@
-import { APIClient } from "./client";
-import type {
-  FlowListResponse,
-  FlowResponse,
-  FlowCreateRequest,
-  ConnectionInfo,
-} from "../types/api";
+import {
+  FlowsService,
+  DiscoveryService,
+  MonitorService,
+  OpenAPI,
+  type FlowListResponse,
+  type FlowResponse,
+  type FlowCreateRequest,
+} from "./generated";
 
 export class FlowsAPI {
-  constructor(private client: APIClient) {}
+  constructor(private baseURL: string, private apiKey?: string) {
+    // Configure OpenAPI base URL and headers
+    OpenAPI.BASE = baseURL.replace(/\/$/, "");
+    if (apiKey) {
+      OpenAPI.HEADERS = {
+        "X-API-Key": apiKey,
+      };
+    }
+  }
 
   async list(): Promise<FlowListResponse> {
-    return this.client.get<FlowListResponse>("/api/flows");
+    return FlowsService.listFlowsApiFlowsGet();
   }
 
   async get(flowId: string): Promise<FlowResponse> {
-    return this.client.get<FlowResponse>(`/api/flows/${flowId}`);
+    return FlowsService.getFlowApiFlowsFlowIdGet(flowId);
   }
 
   async create(request: FlowCreateRequest): Promise<FlowResponse> {
-    return this.client.post<FlowResponse>("/api/flows", request);
+    return FlowsService.createFlowApiFlowsPost(request);
   }
 
   async delete(flowId: string): Promise<void> {
-    return this.client.delete(`/api/flows/${flowId}`);
+    return FlowsService.deleteFlowApiFlowsFlowIdDelete(flowId);
   }
 
   async export(flowId: string, format: "yaml" | "json" = "yaml"): Promise<string> {
-    const response = await this.client.get<{ format: string; dsl: string }>(
-      `/api/flows/${flowId}/dsl`,
-      { format }
-    );
-    return response.dsl;
+    const response = await FlowsService.exportFlowDslApiFlowsFlowIdDslGet(flowId, format);
+    return typeof response === "string" ? response : (response as any).dsl || "";
   }
 
   async getRoutines(flowId: string): Promise<Record<string, any>> {
-    return this.client.get<Record<string, any>>(`/api/flows/${flowId}/routines`);
+    const flow = await this.get(flowId);
+    return flow.routines || {};
   }
 
-  async getConnections(flowId: string): Promise<ConnectionInfo[]> {
-    return this.client.get<ConnectionInfo[]>(`/api/flows/${flowId}/connections`);
+  async getConnections(flowId: string): Promise<any[]> {
+    const flow = await this.get(flowId);
+    return flow.connections || [];
   }
 
   async validate(flowId: string): Promise<{ valid: boolean; issues: string[] }> {
-    return this.client.get<{ valid: boolean; issues: string[] }>(
-      `/api/flows/${flowId}/validate`
-    );
+    return FlowsService.validateFlowApiFlowsFlowIdValidatePost(flowId) as Promise<{
+      valid: boolean;
+      issues: string[];
+    }>;
   }
 
   async addRoutine(
@@ -53,15 +63,19 @@ export class FlowsAPI {
     classPath: string,
     config?: Record<string, any>
   ): Promise<{ routine_id: string; status: string }> {
-    return this.client.post<{ routine_id: string; status: string }>(
-      `/api/flows/${flowId}/routines`,
-      config,
-      { routine_id: routineId, class_path: classPath }
-    );
+    return FlowsService.addRoutineToFlowApiFlowsFlowIdRoutinesPost(
+      flowId,
+      routineId,
+      classPath,
+      config || null
+    ) as Promise<{ routine_id: string; status: string }>;
   }
 
   async removeRoutine(flowId: string, routineId: string): Promise<void> {
-    return this.client.delete(`/api/flows/${flowId}/routines/${routineId}`);
+    return FlowsService.removeRoutineFromFlowApiFlowsFlowIdRoutinesRoutineIdDelete(
+      flowId,
+      routineId
+    );
   }
 
   async addConnection(
@@ -72,23 +86,40 @@ export class FlowsAPI {
     targetSlot: string,
     paramMapping?: Record<string, string>
   ): Promise<{ status: string }> {
-    return this.client.post<{ status: string }>(
-      `/api/flows/${flowId}/connections`,
-      paramMapping,
-      {
-        source_routine: sourceRoutine,
-        source_event: sourceEvent,
-        target_routine: targetRoutine,
-        target_slot: targetSlot
-      }
-    );
+    return FlowsService.addConnectionToFlowApiFlowsFlowIdConnectionsPost(
+      flowId,
+      sourceRoutine,
+      sourceEvent,
+      targetRoutine,
+      targetSlot,
+      paramMapping || null
+    ) as Promise<{ status: string }>;
   }
 
   async removeConnection(flowId: string, connectionIndex: number): Promise<void> {
-    return this.client.delete(`/api/flows/${flowId}/connections/${connectionIndex}`);
+    return FlowsService.removeConnectionFromFlowApiFlowsFlowIdConnectionsConnectionIndexDelete(
+      flowId,
+      connectionIndex
+    );
   }
 
   async getMetrics(flowId: string): Promise<any> {
-    return this.client.get<any>(`/api/flows/${flowId}/metrics`);
+    return MonitorService.getFlowMetricsApiFlowsFlowIdMetricsGet(flowId);
   }
+
+  // Discovery methods
+  async discoverFlows(): Promise<FlowListResponse> {
+    return DiscoveryService.discoverFlowsApiDiscoveryFlowsGet();
+  }
+
+  async syncFlows(): Promise<FlowListResponse> {
+    return DiscoveryService.syncFlowsApiDiscoveryFlowsSyncPost();
+  }
+
+  // Note: Flow cleanup endpoint may not exist in the API
+  // async cleanup(maxAgeHours: number = 24, status?: string[]): Promise<{ removed: number }> {
+  //   return FlowsService.cleanupFlowsApiFlowsCleanupPost(maxAgeHours, status || null) as Promise<{
+  //     removed: number;
+  //   }>;
+  // }
 }

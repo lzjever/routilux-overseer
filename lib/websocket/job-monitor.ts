@@ -139,6 +139,13 @@ export class JobMonitor {
       this.addEventToStore("error", message.data.routine_id || this.jobId, message.data);
     });
     this.unsubscribeCallbacks.push(unsubscribeError);
+
+    // Progress update
+    const unsubscribeProgress = wsManager.on("progress", (message: WebSocketMessage) => {
+      console.log("Progress update:", message);
+      this.updateRoutineProgress(message.data.routine_id, message.data.progress, message.data.message);
+    });
+    this.unsubscribeCallbacks.push(unsubscribeProgress);
   }
 
   private updateJobStatus(status: ExecutionStatus): void {
@@ -157,6 +164,13 @@ export class JobMonitor {
 
   private updateRoutineStatus(routineId: string, status: ExecutionStatus): void {
     useFlowStore.getState().updateNodeData(routineId, { status });
+  }
+
+  private updateRoutineProgress(routineId: string, progress: number, message?: string): void {
+    useFlowStore.getState().updateNodeData(routineId, {
+      progress,
+      progressMessage: message
+    });
   }
 
   private incrementExecutionCount(routineId: string): void {
