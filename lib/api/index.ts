@@ -19,6 +19,8 @@ import { DebugService } from "./generated/services/DebugService";
 import { BreakpointsService } from "./generated/services/BreakpointsService";
 import { DiscoveryService } from "./generated/services/DiscoveryService";
 import { DefaultService } from "./generated/services/DefaultService";
+import { FactoryService } from "./generated/services/FactoryService";
+import { RuntimesService } from "./generated/services/RuntimesService";
 
 /**
  * Create and configure a Routilux API client
@@ -199,6 +201,32 @@ export function createAPI(baseURL: string, apiKey?: string) {
       },
       discoverJobs: async () => {
         return await DiscoveryService.discoverJobsApiDiscoveryJobsGet();
+      },
+    },
+
+    // Factory/Objects API
+    factory: {
+      listObjects: async (category?: string | null, objectType?: string | null) => {
+        return await FactoryService.listFactoryObjectsApiFactoryObjectsGet(category || null, objectType || null);
+      },
+      getObjectMetadata: async (name: string) => {
+        return await FactoryService.getFactoryObjectMetadataApiFactoryObjectsNameGet(name);
+      },
+      getObjectInterface: async (name: string) => {
+        return await FactoryService.getFactoryObjectInterfaceApiFactoryObjectsNameInterfaceGet(name);
+      },
+    },
+
+    // Runtimes API
+    runtimes: {
+      list: async () => {
+        return await RuntimesService.listRuntimesApiRuntimesGet();
+      },
+      get: async (runtimeId: string) => {
+        return await RuntimesService.getRuntimeApiRuntimesRuntimeIdGet(runtimeId);
+      },
+      create: async (request: { runtime_id: string; thread_pool_size?: number; is_default?: boolean }) => {
+        return await RuntimesService.createRuntimeApiRuntimesPost(request);
       },
     },
 
