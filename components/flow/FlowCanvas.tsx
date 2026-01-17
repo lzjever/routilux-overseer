@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -25,15 +25,6 @@ import { layoutNodes } from "@/lib/utils/flow-layout";
 import { ZoomIn, ZoomOut, Maximize } from "lucide-react";
 import { BreakpointCreateRequest } from "@/lib/api/generated";
 
-// Define nodeTypes and edgeTypes outside component to prevent recreation
-const nodeTypes: NodeTypes = {
-  routine: RoutineNode,
-};
-
-const edgeTypes: EdgeTypes = {
-  connection: ConnectionEdge,
-};
-
 interface FlowCanvasProps {
   flowId?: string;
   jobId?: string;
@@ -49,13 +40,29 @@ export function FlowCanvas({ flowId, jobId, editable = false }: FlowCanvasProps)
     updateNodeData,
     setEdges,
     serverUrl,
+    selectedFlowId,
   } = useFlowStore();
   const { selectedRoutine, selectRoutine, closeDetailPanel } = useUIStore();
   const { jobStates } = useJobStateStore();
   const { breakpoints, addBreakpoint, removeBreakpoint } = useBreakpointStore();
   const [pendingConnectionBp, setPendingConnectionBp] = useState<Edge | null>(null);
 
-  // Auto-fit view when flow changes
+  // Memoize nodeTypes and edgeTypes to prevent recreation on each render
+  const nodeTypes = useMemo<NodeTypes>(
+    () => ({
+      routine: RoutineNode,
+    }),
+    []
+  );
+
+  const edgeTypes = useMemo<EdgeTypes>(
+    () => ({
+      connection: ConnectionEdge,
+    }),
+    []
+  );
+
+  // Auto-fit view when flow changes or nodes are loaded
   useEffect(() => {
     if (nodes.length > 0) {
       setTimeout(() => {
@@ -64,7 +71,7 @@ export function FlowCanvas({ flowId, jobId, editable = false }: FlowCanvasProps)
         }
       }, 100);
     }
-  }, [flowId]);
+  }, [flowId, nodes.length]);
 
   const handleFitView = useCallback(() => {
     if (typeof window !== "undefined" && (window as any).reactFlowInstance) {
@@ -196,9 +203,54 @@ export function FlowCanvas({ flowId, jobId, editable = false }: FlowCanvasProps)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId, breakpoints]);
 
+  // Debug logging
+  useEffect(() => {
+    console.log("FlowCanvas render:", {
+      flowId,
+      selectedFlowId,
+      nodesCount: nodes.length,
+      edgesCount: edges.length,
+      match: flowId === selectedFlowId,
+    });
+  }, [flowId, selectedFlowId, nodes.length, edges.length]);
+
+  // Show message if flow is not selected or no nodes/edges are loaded
+  if (flowId && flowId !== selectedFlowId) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+        <div className="text-center text-muted-foreground">
+          <p className="text-sm">Flow not loaded</p>
+          <p className="text-xs mt-2">Loading flow {flowId}... (selectedFlowId: {selectedFlowId || "null"})</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no nodes/edges are loaded
+  if (nodes.length === 0 && edges.length === 0) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+        <div className="text-center text-muted-foreground">
+          <p className="text-sm">No flow data available</p>
+          <p className="text-xs mt-2">
+            {flowId ? (
+              <>
+                Flow {flowId} has no routines or connections
+                <br />
+                (selectedFlowId: {selectedFlowId || "null"}, nodes: {nodes.length}, edges: {edges.length})
+              </>
+            ) : (
+              "Select a flow to view"
+            )}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="w-full h-full min-h-[500px]">
+      <div className="absolute inset-0">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -216,6 +268,10 @@ export function FlowCanvas({ flowId, jobId, editable = false }: FlowCanvasProps)
           className="bg-background"
           onInit={(instance) => {
             (window as any).reactFlowInstance = instance;
+            // Fit view after initialization
+            setTimeout(() => {
+              instance.fitView({ padding: 0.2, duration: 800 });
+            }, 100);
           }}
         >
           <Background variant={BackgroundVariant.Dots} gap={16} size={1} />

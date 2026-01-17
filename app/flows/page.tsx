@@ -17,6 +17,7 @@ import { BulkActionsToolbar } from "@/components/common/BulkActionsToolbar";
 import { CreateFlowWizard } from "@/components/flow/CreateFlowWizard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
+import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 import { createAPI } from "@/lib/api";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,7 @@ import { cn } from "@/lib/utils";
 export default function FlowsPage() {
   const router = useRouter();
   const { connected, serverUrl } = useConnectionStore();
-  const { flows, loading, loadFlows } = useFlowStore();
+  const { flows, loading, loadFlows, error: flowError } = useFlowStore();
   const {
     discoveredFlows,
     syncingFlows,
@@ -50,11 +51,15 @@ export default function FlowsPage() {
     setSyncing(true);
     try {
       const count = await syncFlowsAction(serverUrl);
+      console.log(`Sync completed, synced ${count} flows, reloading flows list...`);
+      // Wait a bit to ensure server has processed the sync
+      await new Promise(resolve => setTimeout(resolve, 500));
       // Reload flows after sync
       await loadFlows(serverUrl);
       // Show success message
       alert(`Successfully synced ${count} flow${count !== 1 ? "s" : ""} from registry`);
     } catch (error) {
+      console.error("Sync error:", error);
       alert(`Failed to sync flows: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setSyncing(false);
@@ -199,6 +204,26 @@ export default function FlowsPage() {
       <div className="mb-6">
         <FlowSearchBar value={searchQuery} onChange={setSearchQuery} />
       </div>
+
+      {/* Error Display */}
+      {flowError && (
+        <div className="mb-6">
+          <ErrorDisplay
+            error={flowError}
+            onDismiss={() => {
+              // Clear error by reloading
+              if (serverUrl) {
+                loadFlows(serverUrl);
+              }
+            }}
+            retry={() => {
+              if (serverUrl) {
+                loadFlows(serverUrl);
+              }
+            }}
+          />
+        </div>
+      )}
 
       {/* Bulk Actions Toolbar */}
       {selectedFlows.size > 0 && (

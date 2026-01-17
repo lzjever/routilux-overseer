@@ -573,40 +573,42 @@ interface DiscoveryState {
     - Flow Metrics
 
 #### Tabs
-- **Tabs**: Overview | Routines | Connections | Export | Metrics (NEW)
+- **Tabs**: Overview | Routines (Metrics tab removed - not relevant for flows)
 - Use `Tabs` component from shadcn/ui
 
 #### Overview Tab
 
-**Flow Metadata Card**:
-- Execution strategy
-- Max workers
-- Timeout (if set)
-- Created/updated timestamps
-
-**Validation Status Card** (NEW):
+**Flow Information Card** (UPDATED):
 - **Component**: `Card`
-- **Status Indicator**:
-  - Valid: Green checkmark + "Valid"
-  - Invalid: Red X + "Invalid" + issue count
-- **Validate Button**:
-  - Variant: `outline`
-  - Action: Call `POST /api/flows/{flowId}/validate`
-- **Issues List** (if invalid):
-  - Show list of validation issues
-  - Each issue: Type + message
-  - Color: text-destructive
+- **Basic Information**:
+  - Flow ID
+  - Execution strategy
+  - Max workers
+  - Timeout (if set)
+  - Created/updated timestamps
+- **Statistics**:
+  - Routines count
+  - Connections count
+  - Cross-connections count
+- **Validation Status** (INTEGRATED):
+  - Status Indicator:
+    - Valid: Green checkmark + "Valid"
+    - Invalid: Red X + "Invalid" + issue count
+  - Validate Button:
+    - Variant: `outline`, size: `sm`
+    - Action: Call `POST /api/flows/{flowId}/validate`
+  - Issues List (if invalid):
+    - Show list of validation issues
+    - Each issue: Type + message
+    - Color: text-destructive
+- **Job Count** (NEW):
+  - Display: "X jobs" (where X is the count of jobs for this flow)
+  - Link: Navigate to `/jobs?flowId={flowId}` to filter jobs by this flow
+  - Data Source: `GET /api/jobs?flow_id={flowId}` to get count
+  - Loading: Show skeleton while loading
+  - Empty: "0 jobs" if no jobs exist
 
-**Flow Metrics Card** (NEW):
-- **Component**: `Card`
-- **Metrics**:
-  - Total jobs count
-  - Completed jobs count
-  - Failed jobs count
-  - Average duration (if available)
-- **Data Source**: `GET /api/flows/{flowId}/metrics`
-- **Loading**: Show skeleton while loading
-- **Empty**: "No metrics available"
+**Note**: Flow Metrics Card removed - metrics are not relevant at flow level, only at job level.
 
 **Flow Canvas**:
 - Full width, min-height: 500px
@@ -686,25 +688,7 @@ interface DiscoveryState {
   - Action: Validate DSL, then update flow
   - Warning: "This will replace the current flow structure"
 
-#### Metrics Tab (NEW)
-
-**Purpose**: Show aggregated metrics for all jobs of this flow
-
-**Metrics Display**:
-- **Summary Cards**:
-  - Total Jobs
-  - Completed Jobs
-  - Failed Jobs
-  - Success Rate (%)
-- **Job Metrics Table**:
-  - Columns: Job ID, Status, Duration, Created
-  - Sortable columns
-  - Click job ID → Navigate to job page
-- **Charts** (optional):
-  - Duration over time
-  - Success rate trend
-
-**Data Source**: `GET /api/flows/{flowId}/metrics`
+**Note**: Metrics Tab removed - Flow-level metrics are not meaningful. Job metrics are available on individual job pages. Flow Information card now shows job count with link to filtered jobs list.
 
 ---
 

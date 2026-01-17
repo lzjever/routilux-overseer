@@ -77,8 +77,14 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     try {
       const api = createAPI(serverUrl);
       const response = await api.discovery.syncFlows();
+      if (!response) {
+        console.warn("Sync flows returned null response");
+        set({ syncingFlows: false });
+        return 0;
+      }
       if (response && response.flows) {
         const flowIds = response.flows.map((f) => f.flow_id);
+        console.log(`Synced ${flowIds.length} flows from registry:`, flowIds);
         set({
           discoveredFlows: [],
           lastFlowSync: new Date(),
@@ -86,6 +92,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
         });
         return flowIds.length;
       }
+      console.warn("Sync flows response missing flows array:", response);
       set({ syncingFlows: false });
       return 0;
     } catch (error) {

@@ -35,8 +35,14 @@ export function createAPI(baseURL: string, apiKey?: string) {
 
     // Flows API (backward compatible)
     flows: {
+      list: async () => {
+        return await FlowsService.listFlowsApiFlowsGet();
+      },
       listFlows: async () => {
         return await FlowsService.listFlowsApiFlowsGet();
+      },
+      get: async (flowId: string) => {
+        return await FlowsService.getFlowApiFlowsFlowIdGet(flowId);
       },
       getFlow: async (flowId: string) => {
         return await FlowsService.getFlowApiFlowsFlowIdGet(flowId);

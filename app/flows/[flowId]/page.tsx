@@ -1,32 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlowCanvas } from "@/components/flow/FlowCanvas";
-import { FlowMetadata } from "@/components/flow/FlowMetadata";
-import { RoutineDetails } from "@/components/flow/RoutineDetails";
-import { FlowDSLExport } from "@/components/flow/FlowDSLExport";
-import { FlowValidationCard } from "@/components/flow/FlowValidationCard";
-import { FlowMetricsCard } from "@/components/flow/FlowMetricsCard";
-import { AddRoutineDialog } from "@/components/flow/AddRoutineDialog";
-import { AddConnectionDialog } from "@/components/flow/AddConnectionDialog";
-import { ArrowLeft, Play, Loader2, MoreVertical, Download, Upload, ChevronDown, ChevronRight } from "lucide-react";
-import Link from "next/link";
+import { FlowDetailHeader } from "@/components/flow/FlowDetailHeader";
+import { FlowInfoSidebar } from "@/components/flow/FlowInfoSidebar";
+import { FlowDetailsSidebar } from "@/components/flow/FlowDetailsSidebar";
+import { Loader2 } from "lucide-react";
 import { useJobStore } from "@/lib/stores/jobStore";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { createAPI } from "@/lib/api";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export default function FlowDetailPage() {
   const router = useRouter();
@@ -35,9 +19,14 @@ export default function FlowDetailPage() {
   const { connected, serverUrl } = useConnectionStore();
   const { selectedFlowId, nodes, selectFlow, loading, flows, loadFlows } = useFlowStore();
   const { startJob } = useJobStore();
-  const [activeTab, setActiveTab] = useState<"overview" | "routines" | "metrics">("overview");
-  const [connectionsExpanded, setConnectionsExpanded] = useState(false);
   const [routines, setRoutines] = useState<Record<string, any>>({});
+  const [validationStatus, setValidationStatus] = useState<{
+    valid: boolean;
+    errors?: string[];
+  } | null>(null);
+  const [jobCount, setJobCount] = useState<number | null>(null);
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
 
   const flow = flows.get(flowId);
 
@@ -47,10 +36,14 @@ export default function FlowDetailPage() {
       return;
     }
 
-    if (flowId && flowId !== selectedFlowId && serverUrl) {
-      selectFlow(flowId, serverUrl);
+    // Always reload flow if flowId changes or if not selected
+    if (flowId && serverUrl) {
+      if (flowId !== selectedFlowId || !flow) {
+        console.log(`Loading flow ${flowId}, selectedFlowId: ${selectedFlowId}, hasFlow: ${!!flow}`);
+        selectFlow(flowId, serverUrl);
+      }
     }
-  }, [connected, flowId, selectedFlowId, selectFlow, serverUrl]);
+  }, [connected, flowId, selectedFlowId, selectFlow, serverUrl, flow]);
 
   useEffect(() => {
     const loadRoutines = async () => {
@@ -65,6 +58,50 @@ export default function FlowDetailPage() {
     };
     loadRoutines();
   }, [flowId, serverUrl]);
+
+  useEffect(() => {
+    const loadValidationAndJobs = async () => {
+      if (!serverUrl || !flowId) return;
+      try {
+        const api = createAPI(serverUrl);
+        // Load validation status
+        try {
+          await api.flows.validateFlow(flowId);
+          setValidationStatus({ valid: true });
+        } catch (error) {
+          setValidationStatus({
+            valid: false,
+            errors: [error instanceof Error ? error.message : "Validation failed"],
+          });
+        }
+        // Load job count
+        const jobsResponse = await api.jobs.list({ flowId });
+        setJobCount(jobsResponse.total || 0);
+      } catch (error) {
+        console.error("Failed to load validation/jobs:", error);
+      }
+    };
+    loadValidationAndJobs();
+  }, [flowId, serverUrl]);
+
+  // Keyboard shortcuts for panel collapse/expand
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + B: Toggle left sidebar
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault();
+        setLeftSidebarCollapsed(!leftSidebarCollapsed);
+      }
+      // Cmd/Ctrl + ]: Toggle right sidebar
+      if ((e.metaKey || e.ctrlKey) && e.key === ']') {
+        e.preventDefault();
+        setRightSidebarCollapsed(!rightSidebarCollapsed);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [leftSidebarCollapsed, rightSidebarCollapsed]);
 
   const handleRefresh = async () => {
     if (serverUrl) {
@@ -107,6 +144,64 @@ export default function FlowDetailPage() {
     }
   };
 
+  const handleExportDSL = async () => {
+    if (!serverUrl) return;
+    try {
+      const api = createAPI(serverUrl);
+      const dsl = await api.flows.exportFlowDSL(flowId, "yaml");
+      const dslString = typeof dsl === "string" ? dsl : JSON.stringify(dsl, null, 2);
+      const blob = new Blob([dslString], { type: "text/yaml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${flowId}.yaml`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      alert(`Failed to export DSL: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  };
+
+  const handleValidate = async () => {
+    if (!serverUrl) return;
+    try {
+      const api = createAPI(serverUrl);
+      await api.flows.validateFlow(flowId);
+      setValidationStatus({ valid: true });
+    } catch (error) {
+      setValidationStatus({
+        valid: false,
+        errors: [error instanceof Error ? error.message : "Validation failed"],
+      });
+    }
+  };
+
+  // Canvas ↔ Sidebar sync handlers
+  const handleRoutineClick = useCallback((routineId: string) => {
+    // Highlight node in canvas
+    if (typeof window !== "undefined" && (window as any).reactFlowInstance) {
+      const instance = (window as any).reactFlowInstance;
+      const node = nodes.find(n => n.id === routineId);
+      if (node) {
+        instance.fitView({ padding: 0.2, duration: 800, nodes: [node] });
+        // TODO: Add visual highlight effect
+      }
+    }
+  }, [nodes]);
+
+  const handleConnectionClick = useCallback((connectionIndex: number) => {
+    // Highlight edge in canvas
+    if (typeof window !== "undefined" && (window as any).reactFlowInstance) {
+      const instance = (window as any).reactFlowInstance;
+      const { edges: currentEdges } = useFlowStore.getState();
+      const edge = currentEdges[connectionIndex] || null;
+      if (edge) {
+        // TODO: Add visual highlight effect for edge
+        console.log("Highlight connection:", edge);
+      }
+    }
+  }, []);
+
   if (!connected) {
     return null;
   }
@@ -120,213 +215,50 @@ export default function FlowDetailPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 h-screen flex flex-col">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/flows">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Flows
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">{flow.flow_id}</h1>
-            <p className="text-muted-foreground">
-              {Object.keys(flow.routines).length} routines •{" "}
-              {flow.connections.length} connections
-            </p>
+    <div className="h-screen flex flex-col overflow-hidden">
+      {/* Compact Header */}
+      <FlowDetailHeader
+        flow={flow}
+        flowId={flowId}
+        serverUrl={serverUrl}
+        validationStatus={validationStatus}
+        jobCount={jobCount}
+        onStartJob={handleStartJob}
+        onExportDSL={handleExportDSL}
+        onRefresh={handleRefresh}
+        onValidate={handleValidate}
+      />
+
+      {/* Three-Panel Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar - Flow Information */}
+        <FlowInfoSidebar
+          flow={flow}
+          flowId={flowId}
+          serverUrl={serverUrl}
+          collapsed={leftSidebarCollapsed}
+          onToggleCollapse={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
+        />
+
+        {/* Center Panel - Flow Visualization (Primary Focus) */}
+        <div className="flex-1 flex flex-col min-w-0 bg-background">
+          <div className="flex-1 relative">
+            <FlowCanvas flowId={flowId} editable={false} />
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem
-                onClick={async () => {
-                  if (!serverUrl) return;
-                  try {
-                    const api = createAPI(serverUrl);
-                    const dsl = await api.flows.exportFlowDSL(flowId, "yaml");
-                    const dslString = typeof dsl === "string" ? dsl : JSON.stringify(dsl, null, 2);
-                    const blob = new Blob([dslString], { type: "text/yaml" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `${flowId}.yaml`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  } catch (error) {
-                    alert(`Failed to export DSL: ${error instanceof Error ? error.message : "Unknown error"}`);
-                  }
-                }}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export DSL
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleRefresh}>
-                <Upload className="mr-2 h-4 w-4" />
-                Refresh
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button onClick={handleStartJob}>
-            <Play className="mr-2 h-4 w-4" />
-            Start Job
-          </Button>
-        </div>
-      </div>
 
-      {/* Tabs Content */}
-      <div className="flex-1 min-h-0">
-        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="h-full flex flex-col">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="routines">Routines</TabsTrigger>
-            <TabsTrigger value="metrics">Metrics</TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="flex-1 min-h-0 overflow-auto">
-            <div className="flex flex-col gap-6 h-full">
-              {/* Validation and Metrics Cards */}
-              <div className="grid gap-4 md:grid-cols-2">
-                {serverUrl && (
-                  <>
-                    <FlowValidationCard flowId={flowId} serverUrl={serverUrl} />
-                    <FlowMetricsCard flowId={flowId} serverUrl={serverUrl} />
-                  </>
-                )}
-              </div>
-
-              {/* Flow Metadata */}
-              <div>
-                <FlowMetadata flow={flow} />
-              </div>
-
-              {/* Connections Section */}
-              {serverUrl && (
-                <Card>
-                  <Collapsible open={connectionsExpanded} onOpenChange={setConnectionsExpanded}>
-                    <CollapsibleTrigger asChild>
-                      <CardHeader className="cursor-pointer">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="flex items-center gap-2">
-                            {connectionsExpanded ? (
-                              <ChevronDown className="h-4 w-4" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4" />
-                            )}
-                            Connections ({flow.connections.length})
-                          </CardTitle>
-                          <AddConnectionDialog
-                            flowId={flowId}
-                            serverUrl={serverUrl}
-                            routines={routines}
-                            onSuccess={handleRefresh}
-                          />
-                        </div>
-                      </CardHeader>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <CardContent>
-                        <div className="space-y-2">
-                          {flow.connections.length === 0 ? (
-                            <div className="text-sm text-muted-foreground py-4 text-center">
-                              No connections. Add a connection to link routines.
-                            </div>
-                          ) : (
-                            flow.connections.map((conn: any, index: number) => (
-                              <div
-                                key={index}
-                                className="flex items-center justify-between p-2 border rounded"
-                              >
-                                <div className="text-sm">
-                                  <span className="font-medium">{conn.source_routine}</span>
-                                  <span className="text-muted-foreground">.</span>
-                                  <span className="font-medium">{conn.source_event}</span>
-                                  <span className="text-muted-foreground"> → </span>
-                                  <span className="font-medium">{conn.target_routine}</span>
-                                  <span className="text-muted-foreground">.</span>
-                                  <span className="font-medium">{conn.target_slot}</span>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={async () => {
-                                    if (!serverUrl) return;
-                                    try {
-                                      const api = createAPI(serverUrl);
-                                      await api.flows.removeConnection(flowId, index);
-                                      await handleRefresh();
-                                    } catch (error) {
-                                      alert(
-                                        `Failed to remove connection: ${
-                                          error instanceof Error ? error.message : "Unknown error"
-                                        }`
-                                      );
-                                    }
-                                  }}
-                                >
-                                  Remove
-                                </Button>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </CardContent>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </Card>
-              )}
-
-              {/* Flow Canvas */}
-              <div className="flex-1 min-h-0">
-                <Card className="h-full flex flex-col">
-                  <CardHeader className="pb-4">
-                    <CardTitle>Flow Visualization</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex-1 p-0 min-h-[500px]">
-                    <FlowCanvas flowId={flowId} editable={false} />
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* Routines Tab */}
-          <TabsContent value="routines" className="flex-1 min-h-0 overflow-auto">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Routines</h2>
-                {serverUrl && (
-                  <AddRoutineDialog
-                    flowId={flowId}
-                    serverUrl={serverUrl}
-                    onSuccess={handleRefresh}
-                  />
-                )}
-              </div>
-              <RoutineDetails
-                routines={flow.routines}
-                flowId={flowId}
-                serverUrl={serverUrl}
-                onRoutineRemoved={handleRefresh}
-              />
-            </div>
-          </TabsContent>
-
-          {/* Metrics Tab */}
-          <TabsContent value="metrics" className="flex-1 min-h-0 overflow-auto">
-            {serverUrl && (
-              <FlowMetricsCard flowId={flowId} serverUrl={serverUrl} />
-            )}
-          </TabsContent>
-        </Tabs>
+        {/* Right Sidebar - Routines & Connections */}
+        <FlowDetailsSidebar
+          flow={flow}
+          flowId={flowId}
+          serverUrl={serverUrl}
+          routines={routines}
+          collapsed={rightSidebarCollapsed}
+          onToggleCollapse={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
+          onRefresh={handleRefresh}
+          onRoutineClick={handleRoutineClick}
+          onConnectionClick={handleConnectionClick}
+        />
       </div>
     </div>
   );

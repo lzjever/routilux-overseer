@@ -25,9 +25,12 @@ export function FlowMetricsCard({ flowId, serverUrl }: FlowMetricsCardProps) {
       try {
         const api = createAPI(serverUrl);
         const data = await api.flows.getFlowMetrics(flowId);
+        console.log(`Flow metrics for ${flowId}:`, data);
         setMetrics(data);
       } catch (error) {
         console.error("Failed to load flow metrics:", error);
+        // Set metrics to null to show "No metrics available" message
+        setMetrics(null);
       } finally {
         setLoading(false);
       }
@@ -65,16 +68,20 @@ export function FlowMetricsCard({ flowId, serverUrl }: FlowMetricsCardProps) {
   }
 
   // Transform metrics data for charts
-  const jobDurationData = metrics.job_durations?.map((d: any, i: number) => ({
-    time: i,
-    duration: d,
-  })) || [];
-
-  const statusDistribution = metrics.status_distribution
-    ? Object.entries(metrics.status_distribution).map(([name, value]) => ({
-        name,
-        value: value as number,
+  const jobDurationData = metrics.job_durations && Array.isArray(metrics.job_durations) && metrics.job_durations.length > 0
+    ? metrics.job_durations.map((d: any, i: number) => ({
+        time: i,
+        duration: typeof d === 'number' ? d : 0,
       }))
+    : [];
+
+  const statusDistribution = metrics.status_distribution && typeof metrics.status_distribution === 'object'
+    ? Object.entries(metrics.status_distribution)
+        .filter(([_, value]) => typeof value === 'number' && value > 0)
+        .map(([name, value]) => ({
+          name,
+          value: value as number,
+        }))
     : [];
 
   return (

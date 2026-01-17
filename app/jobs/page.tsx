@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useJobStore } from "@/lib/stores/jobStore";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
@@ -23,9 +23,11 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { createAPI } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 export default function JobsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { connected, serverUrl } = useConnectionStore();
   const { jobs, loading, loadJobs, wsConnected, connectWebSocket, disconnectWebSocket } = useJobStore();
   const { flows } = useFlowStore();
@@ -37,7 +39,7 @@ export default function JobsPage() {
     syncJobs: syncJobsAction,
   } = useDiscoveryStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [filterFlowId, setFilterFlowId] = useState<string>("all");
+  const [filterFlowId, setFilterFlowId] = useState<string>(searchParams.get("flowId") || "all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [cleanupDialogOpen, setCleanupDialogOpen] = useState(false);
   const [cleanupAge, setCleanupAge] = useState(24);

@@ -31,9 +31,20 @@ export function PieChart({
   height = 300,
   className,
 }: PieChartProps) {
+  // Ensure minimum dimensions to prevent chart errors
+  const minHeight = Math.max(height || 300, 100);
+  
+  if (!data || data.length === 0) {
+    return (
+      <div className={className} style={{ width: "100%", height: minHeight, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span className="text-muted-foreground text-sm">No data available</span>
+      </div>
+    );
+  }
+
   return (
-    <div className={className} style={{ width: "100%", height }}>
-      <ResponsiveContainer>
+    <div className={className} style={{ width: "100%", minHeight, height: minHeight }}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={minHeight}>
         <RechartsPieChart>
           <Pie
             data={data}
