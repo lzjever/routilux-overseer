@@ -3,10 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Request model for starting a job.
+ * Request model for updating a breakpoint (enable/disable).
  */
-export type JobStartRequest = {
-    flow_id: string;
-    timeout?: (number | null);
+export type BreakpointUpdateRequest = {
+    enabled: boolean;
 };
 

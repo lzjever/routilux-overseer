@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mockJobState } from "@/test/test-utils";
 import { JobsService } from "../generated/services/JobsService";
-import { MonitorService } from "../generated/services/MonitorService";
 
 // Mock the generated services
 vi.mock("../generated/services/JobsService", () => ({
@@ -15,18 +14,6 @@ vi.mock("../generated/services/JobsService", () => ({
     getJobStateApiJobsJobIdStateGet: vi.fn(),
     cleanupJobsApiJobsCleanupPost: vi.fn(),
   },
-}));
-
-vi.mock("../generated/services/MonitorService", () => ({
-  MonitorService: {
-    getJobMetricsApiJobsJobIdMetricsGet: vi.fn(),
-    getJobTraceApiJobsJobIdTraceGet: vi.fn(),
-    getJobLogsApiJobsJobIdLogsGet: vi.fn(),
-  },
-}));
-
-vi.mock("../generated/RoutiluxAPI", () => ({
-  RoutiluxAPI: vi.fn().mockImplementation(() => ({})),
 }));
 
 vi.mock("../generated/core/OpenAPI", () => ({
@@ -75,7 +62,7 @@ describe("Jobs API", () => {
         jobs: mockJobs,
       } as any);
 
-      await api.jobs.list({ flowId: "flow-1", status: "running" });
+      await api.jobs.list("flow-1", "running");
 
       expect(JobsService.listJobsApiJobsGet).toHaveBeenCalledWith(
         "flow-1",
@@ -102,7 +89,7 @@ describe("Jobs API", () => {
   describe("start", () => {
     it("should start a job", async () => {
       const mockJob = { job_id: "job-1", flow_id: "flow-1", status: "running" };
-      const request = { flow_id: "flow-1", entry_routine_id: "routine-1", entry_params: {} };
+      const request = { flow_id: "flow-1" };
 
       vi.mocked(JobsService.startJobApiJobsPost).mockResolvedValue(mockJob as any);
 
@@ -160,76 +147,6 @@ describe("Jobs API", () => {
 
       expect(result).toEqual(mockJobState);
       expect(JobsService.getJobStateApiJobsJobIdStateGet).toHaveBeenCalledWith("job-1");
-    });
-  });
-
-  describe("getMetrics", () => {
-    it("should get job metrics", async () => {
-      const mockMetrics = {
-        job_id: "job-1",
-        flow_id: "flow-1",
-        start_time: "2025-01-15T10:00:00Z",
-        end_time: null,
-        duration: null,
-        routine_metrics: {},
-        total_events: 0,
-        total_slot_calls: 0,
-        total_event_emits: 0,
-        errors: [],
-      };
-
-      vi.mocked(MonitorService.getJobMetricsApiJobsJobIdMetricsGet).mockResolvedValue(mockMetrics as any);
-
-      const result = await api.jobs.getMetrics("job-1");
-
-      expect(result).toEqual(mockMetrics);
-      expect(MonitorService.getJobMetricsApiJobsJobIdMetricsGet).toHaveBeenCalledWith("job-1");
-    });
-  });
-
-  describe("getTrace", () => {
-    it("should get job trace", async () => {
-      const mockTrace = {
-        events: [],
-        total: 0,
-      };
-
-      vi.mocked(MonitorService.getJobTraceApiJobsJobIdTraceGet).mockResolvedValue(mockTrace as any);
-
-      const result = await api.jobs.getTrace("job-1");
-
-      expect(result).toEqual(mockTrace);
-      expect(MonitorService.getJobTraceApiJobsJobIdTraceGet).toHaveBeenCalledWith("job-1", null);
-    });
-
-    it("should get job trace with limit", async () => {
-      const mockTrace = {
-        events: [],
-        total: 0,
-      };
-
-      vi.mocked(MonitorService.getJobTraceApiJobsJobIdTraceGet).mockResolvedValue(mockTrace as any);
-
-      await api.jobs.getTrace("job-1", 100);
-
-      expect(MonitorService.getJobTraceApiJobsJobIdTraceGet).toHaveBeenCalledWith("job-1", 100);
-    });
-  });
-
-  describe("getLogs", () => {
-    it("should get job logs", async () => {
-      const mockLogs = {
-        job_id: "job-1",
-        logs: [],
-        total: 0,
-      };
-
-      vi.mocked(MonitorService.getJobLogsApiJobsJobIdLogsGet).mockResolvedValue(mockLogs as any);
-
-      const result = await api.jobs.getLogs("job-1");
-
-      expect(result).toEqual(mockLogs);
-      expect(MonitorService.getJobLogsApiJobsJobIdLogsGet).toHaveBeenCalledWith("job-1");
     });
   });
 

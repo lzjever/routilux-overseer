@@ -3,32 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Routine metadata information.
+ * Information about a routine.
  */
 export type RoutineInfo = {
-    /**
-     * Routine ID
-     */
     routine_id: string;
-    /**
-     * Routine class name
-     */
-    routine_type: string;
-    /**
-     * Activation policy type and configuration
-     */
-    activation_policy: Record<string, any>;
-    /**
-     * Routine configuration (_config)
-     */
-    config: Record<string, any>;
-    /**
-     * List of slot names
-     */
+    class_name: string;
     slots: Array<string>;
-    /**
-     * List of event names
-     */
     events: Array<string>;
+    config: Record<string, any>;
 };
 

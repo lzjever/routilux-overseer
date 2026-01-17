@@ -3,7 +3,7 @@
 import { ReactNode, ComponentType } from "react";
 import { EventBus } from "./event-bus";
 import { StorageAPI } from "./storage-api";
-import { FlowsAPI, JobsAPI, DebugAPI, BreakpointsAPI } from "@/lib/api";
+import type { API } from "@/lib/api";
 
 /**
  * 插件上下文
@@ -23,14 +23,9 @@ export interface PluginContext {
   storage: StorageAPI;
 
   /**
-   * Routilux API 客户端
+   * Routilux API 客户端（createAPI 的返回值）
    */
-  api: {
-    flows: FlowsAPI;
-    jobs: JobsAPI;
-    debug: DebugAPI;
-    breakpoints: BreakpointsAPI;
-  };
+  api: Pick<API, "flows" | "jobs" | "debug" | "breakpoints">;
 
   /**
    * WebSocket 访问

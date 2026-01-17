@@ -36,7 +36,7 @@ export function FlowInfoSidebar({
     setValidating(true);
     try {
       const api = createAPI(serverUrl);
-      await api.flows.validateFlow(flowId);
+      await api.flows.validate(flowId);
       setValidationResult({
         valid: true,
         errors: [],
@@ -105,16 +105,6 @@ export function FlowInfoSidebar({
           <div>
             <Label className="text-xs text-muted-foreground">Flow ID</Label>
             <p className="text-xs font-mono mt-1 truncate">{flow.flow_id}</p>
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">Execution Strategy</Label>
-            <div className="mt-1">
-              <Badge variant="outline" className="text-xs">{flow.execution_strategy}</Badge>
-            </div>
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">Max Workers</Label>
-            <p className="text-xs mt-1">{flow.max_workers}</p>
           </div>
         </div>
 

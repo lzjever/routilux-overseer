@@ -12,7 +12,7 @@ interface RoutineStatesPanelProps {
 }
 
 export function RoutineStatesPanel({ jobState }: RoutineStatesPanelProps) {
-  const routineStates = Object.entries(jobState.routine_states);
+  const routineStates = Object.entries(jobState.routine_states ?? {});
 
   return (
     <Card>
@@ -51,7 +51,7 @@ export function RoutineStatesPanel({ jobState }: RoutineStatesPanelProps) {
                 </Alert>
               )}
 
-              {state.result && (
+              {state.result != null ? (
                 <Collapsible className="mt-2">
                   <CollapsibleTrigger className="text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground">
                     <ChevronRight className="h-3 w-3" />
@@ -63,7 +63,7 @@ export function RoutineStatesPanel({ jobState }: RoutineStatesPanelProps) {
                     </pre>
                   </CollapsibleContent>
                 </Collapsible>
-              )}
+              ) : null}
             </div>
           ))}
         </div>

@@ -32,7 +32,7 @@ export function FlowMetadata({ flow, flowId, serverUrl }: FlowMetadataProps) {
     setValidating(true);
     try {
       const api = createAPI(serverUrl);
-      const result = await api.flows.validateFlow(flowId);
+      const result = await api.flows.validate(flowId);
       setValidationResult({
         valid: true,
         errors: [],
@@ -54,7 +54,7 @@ export function FlowMetadata({ flow, flowId, serverUrl }: FlowMetadataProps) {
     setLoadingJobs(true);
     try {
       const api = createAPI(serverUrl);
-      const response = await api.jobs.list({ flowId });
+      const response = await api.jobs.list(flowId);
       setJobCount(response.total || 0);
     } catch (error) {
       console.error("Failed to load job count:", error);
@@ -81,14 +81,6 @@ export function FlowMetadata({ flow, flowId, serverUrl }: FlowMetadataProps) {
           <div>
             <Label>Flow ID</Label>
             <p className="text-sm font-mono">{flow.flow_id}</p>
-          </div>
-          <div>
-            <Label>Execution Strategy</Label>
-            <Badge>{flow.execution_strategy}</Badge>
-          </div>
-          <div>
-            <Label>Max Workers</Label>
-            <p className="text-sm">{flow.max_workers}</p>
           </div>
         </div>
 

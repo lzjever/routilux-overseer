@@ -38,14 +38,17 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Remove RoutiluxAPI.ts; it depends on missing BaseHttpRequest/AxiosHttpRequest.
+# We use generated *Service classes via lib/api/index.ts only.
+if [ -f "lib/api/generated/RoutiluxAPI.ts" ]; then
+  rm -f lib/api/generated/RoutiluxAPI.ts
+  echo "   Removed lib/api/generated/RoutiluxAPI.ts"
+fi
+
 echo ""
 echo "[2/2] Client generation complete!"
 echo ""
-echo "✅ TypeScript client regenerated"
-echo "   Location: lib/api/generated"
+echo "✅ TypeScript client regenerated at lib/api/generated"
 echo ""
-echo "Next steps:"
-echo "  1. Review generated client structure"
-echo "  2. Update lib/api/index.ts wrapper"
-echo "  3. Test API calls"
+echo "Tip: To fetch from a running server, use: npm run regenerate-api"
 echo ""

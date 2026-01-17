@@ -24,7 +24,7 @@ export function FlowMetricsCard({ flowId, serverUrl }: FlowMetricsCardProps) {
       setLoading(true);
       try {
         const api = createAPI(serverUrl);
-        const data = await api.flows.getFlowMetrics(flowId);
+        const data = await api.monitor.getFlowMetrics(flowId);
         console.log(`Flow metrics for ${flowId}:`, data);
         setMetrics(data);
       } catch (error) {

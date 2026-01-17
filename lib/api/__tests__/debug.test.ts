@@ -16,10 +16,6 @@ vi.mock("../generated/services/DebugService", () => ({
   },
 }));
 
-vi.mock("../generated/RoutiluxAPI", () => ({
-  RoutiluxAPI: vi.fn().mockImplementation(() => ({})),
-}));
-
 vi.mock("../generated/core/OpenAPI", () => ({
   OpenAPI: {
     BASE: "",

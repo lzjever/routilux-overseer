@@ -5,8 +5,8 @@
 import type { ExecutionMetricsResponse } from '../models/ExecutionMetricsResponse';
 import type { ExecutionTraceResponse } from '../models/ExecutionTraceResponse';
 import type { JobMonitoringData } from '../models/JobMonitoringData';
+import type { routilux__api__models__monitor__RoutineInfo } from '../models/routilux__api__models__monitor__RoutineInfo';
 import type { RoutineExecutionStatus } from '../models/RoutineExecutionStatus';
-import type { RoutineInfo } from '../models/RoutineInfo';
 import type { SlotQueueStatus } from '../models/SlotQueueStatus';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -151,13 +151,13 @@ export class MonitorService {
      * Get routine metadata information (policy, config, slots, events).
      * @param flowId
      * @param routineId
-     * @returns RoutineInfo Successful Response
+     * @returns routilux__api__models__monitor__RoutineInfo Successful Response
      * @throws ApiError
      */
     public static getRoutineInfoApiFlowsFlowIdRoutinesRoutineIdInfoGet(
         flowId: string,
         routineId: string,
-    ): CancelablePromise<RoutineInfo> {
+    ): CancelablePromise<routilux__api__models__monitor__RoutineInfo> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/flows/{flow_id}/routines/{routine_id}/info',

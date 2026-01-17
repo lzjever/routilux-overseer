@@ -5,6 +5,7 @@
 import type { JobListResponse } from '../models/JobListResponse';
 import type { JobResponse } from '../models/JobResponse';
 import type { JobStartRequest } from '../models/JobStartRequest';
+import type { PostToJobRequest } from '../models/PostToJobRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -78,6 +79,31 @@ export class JobsService {
             path: {
                 'job_id': jobId,
             },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Post To Job
+     * Post data to a routine slot in a running or paused job.
+     * @param jobId
+     * @param requestBody
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static postToJobApiJobsJobIdPostPost(
+        jobId: string,
+        requestBody: PostToJobRequest,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/jobs/{job_id}/post',
+            path: {
+                'job_id': jobId,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: `Validation Error`,
             },

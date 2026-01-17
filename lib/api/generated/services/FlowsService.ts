@@ -2,11 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AddConnectionRequest } from '../models/AddConnectionRequest';
+import type { AddRoutineRequest } from '../models/AddRoutineRequest';
 import type { ConnectionInfo } from '../models/ConnectionInfo';
 import type { FlowCreateRequest } from '../models/FlowCreateRequest';
 import type { FlowListResponse } from '../models/FlowListResponse';
 import type { FlowResponse } from '../models/FlowResponse';
-import type { routilux__api__models__flow__RoutineInfo } from '../models/routilux__api__models__flow__RoutineInfo';
+import type { RoutineInfo } from '../models/RoutineInfo';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -136,12 +138,12 @@ export class FlowsService {
      * List Flow Routines
      * List all routines in a flow.
      * @param flowId
-     * @returns routilux__api__models__flow__RoutineInfo Successful Response
+     * @returns RoutineInfo Successful Response
      * @throws ApiError
      */
     public static listFlowRoutinesApiFlowsFlowIdRoutinesGet(
         flowId: string,
-    ): CancelablePromise<Record<string, routilux__api__models__flow__RoutineInfo>> {
+    ): CancelablePromise<Record<string, RoutineInfo>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/flows/{flow_id}/routines',
@@ -155,29 +157,25 @@ export class FlowsService {
     }
     /**
      * Add Routine To Flow
-     * Add a routine to an existing flow.
+     * Add a routine to an existing flow using factory name or class path.
+     *
+     * Args:
+     * flow_id: Flow identifier.
+     * request: AddRoutineRequest with routine_id, object_name, and optional config.
      * @param flowId
-     * @param routineId
-     * @param classPath
      * @param requestBody
      * @returns any Successful Response
      * @throws ApiError
      */
     public static addRoutineToFlowApiFlowsFlowIdRoutinesPost(
         flowId: string,
-        routineId: string,
-        classPath: string,
-        requestBody?: (Record<string, any> | null),
+        requestBody: AddRoutineRequest,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/flows/{flow_id}/routines',
             path: {
                 'flow_id': flowId,
-            },
-            query: {
-                'routine_id': routineId,
-                'class_path': classPath,
             },
             body: requestBody,
             mediaType: 'application/json',
@@ -211,33 +209,19 @@ export class FlowsService {
      * Add Connection To Flow
      * Add a connection to an existing flow.
      * @param flowId
-     * @param sourceRoutine
-     * @param sourceEvent
-     * @param targetRoutine
-     * @param targetSlot
      * @param requestBody
      * @returns any Successful Response
      * @throws ApiError
      */
     public static addConnectionToFlowApiFlowsFlowIdConnectionsPost(
         flowId: string,
-        sourceRoutine: string,
-        sourceEvent: string,
-        targetRoutine: string,
-        targetSlot: string,
-        requestBody?: (Record<string, string> | null),
+        requestBody: AddConnectionRequest,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/flows/{flow_id}/connections',
             path: {
                 'flow_id': flowId,
-            },
-            query: {
-                'source_routine': sourceRoutine,
-                'source_event': sourceEvent,
-                'target_routine': targetRoutine,
-                'target_slot': targetSlot,
             },
             body: requestBody,
             mediaType: 'application/json',

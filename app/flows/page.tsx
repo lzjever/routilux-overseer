@@ -75,7 +75,7 @@ export default function FlowsPage() {
     try {
       const api = createAPI(serverUrl);
       await Promise.all(
-        Array.from(selectedFlows).map((flowId) => api.flows.deleteFlow(flowId))
+        Array.from(selectedFlows).map((flowId) => api.flows.delete(flowId))
       );
       setSelectedFlows(new Set());
       await loadFlows(serverUrl);
@@ -209,17 +209,14 @@ export default function FlowsPage() {
       {flowError && (
         <div className="mb-6">
           <ErrorDisplay
-            error={flowError}
-            onDismiss={() => {
-              // Clear error by reloading
-              if (serverUrl) {
-                loadFlows(serverUrl);
-              }
+            error={{
+              message: String(flowError),
+              retry: () => {
+                if (serverUrl) loadFlows(serverUrl);
+              },
             }}
-            retry={() => {
-              if (serverUrl) {
-                loadFlows(serverUrl);
-              }
+            onDismiss={() => {
+              if (serverUrl) loadFlows(serverUrl);
             }}
           />
         </div>
@@ -325,16 +322,6 @@ export default function FlowsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Execution</span>
-                    <Badge variant="outline">
-                      {flow.execution_strategy}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Max Workers</span>
-                    <span className="font-mono">{flow.max_workers}</span>
-                  </div>
                   <Button
                     variant="ghost"
                     className="w-full mt-4"

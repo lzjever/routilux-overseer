@@ -82,14 +82,14 @@ export function GlobalSearchModal() {
       // Search flows
       flows.forEach((flow) => {
         const flowId = flow.flow_id.toLowerCase();
-        const description = flow.description?.toLowerCase() || "";
+        const description = "";
         
         if (flowId.includes(trimmedQuery) || description.includes(trimmedQuery)) {
           searchResults.push({
             id: flow.flow_id,
             type: "flow",
             title: flow.flow_id,
-            description: flow.description || `Flow with ${flow.routines?.length || 0} routines`,
+            description: `Flow with ${Object.keys(flow.routines ?? {}).length} routines`,
             url: `/flows/${flow.flow_id}`,
             metadata: { flow },
           });
@@ -139,15 +139,16 @@ export function GlobalSearchModal() {
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      const { selectedIndex: cur, results: res } = useSearchStore.getState();
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : prev));
+        setSelectedIndex(cur < res.length - 1 ? cur + 1 : cur);
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
-      } else if (e.key === "Enter" && selectedIndex >= 0 && results[selectedIndex]) {
+        setSelectedIndex(cur > 0 ? cur - 1 : -1);
+      } else if (e.key === "Enter" && cur >= 0 && res[cur]) {
         e.preventDefault();
-        handleSelectResult(results[selectedIndex]);
+        handleSelectResult(res[cur]);
       }
     };
 
@@ -203,7 +204,7 @@ export function GlobalSearchModal() {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => (open ? open() : close())}>
+    <Dialog open={isOpen} onOpenChange={(opened) => (opened ? open() : close())}>
       <DialogContent className="max-w-2xl p-0 gap-0">
         <div className="flex flex-col">
           {/* Search Input */}

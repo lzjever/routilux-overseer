@@ -9,7 +9,5 @@ export type FlowCreateRequest = {
     flow_id?: (string | null);
     dsl?: (string | null);
     dsl_dict?: (Record<string, any> | null);
-    execution_strategy?: (string | null);
-    max_workers?: (number | null);
 };
 

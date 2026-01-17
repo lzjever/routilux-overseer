@@ -9,6 +9,8 @@ export interface KeyboardShortcut {
   handler: (e: KeyboardEvent) => void;
   preventDefault?: boolean;
   enabled?: boolean;
+  /** When true, the shortcut also fires when focus is in an input/textarea. Default: false */
+  allowInInput?: boolean;
 }
 
 /**

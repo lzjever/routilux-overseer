@@ -82,7 +82,12 @@ export default function JobsPage() {
       if (filterFlowId !== "all") params.flow_id = filterFlowId;
       if (filterStatus !== "all") params.status = filterStatus;
 
-      const response = await api.jobs.list(params);
+      const response = await api.jobs.list(
+        params.flowId || null,
+        params.status || null,
+        params.limit || 100,
+        params.offset
+      );
 
       // Update jobs in store
       jobs.clear();
@@ -518,7 +523,7 @@ export default function JobsPage() {
                   <StatusBadge
                     status={job.status}
                     showSpinner={job.status === "running"}
-                    errorMessage={job.error}
+                    errorMessage={job.error ?? undefined}
                   />
                 </div>
               </CardHeader>

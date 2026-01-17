@@ -26,7 +26,7 @@ export function FlowValidationCard({ flowId, serverUrl }: FlowValidationCardProp
     setValidating(true);
     try {
       const api = createAPI(serverUrl);
-      const result = await api.flows.validateFlow(flowId);
+      const result = await api.flows.validate(flowId);
       setValidationResult({
         valid: true,
         errors: [],

@@ -35,7 +35,7 @@ export const useJobStore = create<JobState>((set, get) => ({
     set({ loading: true, error: null, serverUrl });
     try {
       const api = createAPI(serverUrl);
-      const response = await api.jobs.list();
+      const response = await api.jobs.list(null, null, 100);
       const jobMap = new Map(response.jobs.map((j) => [j.job_id, j]));
       set({ jobs: jobMap, loading: false, serverUrl });
     } catch (error) {

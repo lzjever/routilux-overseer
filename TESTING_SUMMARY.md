@@ -96,12 +96,9 @@ Type error: Module '"@/lib/api"' declares 'FlowsAPI' locally,
 but it is not exported.
 ```
 
-**原因**: `lib/api/index.ts` 没有导出 API 类
+**原因**: `lib/api/index.ts` 未导出插件所需的 API 子类型。
 
-**修复**: 添加导出语句
-```typescript
-export { APIClient, FlowsAPI, JobsAPI, DebugAPI, BreakpointsAPI };
-```
+**修复**: 插件使用 `API["flows"]` 等（见 `lib/plugins/types.ts`）。`createAPI` 与 `API` 类型从 `@/lib/api` 导出。
 
 **状态**: ✅ 已修复
 

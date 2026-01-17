@@ -50,7 +50,7 @@ export default function FlowDetailPage() {
       if (!serverUrl || !flowId) return;
       try {
         const api = createAPI(serverUrl);
-        const routinesData = await api.flows.getFlowRoutines(flowId);
+        const routinesData = await api.flows.getRoutines(flowId);
         setRoutines(routinesData);
       } catch (error) {
         console.error("Failed to load routines:", error);
@@ -66,7 +66,7 @@ export default function FlowDetailPage() {
         const api = createAPI(serverUrl);
         // Load validation status
         try {
-          await api.flows.validateFlow(flowId);
+          await api.flows.validate(flowId);
           setValidationStatus({ valid: true });
         } catch (error) {
           setValidationStatus({
@@ -75,7 +75,7 @@ export default function FlowDetailPage() {
           });
         }
         // Load job count
-        const jobsResponse = await api.jobs.list({ flowId });
+        const jobsResponse = await api.jobs.list(flowId);
         setJobCount(jobsResponse.total || 0);
       } catch (error) {
         console.error("Failed to load validation/jobs:", error);
@@ -113,23 +113,9 @@ export default function FlowDetailPage() {
   const handleStartJob = async () => {
     if (!flow || !serverUrl) return;
 
-    // Find entry routine (source)
-    const entryRoutine = Object.keys(flow.routines).find((id) =>
-      id.includes("source")
-    );
-
-    if (!entryRoutine) {
-      alert("No entry routine found for this flow");
-      return;
-    }
-
     try {
       const job = await startJob(
-        {
-          flow_id: flowId,
-          entry_routine_id: entryRoutine,
-          entry_params: { data: "Test from debugger" },
-        },
+        { flow_id: flowId },
         serverUrl
       );
 
@@ -148,7 +134,7 @@ export default function FlowDetailPage() {
     if (!serverUrl) return;
     try {
       const api = createAPI(serverUrl);
-      const dsl = await api.flows.exportFlowDSL(flowId, "yaml");
+      const dsl = await api.flows.exportDSL(flowId, "yaml");
       const dslString = typeof dsl === "string" ? dsl : JSON.stringify(dsl, null, 2);
       const blob = new Blob([dslString], { type: "text/yaml" });
       const url = URL.createObjectURL(blob);
@@ -166,7 +152,7 @@ export default function FlowDetailPage() {
     if (!serverUrl) return;
     try {
       const api = createAPI(serverUrl);
-      await api.flows.validateFlow(flowId);
+      await api.flows.validate(flowId);
       setValidationStatus({ valid: true });
     } catch (error) {
       setValidationStatus({

@@ -121,7 +121,7 @@ export function MiniEventLog({ jobId, onFocusRoutine }: MiniEventLogProps) {
                 </span>
               )}
               <span className="text-slate-600 truncate flex-1">
-                {event.data?.event_name || event.data?.slot_name || event.event_name}
+                {String(event.data?.event_name ?? event.data?.slot_name ?? event.event_name ?? "")}
               </span>
             </div>
           ))}

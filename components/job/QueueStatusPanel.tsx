@@ -120,8 +120,9 @@ export function QueueStatusPanel({
             </CardHeader>
             <CardContent className={cn("space-y-3", embedded && "p-3 pt-0 space-y-2")}>
               {slots.map((slot, index) => {
-                const usage = slot.usage_percent || 0;
-                const level = getPressureLevel(usage);
+                // usage_percentage is 0.0-1.0 from API; convert to 0-100 for display and pressure
+                const usagePct = (slot.usage_percentage ?? 0) * 100;
+                const level = getPressureLevel(usagePct);
                 const pressureColor = getPressureColor(level);
                 const PressureIcon = getPressureIcon(level);
 
@@ -142,12 +143,11 @@ export function QueueStatusPanel({
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>
-                          {slot.pending_count || 0} pending • {slot.processing_count || 0}{" "}
-                          processing
+                          {slot.unconsumed_count ?? 0} unconsumed / {slot.max_length} max
                         </span>
-                        <span>{usage.toFixed(1)}%</span>
+                        <span>{usagePct.toFixed(1)}%</span>
                       </div>
-                      <Progress value={usage} className="h-2" />
+                      <Progress value={usagePct} className="h-2" />
                     </div>
                   </div>
                 );

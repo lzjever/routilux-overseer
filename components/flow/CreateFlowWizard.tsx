@@ -61,13 +61,13 @@ export function CreateFlowWizard({
         }
       } else if (method === "clone" && cloneFlowId) {
         // For clone, we'd need to fetch the flow first and then create with its DSL
-        const existingFlow = await api.flows.getFlow(cloneFlowId);
-        const dsl = await api.flows.exportFlowDSL(cloneFlowId, "json");
+        const existingFlow = await api.flows.get(cloneFlowId);
+        const dsl = await api.flows.exportDSL(cloneFlowId, "json");
         request.dsl = dsl;
         request.flow_id = flowId; // New ID
       }
 
-      await api.flows.createFlow(request);
+      await api.flows.create(request);
       setOpen(false);
       setStep(1);
       setMethod("scratch");

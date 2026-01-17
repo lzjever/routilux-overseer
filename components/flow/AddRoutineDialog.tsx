@@ -55,7 +55,11 @@ export function AddRoutineDialog({
           return;
         }
       }
-      await api.flows.addRoutine(flowId, routineId, classPath, configObj);
+      await api.flows.addRoutine(flowId, {
+        routine_id: routineId,
+        object_name: classPath,
+        config: Object.keys(configObj).length > 0 ? configObj : undefined,
+      });
       setOpen(false);
       setRoutineId("");
       setClassPath("");

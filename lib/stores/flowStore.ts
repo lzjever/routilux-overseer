@@ -208,7 +208,7 @@ function convertFlowToNodes(flow: FlowResponse): Node[] {
           breakpoints: [],
         },
       };
-    }).filter((node): node is Node => node !== null);
+    }).filter((node) => node !== null) as Node[];
     
     console.log(`convertFlowToNodes: converted ${nodes.length} nodes from ${Object.keys(flow.routines).length} routines`);
     return nodes;
@@ -243,12 +243,11 @@ function convertFlowToEdges(flow: FlowResponse): Edge[] {
           sourceEvent: conn.source_event,
           targetRoutine: conn.target_routine,
           targetSlot: conn.target_slot,
-          paramMapping: conn.param_mapping || null,
           active: false,
           lastActivity: null,
         },
       };
-    }).filter((edge): edge is Edge => edge !== null);
+    }).filter((edge) => edge !== null) as Edge[];
     
     console.log(`convertFlowToEdges: converted ${edges.length} edges from ${flow.connections.length} connections`);
     return edges;

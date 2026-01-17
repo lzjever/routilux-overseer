@@ -40,13 +40,13 @@ export const useJobStateStore = create<JobStateStore>((set, get) => ({
   getRoutineState: (jobId: string, routineId: string) => {
     const jobState = get().jobStates.get(jobId);
     if (!jobState) return null;
-    return jobState.routine_states[routineId] || null;
+    return jobState.routine_states?.[routineId] || null;
   },
 
   getExecutionHistory: (jobId: string, routineId?: string) => {
     const jobState = get().jobStates.get(jobId);
     if (!jobState) return [];
-    const history = jobState.execution_history;
+    const history = jobState.execution_history ?? [];
     if (routineId) {
       return history.filter((r) => r.routine_id === routineId);
     }

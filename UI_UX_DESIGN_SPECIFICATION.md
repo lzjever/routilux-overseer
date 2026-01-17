@@ -535,136 +535,161 @@ interface DiscoveryState {
 **Route**: `/flows/[flowId]`  
 **Purpose**: View, edit, and manage a specific flow
 
-### Layout Structure
+### Layout Structure (REDESIGNED - Three-Panel Layout)
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Navbar                                                   │
-├─────────────────────────────────────────────────────────┤
-│ [Back] Flow ID                    [Start Job] [Actions▼]│
-│                                                           │
-│ [Tabs: Overview | Routines | Connections | Export]       │
-│                                                           │
-│ [Tab Content Area]                                        │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ Flow Canvas (Full Width)                           │ │
-│ │                                                     │ │
-│ │ [Flow Metadata Card]                               │ │
-│ │ [Validation Status]                                │ │
-│ │ [Flow Metrics]                                     │ │
-│ └─────────────────────────────────────────────────────┘ │
-│                                                           │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Compact Header (56px)                                                    │
+│ [← Back] Flow ID [Status Badge] [Jobs Link]    [Actions▼] [▶ Start Job]│
+├──────────┬──────────────────────────────────────────────────┬───────────┤
+│          │                                                  │           │
+│ Left     │           Flow Visualization                    │ Right     │
+│ Sidebar  │           (Primary Focus - 60-70% width)        │ Sidebar   │
+│ (240px)  │           Full height, no scrolling             │ (280px)   │
+│          │                                                  │           │
+│ - Flow   │           ReactFlow Canvas                      │ - Routines│
+│   Info   │           - Minimap                            │   Tab     │
+│   (compact)│         - Controls                            │ - Connections│
+│ - Validation│        - Zoom controls                       │   Tab     │
+│   Status  │          - Fit view                            │           │
+│ - Stats  │                                                  │           │
+│          │                                                  │           │
+│ Collapsible│                                                │ Collapsible│
+│ (can hide)│                                                │ (can hide)│
+└──────────┴──────────────────────────────────────────────────┴───────────┘
 ```
 
 ### Component Specifications
 
-#### Header
-- **Back Button**: Links to `/flows`
-- **Title**: Flow ID (text-3xl, font-bold)
-- **Subtitle**: "{routineCount} routines • {connectionCount} connections"
-- **Actions**:
-  - "Start Job" button (primary)
-  - Actions dropdown menu:
-    - Validate Flow
-    - Export DSL
-    - Import DSL
-    - Delete Flow
-    - Flow Metrics
+#### Compact Header (56px height)
+- **Back Button**: Icon only (ghost, 32px)
+- **Flow ID**: Text-xl, font-bold, truncate if long
+- **Status Badge**: 
+  - Green "Valid" or Red "Invalid" (compact, 20px height)
+  - Click to validate
+- **Jobs Link**: 
+  - Compact: "X jobs" (text-sm, link style)
+  - Hover shows tooltip "View all jobs for this flow"
+- **Actions Menu**: Icon button (MoreVertical)
+  - Export DSL
+  - Refresh
+- **Start Job**: Primary button, compact size (h-8)
 
-#### Tabs
-- **Tabs**: Overview | Routines (Metrics tab removed - not relevant for flows)
-- Use `Tabs` component from shadcn/ui
+#### Left Sidebar (240px width, collapsible)
+**Purpose**: Flow metadata and validation - always accessible but not intrusive
 
-#### Overview Tab
-
-**Flow Information Card** (UPDATED):
-- **Component**: `Card`
-- **Basic Information**:
-  - Flow ID
-  - Execution strategy
+**Layout** (vertical stack, compact):
+- **Flow Information**:
+  - Flow ID (truncated)
+  - Execution strategy (badge)
   - Max workers
-  - Timeout (if set)
-  - Created/updated timestamps
-- **Statistics**:
+- **Validation Status**:
+  - Status indicator (Valid/Invalid)
+  - Refresh button (icon)
+  - Error list (if invalid)
+- **Quick Stats**:
   - Routines count
   - Connections count
   - Cross-connections count
-- **Validation Status** (INTEGRATED):
-  - Status Indicator:
-    - Valid: Green checkmark + "Valid"
-    - Invalid: Red X + "Invalid" + issue count
-  - Validate Button:
-    - Variant: `outline`, size: `sm`
-    - Action: Call `POST /api/flows/{flowId}/validate`
-  - Issues List (if invalid):
-    - Show list of validation issues
-    - Each issue: Type + message
-    - Color: text-destructive
-- **Job Count** (NEW):
-  - Display: "X jobs" (where X is the count of jobs for this flow)
-  - Link: Navigate to `/jobs?flowId={flowId}` to filter jobs by this flow
-  - Data Source: `GET /api/jobs?flow_id={flowId}` to get count
-  - Loading: Show skeleton while loading
-  - Empty: "0 jobs" if no jobs exist
+- **Collapse Button**: ChevronLeft icon, collapses to 48px (icon-only mode)
 
-**Note**: Flow Metrics Card removed - metrics are not relevant at flow level, only at job level.
+**Collapsed State**:
+- Shows only icons: Info, Validation, Stats
+- Hover shows tooltip with details
+- Click to expand
 
-**Flow Canvas**:
-- Full width, min-height: 500px
-- Read-only mode (editable=false)
-- Shows flow visualization with ReactFlow
+#### Center Panel: Flow Visualization (Primary Focus)
+**Purpose**: Primary focus - flow graph visualization
 
-#### Routines Tab (ENHANCED)
+**Layout**:
+- **Full height**: Uses all available vertical space (calc(100vh - 120px))
+- **No scrolling**: Canvas fits within viewport
+- **Floating controls**: Zoom, fit view, etc. overlay on canvas (top-right)
+- **Minimap**: Bottom-right corner, floating
+- **Auto-fit on load**: Automatically fits view to show all nodes
+- **Responsive**: Adjusts when sidebars collapse/expand
 
-**Current**: Shows routine details  
-**Enhancement**: Add management capabilities
+**Controls** (floating, top-right):
+- Zoom In
+- Zoom Out  
+- Fit View
+- Fullscreen (optional)
 
-**Header**:
-- "Routines" title
-- "Add Routine" button (primary)
+#### Right Sidebar (280px width, collapsible)
+**Purpose**: Routines and Connections - detailed lists
 
-**Routine List**:
-- Each routine card shows:
-  - Routine ID
-  - Class name
-  - Slots count
-  - Events count
-  - Config (collapsible)
-  - Actions: Edit, Remove
+**Layout** (tabs):
+- **Tabbed interface**: Routines | Connections
+- **Compact list items**: Minimal padding, clear hierarchy
+- **Quick actions**: Inline edit/remove buttons (on hover)
+- **Collapsible**: Can collapse to 48px (icon-only)
+- **Scrollable**: If content overflows
 
-**Add Routine Dialog** (NEW):
-- **Routine ID**: Text input (required)
-- **Class Path**: Text input (required)
-  - Format: `module.path.ClassName`
-  - Validation: Must contain dot, not start/end with dot
-- **Config**: JSON editor (optional)
-- **Submit**: "Add Routine" button
-- **Action**: `POST /api/flows/{flowId}/routines`
+**Routines Tab**:
+- List of routines with:
+  - Routine ID (bold)
+  - Class name (muted)
+  - Slot/Event counts (badges)
+- Click routine → Highlight in canvas
+- Hover → Show tooltip with full details
+- Add Routine button (compact)
 
-#### Connections Tab (NEW)
+**Connections Tab**:
+- List of connections:
+  - Source → Target (compact format)
+  - Visual indicator (arrow icon)
+- Click connection → Highlight in canvas
+- Inline remove button
+- Add Connection button (compact)
 
-**Purpose**: View and manage flow connections
+**Note**: Param Mapping removed - this feature has been deprecated from the API.
 
-**Header**:
-- "Connections" title
-- "Add Connection" button (primary)
+### Interaction Patterns
 
-**Connection List**:
-- Table or card list showing:
-  - Source: `{routine}.{event}`
-  - Target: `{routine}.{slot}`
-  - Param mapping (if any)
-  - Actions: Remove
+#### Canvas ↔ Sidebar Sync
+- **Click routine in sidebar** → Highlight node in canvas, center view
+- **Click connection in sidebar** → Highlight edge in canvas
+- **Click node in canvas** → Scroll to routine in sidebar, show details
+- **Click edge in canvas** → Scroll to connection in sidebar
 
-**Add Connection Dialog** (NEW):
-- **Source Routine**: Select dropdown
-- **Source Event**: Select dropdown (populated based on source routine)
-- **Target Routine**: Select dropdown
-- **Target Slot**: Select dropdown (populated based on target routine)
-- **Param Mapping**: JSON editor (optional)
-- **Submit**: "Add Connection" button
-- **Action**: `POST /api/flows/{flowId}/connections`
+#### Panel Collapse/Expand
+- **Collapse button**: Icon in panel header
+- **Keyboard shortcut**: `Cmd/Ctrl + B` (left), `Cmd/Ctrl + ]` (right)
+- **Smooth animation**: 200ms transition
+- **State persistence**: Remember user preference (localStorage)
+
+### Key Design Improvements
+
+1. **Space Efficiency**
+   - ✅ Horizontal layout: Uses 100% of screen width
+   - ✅ No wasted space: Sidebars only take what they need
+   - ✅ Collapsible panels: Users can maximize canvas space
+   - ✅ Compact headers: Reduced from ~120px to 56px
+
+2. **Flow Visualization Priority**
+   - ✅ Immediate visibility: Canvas visible on page load, no scrolling
+   - ✅ Maximum space: 60-70% of screen width, full height
+   - ✅ No constraints: Canvas not limited by card padding
+   - ✅ Better aspect ratio: Wide canvas better for flow graphs
+
+3. **Information Architecture**
+   - ✅ Clear hierarchy: Visualization > Metadata > Details
+   - ✅ Progressive disclosure: Essential info in header, details in sidebars
+   - ✅ Context preservation: Canvas always visible while browsing details
+   - ✅ Reduced redundancy: Flow ID shown once in header
+
+### API Changes
+
+**Removed**:
+- ❌ `param_mapping` parameter from `addConnection` - Feature deprecated
+- ❌ Flow-level metrics - Not meaningful at flow level
+
+**Updated Method Names**:
+- `exportFlowDSL` → `exportDSL`
+- `validateFlow` → `validate`
+- `getFlowRoutines` → `getRoutines`
+- `getFlowConnections` → `getConnections`
+- `getFlowMetrics` → `monitor.getFlowMetrics`
 
 #### Export Tab
 

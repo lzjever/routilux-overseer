@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { routilux__api__models__monitor__RoutineInfo } from './routilux__api__models__monitor__RoutineInfo';
 import type { RoutineExecutionStatus } from './RoutineExecutionStatus';
-import type { RoutineInfo } from './RoutineInfo';
 import type { SlotQueueStatus } from './SlotQueueStatus';
 /**
  * Complete monitoring data for a routine.
@@ -24,6 +24,6 @@ export type RoutineMonitoringData = {
     /**
      * Routine metadata information
      */
-    info: RoutineInfo;
+    info: routilux__api__models__monitor__RoutineInfo;
 };
 

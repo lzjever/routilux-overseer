@@ -125,15 +125,6 @@ export function CallStackViewer({ jobId, serverUrl, embedded = false }: CallStac
                     </>
                   )}
                 </div>
-
-                {frame.variables && frame.variables.length > 0 && (
-                  <div className="mt-2 text-xs">
-                    <span className="text-muted-foreground">Variables: </span>
-                    <span className="font-mono text-primary">
-                      {frame.variables.join(", ")}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           ))}

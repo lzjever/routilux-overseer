@@ -10,7 +10,8 @@
     "lint": "next lint",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "regenerate-api": "bash scripts/regenerate-api.sh"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.5",

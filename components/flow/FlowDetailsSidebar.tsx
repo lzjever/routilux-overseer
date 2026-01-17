@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Inbox, Send, X } from "lucide-react";
 import { AddRoutineDialog } from "./AddRoutineDialog";
 import { AddConnectionDialog } from "./AddConnectionDialog";
 import { createAPI } from "@/lib/api";
@@ -110,7 +109,7 @@ export function FlowDetailsSidebar({
                 <AddRoutineDialog
                   flowId={flowId}
                   serverUrl={serverUrl}
-                  onSuccess={onRefresh}
+                  onSuccess={onRefresh ?? (() => {})}
                   trigger={
                     <Button variant="outline" size="sm" className="h-6 text-xs px-2">
                       <Plus className="h-3 w-3 mr-1" />
@@ -120,31 +119,36 @@ export function FlowDetailsSidebar({
                 />
               )}
             </div>
-            <div className="space-y-1.5">
-              {Object.entries(flow.routines).map(([id, routine]: [string, any]) => (
-                <div
-                  key={id}
-                  className="p-2 bg-background rounded border cursor-pointer hover:bg-accent transition-colors group"
-                  onClick={() => onRoutineClick?.(id)}
-                >
-                  <div className="flex items-start justify-between gap-2">
+            <div className="space-y-2">
+              {Object.entries(flow.routines).map(([id, routine]: [string, any]) => {
+                const inCount = routine.slots?.length ?? 0;
+                const outCount = routine.events?.length ?? 0;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    className="w-full text-left p-2.5 pr-2 bg-background rounded-lg border border-border/80 cursor-pointer hover:bg-accent/50 hover:border-border transition-colors group flex items-start gap-2 border-l-[3px] border-l-blue-300"
+                    onClick={() => onRoutineClick?.(id)}
+                  >
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">{id}</p>
+                      <p className="text-sm font-semibold truncate">{id}</p>
                       <p className="text-xs text-muted-foreground truncate mt-0.5">
                         {routine.class_name || "Unknown"}
                       </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs h-4 px-1">
-                          {routine.slots?.length || 0} slots
-                        </Badge>
-                        <Badge variant="outline" className="text-xs h-4 px-1">
-                          {routine.events?.length || 0} events
-                        </Badge>
+                      <div className="flex items-center gap-2.5 mt-1.5 text-[10px] text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Inbox className="h-3 w-3 text-blue-500" aria-hidden />
+                          {inCount}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Send className="h-3 w-3 text-emerald-500" aria-hidden />
+                          {outCount}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </TabsContent>
 
@@ -159,7 +163,7 @@ export function FlowDetailsSidebar({
                   flowId={flowId}
                   serverUrl={serverUrl}
                   routines={routines}
-                  onSuccess={onRefresh}
+                  onSuccess={onRefresh ?? (() => {})}
                   trigger={
                     <Button variant="outline" size="sm" className="h-6 text-xs px-2">
                       <Plus className="h-3 w-3 mr-1" />
@@ -178,33 +182,31 @@ export function FlowDetailsSidebar({
                 flow.connections.map((conn: any, index: number) => (
                   <div
                     key={index}
-                    className="p-2 bg-background rounded border cursor-pointer hover:bg-accent transition-colors group"
+                    className="p-2.5 pr-2 bg-background rounded-lg border border-border/80 cursor-pointer hover:bg-accent/50 hover:border-border transition-colors group flex items-start gap-2 border-l-[3px] border-l-emerald-300"
                     onClick={() => onConnectionClick?.(index)}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-mono">
-                          <span className="font-medium">{conn.source_routine}</span>
-                          <span className="text-muted-foreground">.</span>
-                          <span className="font-medium">{conn.source_event}</span>
-                          <span className="text-muted-foreground mx-1">→</span>
-                          <span className="font-medium">{conn.target_routine}</span>
-                          <span className="text-muted-foreground">.</span>
-                          <span className="font-medium">{conn.target_slot}</span>
-                        </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5">From</div>
+                      <div className="text-xs font-mono font-medium truncate">
+                        {conn.source_routine}<span className="text-muted-foreground">.</span>{conn.source_event}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveConnection(index);
-                        }}
-                      >
-                        ×
-                      </Button>
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5 mt-1.5">To</div>
+                      <div className="text-xs font-mono font-medium truncate">
+                        {conn.target_routine}<span className="text-muted-foreground">.</span>{conn.target_slot}
+                      </div>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveConnection(index);
+                      }}
+                      aria-label="Remove connection"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 ))
               )}

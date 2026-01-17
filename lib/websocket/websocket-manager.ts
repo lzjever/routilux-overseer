@@ -11,6 +11,7 @@ export type WebSocketEventType =
   | "slot_called"
   | "event_emitted"
   | "breakpoint_hit"
+  | "progress"
   | "error";
 
 export interface WebSocketMessage<T = any> {

@@ -316,16 +316,7 @@ export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions): C
                 resolve(result.body);
             }
         } catch (error) {
-            // Improve CORS error handling
-            if (error instanceof TypeError && error.message.includes('fetch')) {
-                const corsError = new Error(
-                    `CORS error: Unable to connect to ${config.BASE}. Please check if the server is running and CORS is properly configured.`
-                );
-                corsError.name = 'CorsError';
-                reject(corsError);
-            } else {
-                reject(error);
-            }
+            reject(error);
         }
     });
 };

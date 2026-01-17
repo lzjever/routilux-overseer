@@ -316,24 +316,21 @@ export default function MyPage() {
 
 ### 添加 API 端点
 
+`createAPI(serverUrl)` 返回的对象可扩展。如需新端点，在 `lib/api/index.ts` 的 `createAPI` 返回值中增加方法，或调用已生成的 `*Service`（如 `FlowsService`、`JobsService`）：
+
 ```typescript
-// lib/api/myapi.ts
-export class MyAPI {
-  constructor(private client: APIClient) {}
-
-  async getData() {
-    return this.client.get("/api/my-endpoint");
-  }
-}
-
-// lib/api/index.ts
-export function createAPI(baseURL: string) {
-  return {
-    // ...existing APIs
-    myapi: new MyAPI(client),
-  };
-}
+// lib/api/index.ts — 在 createAPI 的 return 中增加
+return {
+  // ...existing: flows, jobs, debug, ...
+  myFeature: {
+    getData: async (id: string) => {
+      return SomeService.someMethod(id); // 或使用 OpenAPI 的 request
+    },
+  },
+};
 ```
+
+生成客户端：`npm run regenerate-api`（从运行中的服务器拉取 OpenAPI 并生成 `lib/api/generated`）。
 
 ---
 

@@ -3,10 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Information about a connection.
+ * Request model for adding a connection to a flow.
  */
-export type ConnectionInfo = {
-    connection_id: string;
+export type AddConnectionRequest = {
     source_routine: string;
     source_event: string;
     target_routine: string;

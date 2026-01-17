@@ -30,5 +30,9 @@ export type RoutineExecutionStatus = {
      * Total number of errors
      */
     error_count?: number;
+    /**
+     * Number of active threads executing this routine
+     */
+    active_thread_count?: number;
 };
 

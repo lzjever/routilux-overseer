@@ -53,7 +53,6 @@ export interface ConnectionEdgeData {
   sourceEvent: string;
   targetRoutine: string;
   targetSlot: string;
-  paramMapping: Record<string, string> | null;
   active: boolean;
   lastActivity: string | null;
 }

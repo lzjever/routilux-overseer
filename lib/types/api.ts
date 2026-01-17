@@ -1,64 +1,8 @@
-// Re-export all types from generated API
+// Re-export all types from generated API (RoutineInfo, SlotQueueStatus, JobMonitoringData, etc.)
 export type * from "../api/generated";
 
 /**
- * Routine execution status for monitoring
- */
-export interface RoutineExecutionStatus {
-  routine_id: string;
-  is_active: boolean;
-  status: string;
-  last_execution_time?: string | null;
-  execution_count?: number;
-  error_count?: number;
-}
-
-/**
- * Queue status for a slot
- */
-export interface SlotQueueStatus {
-  slot_name: string;
-  queue_size: number;
-  queue_limit: number;
-  active: boolean;
-  queue_pressure: "low" | "medium" | "high" | "critical";
-}
-
-/**
- * Routine info
- */
-export interface RoutineInfo {
-  routine_id: string;
-  routine_type: string;
-  activation_policy: Record<string, any>;
-  config: Record<string, any>;
-  slots: Array<string>;
-  events: Array<string>;
-}
-
-/**
- * Complete monitoring data for a routine
- */
-export interface RoutineMonitoringData {
-  routine_id: string;
-  execution_status: RoutineExecutionStatus;
-  queue_status: SlotQueueStatus[];
-  info: RoutineInfo;
-}
-
-/**
- * Complete monitoring data for a job
- */
-export interface JobMonitoringData {
-  job_id: string;
-  flow_id: string;
-  job_status: string;
-  routines: Record<string, RoutineMonitoringData>;
-  updated_at: string;
-}
-
-/**
- * Call stack response from debug endpoint
+ * Call stack response from debug endpoint (not in generated)
  */
 export interface CallStackResponse {
   job_id: string;
@@ -69,5 +13,59 @@ export interface CallStackResponse {
   }>;
 }
 
-// Legacy type aliases for backward compatibility
-export type { BreakpointResponse as Breakpoint } from "./generated";
+/**
+ * Debug session information from GET /api/jobs/{job_id}/debug/session
+ */
+export interface DebugSessionInfo {
+  session_id: string;
+  job_id: string;
+  status: "running" | "paused" | "stepping";
+  paused_at?: { routine_id: string };
+  call_stack_depth: number;
+  paused_timestamp?: string;
+}
+
+/**
+ * Variables response from GET /api/jobs/{job_id}/debug/variables
+ */
+export interface VariablesResponse {
+  variables: Record<string, unknown>;
+}
+
+/**
+ * Execution record for timeline/history views
+ */
+export interface ExecutionRecord {
+  routine_id: string;
+  timestamp: string;
+  event_name: string;
+  data: Record<string, unknown>;
+}
+
+/**
+ * Routine state within a job (from job state response)
+ */
+export interface RoutineState {
+  status?: string;
+  execution_count?: number;
+  last_execution?: string | null;
+  error?: string;
+  result?: unknown;
+}
+
+/**
+ * Job state response from GET /api/jobs/{job_id}/state
+ */
+export interface JobStateResponse {
+  status: string;
+  current_routine_id?: string | null;
+  routine_states?: Record<string, RoutineState>;
+  execution_history?: ExecutionRecord[];
+  pause_points: Array<{ timestamp: string; reason: string; current_routine_id: string }>;
+  deferred_events: unknown[];
+  created_at: string;
+  updated_at: string;
+  shared_data?: Record<string, unknown>;
+}
+
+export type { BreakpointResponse as Breakpoint } from "../api/generated";

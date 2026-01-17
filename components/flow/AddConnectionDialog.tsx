@@ -43,7 +43,6 @@ export function AddConnectionDialog({
   const [sourceEvent, setSourceEvent] = useState("");
   const [targetRoutine, setTargetRoutine] = useState("");
   const [targetSlot, setTargetSlot] = useState("");
-  const [paramMapping, setParamMapping] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,30 +57,17 @@ export function AddConnectionDialog({
     setError(null);
     try {
       const api = createAPI(serverUrl);
-      let mapping: Record<string, string> = {};
-      if (paramMapping.trim()) {
-        try {
-          mapping = JSON.parse(paramMapping);
-        } catch {
-          setError("Invalid JSON in param mapping");
-          setLoading(false);
-          return;
-        }
-      }
-      await api.flows.addConnection(
-        flowId,
-        sourceRoutine,
-        sourceEvent,
-        targetRoutine,
-        targetSlot,
-        Object.keys(mapping).length > 0 ? mapping : undefined
-      );
+      await api.flows.addConnection(flowId, {
+        source_routine: sourceRoutine,
+        source_event: sourceEvent,
+        target_routine: targetRoutine,
+        target_slot: targetSlot,
+      });
       setOpen(false);
       setSourceRoutine("");
       setSourceEvent("");
       setTargetRoutine("");
       setTargetSlot("");
-      setParamMapping("");
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add connection");
@@ -167,15 +153,6 @@ export function AddConnectionDialog({
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="paramMapping">Param Mapping (JSON, optional)</Label>
-              <Input
-                id="paramMapping"
-                value={paramMapping}
-                onChange={(e) => setParamMapping(e.target.value)}
-                placeholder='{"source_param": "target_param"}'
-              />
             </div>
             {error && <div className="text-sm text-destructive">{error}</div>}
           </div>

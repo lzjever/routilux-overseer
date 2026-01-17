@@ -11,7 +11,7 @@ interface QuickFilter {
 }
 
 interface QuickFiltersProps {
-  filters: QuickFilter[];
+  filters?: QuickFilter[];
   activeFilter?: string;
   onFilterChange: (value: string) => void;
   className?: string;

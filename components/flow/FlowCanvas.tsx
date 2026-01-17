@@ -157,7 +157,7 @@ export function FlowCanvas({ flowId, jobId, editable = false }: FlowCanvasProps)
     // Update each node's data
     nodes.forEach((node) => {
       const routineId = node.id;
-      const routineState = jobState?.routine_states[routineId];
+      const routineState = jobState?.routine_states?.[routineId];
       const nodeBreakpoints = jobBreakpoints.filter((bp) => bp.routine_id === routineId);
 
       updateNodeData(routineId, {

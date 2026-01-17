@@ -21,7 +21,7 @@ export function FlowDSLExport({ flowId, serverUrl }: FlowDSLExportProps) {
     setLoading(true);
     try {
       const api = createAPI(serverUrl);
-      const dslString = await api.flows.exportFlowDSL(flowId);
+      const dslString = await api.flows.exportDSL(flowId, "yaml");
       setDsl(dslString);
     } catch (error) {
       console.error("Failed to export DSL:", error);
