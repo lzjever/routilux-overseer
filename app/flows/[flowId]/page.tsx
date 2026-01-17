@@ -11,13 +11,14 @@ import { FlowDetailsSidebar } from "@/components/flow/FlowDetailsSidebar";
 import { Loader2 } from "lucide-react";
 import { useJobStore } from "@/lib/stores/jobStore";
 import { createAPI } from "@/lib/api";
+import { StartJobDialog } from "@/components/job/StartJobDialog";
 
 export default function FlowDetailPage() {
   const router = useRouter();
   const params = useParams();
   const flowId = params.flowId as string;
   const { connected, serverUrl } = useConnectionStore();
-  const { selectedFlowId, nodes, selectFlow, loading, flows, loadFlows } = useFlowStore();
+  const { selectedFlowId, nodes, selectFlow, loading, flows, loadFlows, isFlowLocked } = useFlowStore();
   const { startJob } = useJobStore();
   const [routines, setRoutines] = useState<Record<string, any>>({});
   const [validationStatus, setValidationStatus] = useState<{
@@ -27,6 +28,7 @@ export default function FlowDetailPage() {
   const [jobCount, setJobCount] = useState<number | null>(null);
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
+  const [startJobDialogOpen, setStartJobDialogOpen] = useState(false);
 
   const flow = flows.get(flowId);
 
@@ -110,24 +112,12 @@ export default function FlowDetailPage() {
     }
   };
 
-  const handleStartJob = async () => {
-    if (!flow || !serverUrl) return;
+  const handleStartJob = () => {
+    setStartJobDialogOpen(true);
+  };
 
-    try {
-      const job = await startJob(
-        { flow_id: flowId },
-        serverUrl
-      );
-
-      // Navigate to job page
-      router.push(`/jobs/${job.job_id}`);
-    } catch (error) {
-      alert(
-        `Failed to start job: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    }
+  const handleJobStarted = (jobId: string) => {
+    router.push(`/jobs/${jobId}`);
   };
 
   const handleExportDSL = async () => {
@@ -229,7 +219,7 @@ export default function FlowDetailPage() {
         {/* Center Panel - Flow Visualization (Primary Focus) */}
         <div className="flex-1 flex flex-col min-w-0 bg-background">
           <div className="flex-1 relative">
-            <FlowCanvas flowId={flowId} editable={false} />
+            <FlowCanvas flowId={flowId} editable={!isFlowLocked(flowId)} />
           </div>
         </div>
 
@@ -246,6 +236,17 @@ export default function FlowDetailPage() {
           onConnectionClick={handleConnectionClick}
         />
       </div>
+
+      {/* Start Job Dialog */}
+      {serverUrl && (
+        <StartJobDialog
+          open={startJobDialogOpen}
+          onOpenChange={setStartJobDialogOpen}
+          flowId={flowId}
+          serverUrl={serverUrl}
+          onSuccess={handleJobStarted}
+        />
+      )}
     </div>
   );
 }

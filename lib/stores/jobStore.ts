@@ -1,10 +1,13 @@
 import { create } from "zustand";
 import type { JobResponse, JobStartRequest } from "@/lib/types/api";
+import type { JobMonitoringData, ExecutionMetricsResponse } from "@/lib/api/generated";
 import { createAPI } from "@/lib/api";
 import { getWebSocketManager, disposeWebSocketManager, WebSocketMessage } from "@/lib/websocket/websocket-manager";
 
 interface JobState {
   jobs: Map<string, JobResponse>;
+  monitoringData: Map<string, JobMonitoringData>;
+  metricsData: Map<string, ExecutionMetricsResponse>;
   loading: boolean;
   error: string | null;
   serverUrl: string | null;
@@ -17,6 +20,8 @@ interface JobState {
   pauseJob: (jobId: string, serverUrl: string) => Promise<void>;
   resumeJob: (jobId: string, serverUrl: string) => Promise<void>;
   cancelJob: (jobId: string, serverUrl: string) => Promise<void>;
+  loadJobMonitoringData: (jobId: string, serverUrl: string) => Promise<void>;
+  loadJobMetrics: (jobId: string, serverUrl: string) => Promise<void>;
 
   // WebSocket actions
   connectWebSocket: (serverUrl: string) => Promise<void>;
@@ -26,6 +31,8 @@ interface JobState {
 
 export const useJobStore = create<JobState>((set, get) => ({
   jobs: new Map(),
+  monitoringData: new Map(),
+  metricsData: new Map(),
   loading: false,
   error: null,
   serverUrl: null,
@@ -127,6 +134,30 @@ export const useJobStore = create<JobState>((set, get) => ({
       set({
         error: error instanceof Error ? error.message : "Failed to cancel job",
       });
+    }
+  },
+
+  loadJobMonitoringData: async (jobId: string, serverUrl: string) => {
+    try {
+      const api = createAPI(serverUrl);
+      const monitoringData = await api.monitor.getJobMonitoringData(jobId);
+      set((state) => ({
+        monitoringData: new Map(state.monitoringData).set(jobId, monitoringData),
+      }));
+    } catch (error) {
+      console.error("Failed to load job monitoring data:", error);
+    }
+  },
+
+  loadJobMetrics: async (jobId: string, serverUrl: string) => {
+    try {
+      const api = createAPI(serverUrl);
+      const metrics = await api.monitor.getJobMetrics(jobId);
+      set((state) => ({
+        metricsData: new Map(state.metricsData).set(jobId, metrics),
+      }));
+    } catch (error) {
+      console.error("Failed to load job metrics:", error);
     }
   },
 

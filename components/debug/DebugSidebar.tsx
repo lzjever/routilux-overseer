@@ -5,15 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { ChevronLeft, ChevronRight, Bug, Settings2, Maximize2, Minimize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DebugSessionMonitor } from "./DebugSessionMonitor";
-import { StepExecutionControls } from "./StepExecutionControls";
 import { BreakpointControls } from "./BreakpointControls";
-import { VariableInspector } from "./VariableInspector";
-import { ExpressionEvaluator } from "./ExpressionEvaluator";
-import { CallStackViewer } from "./CallStackViewer";
 import { QueueStatusPanel } from "@/components/job/QueueStatusPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -108,22 +102,6 @@ export function DebugSidebar({
               </TabsList>
 
               <TabsContent value="debug" className="space-y-4 mt-0">
-                {/* Debug Session Monitor */}
-                <DebugSessionMonitor jobId={jobId} serverUrl={serverUrl} />
-
-                <Separator />
-
-                {/* Step Execution Controls */}
-                <StepExecutionControls
-                  jobId={jobId}
-                  serverUrl={serverUrl}
-                  status={jobStatus}
-                  onStep={onStep}
-                  embedded
-                />
-
-                <Separator />
-
                 {/* Breakpoint Controls */}
                 <BreakpointControls
                   jobId={jobId}
@@ -131,35 +109,6 @@ export function DebugSidebar({
                   availableRoutines={availableRoutines}
                   embedded
                 />
-
-                <Separator />
-
-                {/* Variable Inspector */}
-                <VariableInspector
-                  jobId={jobId}
-                  serverUrl={serverUrl}
-                  availableRoutines={availableRoutines}
-                  embedded
-                />
-
-                <Separator />
-
-                {/* Expression Evaluator */}
-                <ExpressionEvaluator
-                  jobId={jobId}
-                  serverUrl={serverUrl}
-                  jobStatus={jobStatus}
-                  availableRoutines={availableRoutines}
-                  embedded
-                />
-
-                <Separator />
-
-                {/* Call Stack Viewer */}
-                <div>
-                  <div className="text-sm font-semibold mb-2">Call Stack</div>
-                  <CallStackViewer jobId={jobId} serverUrl={serverUrl} embedded />
-                </div>
               </TabsContent>
 
               <TabsContent value="queues" className="mt-0">

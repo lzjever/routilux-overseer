@@ -4,9 +4,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, XCircle, AlertCircle, Loader2, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
+import { CheckCircle2, XCircle, AlertCircle, Loader2, RefreshCw, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
 import { createAPI } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useFlowStore } from "@/lib/stores/flowStore";
+import { UnlockFlowDialog } from "./UnlockFlowDialog";
 import type { FlowResponse } from "@/lib/types/api";
 
 interface FlowInfoSidebarProps {
@@ -24,12 +27,28 @@ export function FlowInfoSidebar({
   collapsed = false,
   onToggleCollapse,
 }: FlowInfoSidebarProps) {
+  const { isFlowLocked, unlockFlow, lockFlow } = useFlowStore();
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [validating, setValidating] = useState(false);
   const [validationResult, setValidationResult] = useState<{
     valid: boolean;
     errors?: string[];
     warnings?: string[];
   } | null>(null);
+
+  const locked = isFlowLocked(flowId);
+
+  const handleUnlockClick = () => {
+    setUnlockDialogOpen(true);
+  };
+
+  const handleUnlockConfirm = () => {
+    unlockFlow(flowId);
+  };
+
+  const handleLock = () => {
+    lockFlow(flowId);
+  };
 
   const validate = async () => {
     if (!serverUrl) return;
@@ -100,12 +119,44 @@ export function FlowInfoSidebar({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-3 space-y-4">
-        {/* Basic Info */}
+        {/* Flow ID with Lock */}
         <div className="space-y-2">
-          <div>
+          <div className="flex items-center gap-2">
+            <img
+              src={locked ? "/icons/lock.svg" : "/icons/unlock.svg"}
+              alt={locked ? "Locked" : "Unlocked"}
+              className="h-4 w-4 text-muted-foreground"
+            />
             <Label className="text-xs text-muted-foreground">Flow ID</Label>
-            <p className="text-xs font-mono mt-1 truncate">{flow.flow_id}</p>
           </div>
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-mono flex-1 truncate">{flow.flow_id}</p>
+            {locked ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleUnlockClick}
+                className="h-6 text-xs"
+              >
+                Unlock
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLock}
+                className="h-6 text-xs"
+              >
+                Lock
+              </Button>
+            )}
+          </div>
+          {!locked && (
+            <Alert className="py-2">
+              <AlertTriangle className="h-3 w-3" />
+              <p className="text-xs">Flow is unlocked for editing</p>
+            </Alert>
+          )}
         </div>
 
         {/* Validation Status */}
@@ -187,6 +238,17 @@ export function FlowInfoSidebar({
           </div>
         </div>
       </div>
+
+      {/* Unlock Dialog */}
+      {serverUrl && (
+        <UnlockFlowDialog
+          open={unlockDialogOpen}
+          onOpenChange={setUnlockDialogOpen}
+          flowId={flowId}
+          serverUrl={serverUrl}
+          onConfirm={handleUnlockConfirm}
+        />
+      )}
     </div>
   );
 }

@@ -104,14 +104,22 @@ export function RoutineNode({ data, selected }: NodeProps<RoutineNodeData>) {
   const hasBreakpoint = (data.breakpoints?.length ?? 0) > 0;
   const isLoopActive = routineState?.current_iteration != null;
 
+  // Get heat border color if available
+  const heatBorderColor = (data as any).heatBorderColor || config.border;
+
   return (
     <TooltipProvider>
       <div
         className={cn(
           "relative flex flex-col rounded-lg border-2 shadow-md min-w-[200px] max-w-[320px] overflow-visible transition-shadow hover:shadow-lg",
-          config.border,
+          heatBorderColor,
           config.bg
         )}
+        style={{
+          borderColor: (data as any).heat !== undefined
+            ? `rgba(${Math.round((data as any).heat * 255)}, ${Math.round((1 - (data as any).heat) * 100)}, 0, 0.8)`
+            : undefined,
+        }}
       >
         {/* Header: identity (left) + status + actions (right) */}
         <div className="flex items-center gap-2 px-2.5 py-1.5 border-b border-border/60 flex-shrink-0">
@@ -165,24 +173,6 @@ export function RoutineNode({ data, selected }: NodeProps<RoutineNodeData>) {
                 </TooltipTrigger>
                 <TooltipContent>View details</TooltipContent>
               </Tooltip>
-              {status === "running" && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 w-6 p-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        data.onPauseAtRoutine?.();
-                      }}
-                    >
-                      <Pause className="h-3 w-3 text-muted-foreground" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Pause here</TooltipContent>
-                </Tooltip>
-              )}
             </div>
           </div>
         </div>

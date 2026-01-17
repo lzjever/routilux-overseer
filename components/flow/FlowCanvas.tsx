@@ -20,18 +20,28 @@ import { useFlowStore } from "@/lib/stores/flowStore";
 import { useUIStore } from "@/lib/stores/uiStore";
 import { useJobStateStore } from "@/lib/stores/jobStateStore";
 import { useBreakpointStore } from "@/lib/stores/breakpointStore";
+import { useJobStore } from "@/lib/stores/jobStore";
 import { RoutineDetailPanel } from "@/components/job/RoutineDetailPanel";
 import { layoutNodes } from "@/lib/utils/flow-layout";
 import { ZoomIn, ZoomOut, Maximize } from "lucide-react";
 import { BreakpointCreateRequest } from "@/lib/api/generated";
+import { calculateNodeHeat, calculateEdgeHeat, getHeatBorderColor, getHeatStrokeColor, getHeatStrokeWidth } from "@/lib/utils/heatmap";
 
 interface FlowCanvasProps {
   flowId?: string;
   jobId?: string;
   editable?: boolean;
+  onNodeClick?: (nodeId: string) => void;
+  onEdgeClick?: (edgeId: string) => void;
 }
 
-export function FlowCanvas({ flowId, jobId, editable = false }: FlowCanvasProps) {
+export function FlowCanvas({
+  flowId,
+  jobId,
+  editable = false,
+  onNodeClick: onNodeClickProp,
+  onEdgeClick: onEdgeClickProp,
+}: FlowCanvasProps) {
   const {
     nodes,
     edges,
@@ -41,10 +51,12 @@ export function FlowCanvas({ flowId, jobId, editable = false }: FlowCanvasProps)
     setEdges,
     serverUrl,
     selectedFlowId,
+    isFlowLocked,
   } = useFlowStore();
   const { selectedRoutine, selectRoutine, closeDetailPanel } = useUIStore();
   const { jobStates } = useJobStateStore();
   const { breakpoints, addBreakpoint, removeBreakpoint } = useBreakpointStore();
+  const { monitoringData } = useJobStore();
   const [pendingConnectionBp, setPendingConnectionBp] = useState<Edge | null>(null);
 
   // Memoize nodeTypes and edgeTypes to prevent recreation on each render
@@ -92,77 +104,78 @@ export function FlowCanvas({ flowId, jobId, editable = false }: FlowCanvasProps)
   }, []);
 
   // Handle node click
-  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
-    event.stopPropagation();
+  const onNodeClick = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      event.stopPropagation();
 
-    if (!jobId || !flowId) return;
+      // If onNodeClickProp is provided, use it (for job page selection)
+      if (onNodeClickProp) {
+        onNodeClickProp(node.id);
+        return;
+      }
 
-    // Get serverUrl from flowStore
-    const flowServerUrl = useFlowStore.getState().serverUrl;
-    if (!flowServerUrl) return;
+      // Otherwise, use existing behavior (for routine detail panel)
+      if (!jobId || !flowId) return;
 
-    // Select routine and show detail panel
-    selectRoutine({
-      routineId: node.id,
-      jobId,
-      flowId,
-    });
-  }, [jobId, flowId, selectRoutine]);
+      const flowServerUrl = useFlowStore.getState().serverUrl;
+      if (!flowServerUrl) return;
 
-  // Handle edge click for connection breakpoints
-  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
-    event.stopPropagation();
-
-    if (!jobId || !serverUrl || !flowId) return;
-
-    const edgeData = edge.data as ConnectionEdgeData;
-
-    // Check if there's already a breakpoint on this connection
-    const jobBreakpoints = breakpoints.get(jobId) || [];
-    const existingBp = jobBreakpoints.find(
-      (bp) =>
-        bp.type === "connection" &&
-        bp.source_event_name === edgeData?.sourceEvent &&
-        bp.target_routine_id === edge.target &&
-        bp.target_slot_name === edgeData?.targetSlot
-    );
-
-    if (existingBp) {
-      // Remove the breakpoint
-      removeBreakpoint(jobId, existingBp.breakpoint_id, serverUrl);
-    } else {
-      // Create a new connection breakpoint
-      const request: BreakpointCreateRequest = {
-        type: BreakpointCreateRequest.type.CONNECTION,
-        source_routine_id: edge.source,
-        source_event_name: edgeData?.sourceEvent || edge.sourceHandle,
-        target_routine_id: edge.target,
-        target_slot_name: edgeData?.targetSlot || edge.targetHandle,
-      };
-
-      addBreakpoint(jobId, request, serverUrl).catch((err) => {
-        console.error("Failed to add connection breakpoint:", err);
+      selectRoutine({
+        routineId: node.id,
+        jobId,
+        flowId,
       });
-    }
-  }, [jobId, serverUrl, flowId, breakpoints, addBreakpoint, removeBreakpoint]);
+    },
+    [jobId, flowId, selectRoutine, onNodeClickProp]
+  );
 
-  // Update nodes with routine state and breakpoints
-  // Use refs to track previous values and avoid unnecessary updates
+  // Handle edge click
+  const onEdgeClick = useCallback(
+    (event: React.MouseEvent, edge: Edge) => {
+      event.stopPropagation();
+
+      // If onEdgeClickProp is provided, use it (for job page selection)
+      if (onEdgeClickProp) {
+        onEdgeClickProp(edge.id);
+        return;
+      }
+
+      // Otherwise, use existing behavior (for breakpoints - but breakpoints are now routine-only)
+      // Edge clicks in job context should just select the edge
+      if (jobId && flowId) {
+        // Could still show edge details if needed
+      }
+    },
+    [jobId, flowId, onEdgeClickProp]
+  );
+
+  // Update nodes with routine state, breakpoints, and heat visualization
   useEffect(() => {
     if (!jobId || !nodes.length) return;
 
     const jobState = jobStates.get(jobId);
     const jobBreakpoints = breakpoints.get(jobId) || [];
+    const monitoring = monitoringData.get(jobId);
 
-    // Update each node's data
+    // Update each node's data with heat visualization
     nodes.forEach((node) => {
       const routineId = node.id;
       const routineState = jobState?.routine_states?.[routineId];
       const nodeBreakpoints = jobBreakpoints.filter((bp) => bp.routine_id === routineId);
 
+      // Calculate heat if monitoring data is available
+      let heat = 0;
+      let heatBorderColor = "";
+      if (monitoring && monitoring.routines[routineId]) {
+        heat = calculateNodeHeat(monitoring.routines[routineId]);
+        heatBorderColor = getHeatBorderColor(heat);
+      }
+
       updateNodeData(routineId, {
         routineState,
         breakpoints: nodeBreakpoints,
+        heat,
+        heatBorderColor,
         onToggleBreakpoint: () => {
           if (jobId && flowId) {
             selectRoutine({ routineId, jobId, flowId });
@@ -173,13 +186,10 @@ export function FlowCanvas({ flowId, jobId, editable = false }: FlowCanvasProps)
             selectRoutine({ routineId, jobId, flowId });
           }
         },
-        onPauseAtRoutine: () => {
-          console.log("Pause at routine:", routineId);
-        },
       });
     });
 
-    // Update edges to show connection breakpoints
+    // Update edges with heat visualization
     const updatedEdges = edges.map((edge) => {
       const edgeData = edge.data as ConnectionEdgeData;
       const hasBreakpoint = jobBreakpoints.some(
@@ -190,18 +200,40 @@ export function FlowCanvas({ flowId, jobId, editable = false }: FlowCanvasProps)
           bp.target_slot_name === (edgeData?.targetSlot || edge.targetHandle)
       );
 
+      // Calculate edge heat if monitoring data is available
+      let heat = 0;
+      let strokeColor = "";
+      let strokeWidth = 1;
+      if (monitoring && monitoring.routines[edge.target]) {
+        const targetRoutine = monitoring.routines[edge.target];
+        const queueStatus = targetRoutine.queue_status.find(
+          (q) => q.slot_name === (edgeData?.targetSlot || edge.targetHandle)
+        );
+        if (queueStatus) {
+          heat = calculateEdgeHeat(queueStatus);
+          strokeColor = getHeatStrokeColor(heat);
+          strokeWidth = getHeatStrokeWidth(heat);
+        }
+      }
+
       return {
         ...edge,
+        style: {
+          ...edge.style,
+          stroke: strokeColor || edge.style?.stroke,
+          strokeWidth: strokeWidth,
+        },
         data: {
           ...edgeData,
           hasBreakpoint,
+          heat,
         },
       };
     });
 
     setEdges(updatedEdges);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobId, breakpoints]);
+  }, [jobId, breakpoints, monitoringData]);
 
   // Debug logging
   useEffect(() => {
@@ -213,6 +245,9 @@ export function FlowCanvas({ flowId, jobId, editable = false }: FlowCanvasProps)
       match: flowId === selectedFlowId,
     });
   }, [flowId, selectedFlowId, nodes.length, edges.length]);
+
+  // Determine if flow is actually editable (must be unlocked AND editable prop is true)
+  const isEditable = editable && flowId ? !isFlowLocked(flowId) : false;
 
   // Show message if flow is not selected or no nodes/edges are loaded
   if (flowId && flowId !== selectedFlowId) {
@@ -261,10 +296,12 @@ export function FlowCanvas({ flowId, jobId, editable = false }: FlowCanvasProps)
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
-          nodesDraggable={true}
-          nodesConnectable={false}
+          nodesDraggable={isEditable}
+          nodesConnectable={isEditable}
           elementsSelectable={true}
           selectNodesOnDrag={false}
+          edgesDeletable={isEditable}
+          nodesDeletable={isEditable}
           className="bg-background"
           onInit={(instance) => {
             (window as any).reactFlowInstance = instance;

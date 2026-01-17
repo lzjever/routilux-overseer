@@ -14,6 +14,8 @@ interface FlowState {
   loading: boolean;
   error: string | null;
   serverUrl: string | null;
+  lockedFlows: Set<string>;  // Default locked flows (all flows are locked by default)
+  unlockedFlows: Set<string>;  // User-unlocked flows
 
   // Actions
   loadFlows: (serverUrl: string) => Promise<void>;
@@ -25,6 +27,11 @@ interface FlowState {
   updateNodeData: (nodeId: string, data: Partial<Node["data"]>) => void;
   clearFlow: () => void;
   setServerUrl: (url: string) => void;
+  
+  // Lock management
+  isFlowLocked: (flowId: string) => boolean;
+  unlockFlow: (flowId: string) => void;
+  lockFlow: (flowId: string) => void;
 }
 
 export const useFlowStore = create<FlowState>((set, get) => ({
@@ -36,6 +43,8 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   loading: false,
   error: null,
   serverUrl: null,
+  lockedFlows: new Set(),  // All flows are locked by default
+  unlockedFlows: new Set(),
 
   // Set server URL
   setServerUrl: (url) => set({ serverUrl: url }),
@@ -175,6 +184,31 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       selectedFlowId: null,
       nodes: [],
       edges: [],
+    });
+  },
+
+  // Check if flow is locked
+  isFlowLocked: (flowId: string) => {
+    const { unlockedFlows } = get();
+    // Flow is locked if it's not in unlockedFlows (default locked)
+    return !unlockedFlows.has(flowId);
+  },
+
+  // Unlock flow (user confirmed)
+  unlockFlow: (flowId: string) => {
+    set((state) => {
+      const newUnlockedFlows = new Set(state.unlockedFlows);
+      newUnlockedFlows.add(flowId);
+      return { unlockedFlows: newUnlockedFlows };
+    });
+  },
+
+  // Lock flow
+  lockFlow: (flowId: string) => {
+    set((state) => {
+      const newUnlockedFlows = new Set(state.unlockedFlows);
+      newUnlockedFlows.delete(flowId);
+      return { unlockedFlows: newUnlockedFlows };
     });
   },
 }));

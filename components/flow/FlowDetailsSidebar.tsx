@@ -3,10 +3,21 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ChevronLeft, ChevronRight, Plus, Inbox, Send, X } from "lucide-react";
 import { AddRoutineDialog } from "./AddRoutineDialog";
 import { AddConnectionDialog } from "./AddConnectionDialog";
 import { createAPI } from "@/lib/api";
+import { useFlowStore } from "@/lib/stores/flowStore";
 import type { FlowResponse } from "@/lib/types/api";
 
 interface FlowDetailsSidebarProps {
@@ -32,13 +43,35 @@ export function FlowDetailsSidebar({
   onRoutineClick,
   onConnectionClick,
 }: FlowDetailsSidebarProps) {
+  const { isFlowLocked } = useFlowStore();
   const [activeTab, setActiveTab] = useState<"routines" | "connections">("routines");
+  const [deleteRoutineId, setDeleteRoutineId] = useState<string | null>(null);
+  const [deleteConnectionIndex, setDeleteConnectionIndex] = useState<number | null>(null);
+
+  const locked = isFlowLocked(flowId);
+
+  const handleRemoveRoutine = async (routineId: string) => {
+    if (!serverUrl) return;
+    try {
+      const api = createAPI(serverUrl);
+      await api.flows.removeRoutine(flowId, routineId);
+      setDeleteRoutineId(null);
+      onRefresh?.();
+    } catch (error) {
+      alert(
+        `Failed to remove routine: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  };
 
   const handleRemoveConnection = async (index: number) => {
     if (!serverUrl) return;
     try {
       const api = createAPI(serverUrl);
       await api.flows.removeConnection(flowId, index);
+      setDeleteConnectionIndex(null);
       onRefresh?.();
     } catch (error) {
       alert(
@@ -105,7 +138,7 @@ export function FlowDetailsSidebar({
               <span className="text-xs font-semibold text-muted-foreground">
                 {Object.keys(flow.routines).length} routines
               </span>
-              {serverUrl && (
+              {serverUrl && !locked && (
                 <AddRoutineDialog
                   flowId={flowId}
                   serverUrl={serverUrl}
@@ -146,6 +179,20 @@ export function FlowDetailsSidebar({
                         </span>
                       </div>
                     </div>
+                    {!locked && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteRoutineId(id);
+                        }}
+                        aria-label="Remove routine"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </button>
                 );
               })}
@@ -158,7 +205,7 @@ export function FlowDetailsSidebar({
               <span className="text-xs font-semibold text-muted-foreground">
                 {flow.connections.length} connections
               </span>
-              {serverUrl && (
+              {serverUrl && !locked && (
                 <AddConnectionDialog
                   flowId={flowId}
                   serverUrl={serverUrl}
@@ -195,18 +242,20 @@ export function FlowDetailsSidebar({
                         {conn.target_routine}<span className="text-muted-foreground">.</span>{conn.target_slot}
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveConnection(index);
-                      }}
-                      aria-label="Remove connection"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
+                    {!locked && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteConnectionIndex(index);
+                        }}
+                        aria-label="Remove connection"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </div>
                 ))
               )}
@@ -214,6 +263,48 @@ export function FlowDetailsSidebar({
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Delete Routine Confirmation */}
+      <AlertDialog open={deleteRoutineId !== null} onOpenChange={(open) => !open && setDeleteRoutineId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Routine</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove routine "{deleteRoutineId}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteRoutineId && handleRemoveRoutine(deleteRoutineId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Connection Confirmation */}
+      <AlertDialog open={deleteConnectionIndex !== null} onOpenChange={(open) => !open && setDeleteConnectionIndex(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Connection</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this connection? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteConnectionIndex !== null && handleRemoveConnection(deleteConnectionIndex)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

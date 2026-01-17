@@ -286,25 +286,6 @@ export default function HomePage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Get Started */}
-        <div className="mt-12 text-center">
-          <Card className="max-w-2xl mx-auto bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border-blue-500/20">
-            <CardContent className="p-8">
-              <h3 className="text-2xl font-bold mb-2">Ready to debug?</h3>
-              <p className="text-muted-foreground mb-4">
-                Start monitoring your Routilux workflows in real-time with powerful debugging
-                tools.
-              </p>
-              <Button asChild size="lg">
-                <Link href="/flows">
-                  <Play className="h-5 w-5 mr-2" />
-                  Get Started
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );
