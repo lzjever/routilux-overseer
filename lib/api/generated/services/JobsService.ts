@@ -6,9 +6,9 @@ import type { JobListResponse } from '../models/JobListResponse';
 import type { JobResponse } from '../models/JobResponse';
 import type { JobStartRequest } from '../models/JobStartRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
+import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class JobsService {
+    constructor(public readonly httpRequest: BaseHttpRequest) {}
     /**
      * Start Job
      * Start a new job from a flow.
@@ -19,10 +19,10 @@ export class JobsService {
      * @returns JobResponse Successful Response
      * @throws ApiError
      */
-    public static startJobApiJobsPost(
+    public startJobApiJobsPost(
         requestBody: JobStartRequest,
     ): CancelablePromise<JobResponse> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/jobs',
             body: requestBody,
@@ -42,13 +42,13 @@ export class JobsService {
      * @returns JobListResponse Successful Response
      * @throws ApiError
      */
-    public static listJobsApiJobsGet(
+    public listJobsApiJobsGet(
         flowId?: (string | null),
         status?: (string | null),
         limit: number = 100,
         offset?: number,
     ): CancelablePromise<JobListResponse> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/jobs',
             query: {
@@ -69,10 +69,10 @@ export class JobsService {
      * @returns JobResponse Successful Response
      * @throws ApiError
      */
-    public static getJobApiJobsJobIdGet(
+    public getJobApiJobsJobIdGet(
         jobId: string,
     ): CancelablePromise<JobResponse> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/jobs/{job_id}',
             path: {
@@ -90,10 +90,10 @@ export class JobsService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static pauseJobApiJobsJobIdPausePost(
+    public pauseJobApiJobsJobIdPausePost(
         jobId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/jobs/{job_id}/pause',
             path: {
@@ -111,10 +111,10 @@ export class JobsService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static resumeJobApiJobsJobIdResumePost(
+    public resumeJobApiJobsJobIdResumePost(
         jobId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/jobs/{job_id}/resume',
             path: {
@@ -132,10 +132,10 @@ export class JobsService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static cancelJobApiJobsJobIdCancelPost(
+    public cancelJobApiJobsJobIdCancelPost(
         jobId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/jobs/{job_id}/cancel',
             path: {
@@ -153,10 +153,10 @@ export class JobsService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static getJobStatusApiJobsJobIdStatusGet(
+    public getJobStatusApiJobsJobIdStatusGet(
         jobId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/jobs/{job_id}/status',
             path: {
@@ -174,10 +174,10 @@ export class JobsService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static getJobStateApiJobsJobIdStateGet(
+    public getJobStateApiJobsJobIdStateGet(
         jobId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/jobs/{job_id}/state',
             path: {
@@ -205,11 +205,11 @@ export class JobsService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static cleanupJobsApiJobsCleanupPost(
+    public cleanupJobsApiJobsCleanupPost(
         maxAgeHours: number = 24,
         status?: (Array<string> | null),
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/jobs/cleanup',
             query: {

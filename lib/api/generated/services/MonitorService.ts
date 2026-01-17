@@ -4,10 +4,14 @@
 /* eslint-disable */
 import type { ExecutionMetricsResponse } from '../models/ExecutionMetricsResponse';
 import type { ExecutionTraceResponse } from '../models/ExecutionTraceResponse';
+import type { JobMonitoringData } from '../models/JobMonitoringData';
+import type { RoutineExecutionStatus } from '../models/RoutineExecutionStatus';
+import type { RoutineInfo } from '../models/RoutineInfo';
+import type { SlotQueueStatus } from '../models/SlotQueueStatus';
 import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
+import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class MonitorService {
+    constructor(public readonly httpRequest: BaseHttpRequest) {}
     /**
      * Get Job Metrics
      * Get execution metrics for a job.
@@ -15,10 +19,10 @@ export class MonitorService {
      * @returns ExecutionMetricsResponse Successful Response
      * @throws ApiError
      */
-    public static getJobMetricsApiJobsJobIdMetricsGet(
+    public getJobMetricsApiJobsJobIdMetricsGet(
         jobId: string,
     ): CancelablePromise<ExecutionMetricsResponse> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/jobs/{job_id}/metrics',
             path: {
@@ -37,11 +41,11 @@ export class MonitorService {
      * @returns ExecutionTraceResponse Successful Response
      * @throws ApiError
      */
-    public static getJobTraceApiJobsJobIdTraceGet(
+    public getJobTraceApiJobsJobIdTraceGet(
         jobId: string,
         limit?: (number | null),
     ): CancelablePromise<ExecutionTraceResponse> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/jobs/{job_id}/trace',
             path: {
@@ -62,10 +66,10 @@ export class MonitorService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static getJobLogsApiJobsJobIdLogsGet(
+    public getJobLogsApiJobsJobIdLogsGet(
         jobId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/jobs/{job_id}/logs',
             path: {
@@ -83,14 +87,125 @@ export class MonitorService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static getFlowMetricsApiFlowsFlowIdMetricsGet(
+    public getFlowMetricsApiFlowsFlowIdMetricsGet(
         flowId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/flows/{flow_id}/metrics',
             path: {
                 'flow_id': flowId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get Routine Queue Status
+     * Get queue status for all slots in a specific routine.
+     * @param jobId
+     * @param routineId
+     * @returns SlotQueueStatus Successful Response
+     * @throws ApiError
+     */
+    public getRoutineQueueStatusApiJobsJobIdRoutinesRoutineIdQueueStatusGet(
+        jobId: string,
+        routineId: string,
+    ): CancelablePromise<Array<SlotQueueStatus>> {
+        return this.httpRequest.request({
+            method: 'GET',
+            url: '/api/jobs/{job_id}/routines/{routine_id}/queue-status',
+            path: {
+                'job_id': jobId,
+                'routine_id': routineId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get Job Queues Status
+     * Get queue status for all routines in a job.
+     * @param jobId
+     * @returns SlotQueueStatus Successful Response
+     * @throws ApiError
+     */
+    public getJobQueuesStatusApiJobsJobIdQueuesStatusGet(
+        jobId: string,
+    ): CancelablePromise<Record<string, Array<SlotQueueStatus>>> {
+        return this.httpRequest.request({
+            method: 'GET',
+            url: '/api/jobs/{job_id}/queues/status',
+            path: {
+                'job_id': jobId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get Routine Info
+     * Get routine metadata information (policy, config, slots, events).
+     * @param flowId
+     * @param routineId
+     * @returns RoutineInfo Successful Response
+     * @throws ApiError
+     */
+    public getRoutineInfoApiFlowsFlowIdRoutinesRoutineIdInfoGet(
+        flowId: string,
+        routineId: string,
+    ): CancelablePromise<RoutineInfo> {
+        return this.httpRequest.request({
+            method: 'GET',
+            url: '/api/flows/{flow_id}/routines/{routine_id}/info',
+            path: {
+                'flow_id': flowId,
+                'routine_id': routineId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get Routines Status
+     * Get execution status for all routines in a job.
+     * @param jobId
+     * @returns RoutineExecutionStatus Successful Response
+     * @throws ApiError
+     */
+    public getRoutinesStatusApiJobsJobIdRoutinesStatusGet(
+        jobId: string,
+    ): CancelablePromise<Record<string, RoutineExecutionStatus>> {
+        return this.httpRequest.request({
+            method: 'GET',
+            url: '/api/jobs/{job_id}/routines/status',
+            path: {
+                'job_id': jobId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get Job Monitoring Data
+     * Get complete monitoring data for a job (status + queues + metadata).
+     * @param jobId
+     * @returns JobMonitoringData Successful Response
+     * @throws ApiError
+     */
+    public getJobMonitoringDataApiJobsJobIdMonitoringGet(
+        jobId: string,
+    ): CancelablePromise<JobMonitoringData> {
+        return this.httpRequest.request({
+            method: 'GET',
+            url: '/api/jobs/{job_id}/monitoring',
+            path: {
+                'job_id': jobId,
             },
             errors: {
                 422: `Validation Error`,

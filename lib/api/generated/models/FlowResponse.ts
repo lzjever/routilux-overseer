@@ -3,13 +3,13 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ConnectionInfo } from './ConnectionInfo';
-import type { RoutineInfo } from './RoutineInfo';
+import type { routilux__api__models__flow__RoutineInfo } from './routilux__api__models__flow__RoutineInfo';
 /**
  * Response model for flow details.
  */
 export type FlowResponse = {
     flow_id: string;
-    routines: Record<string, RoutineInfo>;
+    routines: Record<string, routilux__api__models__flow__RoutineInfo>;
     connections: Array<ConnectionInfo>;
     execution_strategy: string;
     max_workers: number;

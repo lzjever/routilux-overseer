@@ -6,9 +6,9 @@ import type { ExpressionEvalRequest } from '../models/ExpressionEvalRequest';
 import type { ExpressionEvalResponse } from '../models/ExpressionEvalResponse';
 import type { VariableSetRequest } from '../models/VariableSetRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
+import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class DebugService {
+    constructor(public readonly httpRequest: BaseHttpRequest) {}
     /**
      * Get Debug Session
      * Get debug session information.
@@ -16,10 +16,10 @@ export class DebugService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static getDebugSessionApiJobsJobIdDebugSessionGet(
+    public getDebugSessionApiJobsJobIdDebugSessionGet(
         jobId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/jobs/{job_id}/debug/session',
             path: {
@@ -37,10 +37,10 @@ export class DebugService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static resumeDebugApiJobsJobIdDebugResumePost(
+    public resumeDebugApiJobsJobIdDebugResumePost(
         jobId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/jobs/{job_id}/debug/resume',
             path: {
@@ -58,10 +58,10 @@ export class DebugService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static stepOverApiJobsJobIdDebugStepOverPost(
+    public stepOverApiJobsJobIdDebugStepOverPost(
         jobId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/jobs/{job_id}/debug/step-over',
             path: {
@@ -79,10 +79,10 @@ export class DebugService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static stepIntoApiJobsJobIdDebugStepIntoPost(
+    public stepIntoApiJobsJobIdDebugStepIntoPost(
         jobId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/jobs/{job_id}/debug/step-into',
             path: {
@@ -101,11 +101,11 @@ export class DebugService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static getVariablesApiJobsJobIdDebugVariablesGet(
+    public getVariablesApiJobsJobIdDebugVariablesGet(
         jobId: string,
         routineId?: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/jobs/{job_id}/debug/variables',
             path: {
@@ -128,12 +128,12 @@ export class DebugService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static setVariableApiJobsJobIdDebugVariablesNamePut(
+    public setVariableApiJobsJobIdDebugVariablesNamePut(
         jobId: string,
         name: string,
         requestBody: VariableSetRequest,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'PUT',
             url: '/api/jobs/{job_id}/debug/variables/{name}',
             path: {
@@ -154,10 +154,10 @@ export class DebugService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static getCallStackApiJobsJobIdDebugCallStackGet(
+    public getCallStackApiJobsJobIdDebugCallStackGet(
         jobId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/jobs/{job_id}/debug/call-stack',
             path: {
@@ -193,11 +193,11 @@ export class DebugService {
      * @returns ExpressionEvalResponse Successful Response
      * @throws ApiError
      */
-    public static evaluateExpressionApiJobsJobIdDebugEvaluatePost(
+    public evaluateExpressionApiJobsJobIdDebugEvaluatePost(
         jobId: string,
         requestBody: ExpressionEvalRequest,
     ): CancelablePromise<ExpressionEvalResponse> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/jobs/{job_id}/debug/evaluate',
             path: {

@@ -6,9 +6,9 @@ import type { BreakpointCreateRequest } from '../models/BreakpointCreateRequest'
 import type { BreakpointListResponse } from '../models/BreakpointListResponse';
 import type { BreakpointResponse } from '../models/BreakpointResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
+import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class BreakpointsService {
+    constructor(public readonly httpRequest: BaseHttpRequest) {}
     /**
      * Create Breakpoint
      * Create a breakpoint for a job.
@@ -17,11 +17,11 @@ export class BreakpointsService {
      * @returns BreakpointResponse Successful Response
      * @throws ApiError
      */
-    public static createBreakpointApiJobsJobIdBreakpointsPost(
+    public createBreakpointApiJobsJobIdBreakpointsPost(
         jobId: string,
         requestBody: BreakpointCreateRequest,
     ): CancelablePromise<BreakpointResponse> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/jobs/{job_id}/breakpoints',
             path: {
@@ -41,10 +41,10 @@ export class BreakpointsService {
      * @returns BreakpointListResponse Successful Response
      * @throws ApiError
      */
-    public static listBreakpointsApiJobsJobIdBreakpointsGet(
+    public listBreakpointsApiJobsJobIdBreakpointsGet(
         jobId: string,
     ): CancelablePromise<BreakpointListResponse> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/jobs/{job_id}/breakpoints',
             path: {
@@ -63,11 +63,11 @@ export class BreakpointsService {
      * @returns void
      * @throws ApiError
      */
-    public static deleteBreakpointApiJobsJobIdBreakpointsBreakpointIdDelete(
+    public deleteBreakpointApiJobsJobIdBreakpointsBreakpointIdDelete(
         jobId: string,
         breakpointId: string,
     ): CancelablePromise<void> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'DELETE',
             url: '/api/jobs/{job_id}/breakpoints/{breakpoint_id}',
             path: {
@@ -88,12 +88,12 @@ export class BreakpointsService {
      * @returns BreakpointResponse Successful Response
      * @throws ApiError
      */
-    public static updateBreakpointApiJobsJobIdBreakpointsBreakpointIdPut(
+    public updateBreakpointApiJobsJobIdBreakpointsBreakpointIdPut(
         jobId: string,
         breakpointId: string,
         enabled: boolean,
     ): CancelablePromise<BreakpointResponse> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'PUT',
             url: '/api/jobs/{job_id}/breakpoints/{breakpoint_id}',
             path: {

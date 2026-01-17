@@ -6,19 +6,19 @@ import type { ConnectionInfo } from '../models/ConnectionInfo';
 import type { FlowCreateRequest } from '../models/FlowCreateRequest';
 import type { FlowListResponse } from '../models/FlowListResponse';
 import type { FlowResponse } from '../models/FlowResponse';
-import type { RoutineInfo } from '../models/RoutineInfo';
+import type { routilux__api__models__flow__RoutineInfo } from '../models/routilux__api__models__flow__RoutineInfo';
 import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
+import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class FlowsService {
+    constructor(public readonly httpRequest: BaseHttpRequest) {}
     /**
      * List Flows
      * List all flows.
      * @returns FlowListResponse Successful Response
      * @throws ApiError
      */
-    public static listFlowsApiFlowsGet(): CancelablePromise<FlowListResponse> {
-        return __request(OpenAPI, {
+    public listFlowsApiFlowsGet(): CancelablePromise<FlowListResponse> {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/flows',
         });
@@ -30,10 +30,10 @@ export class FlowsService {
      * @returns FlowResponse Successful Response
      * @throws ApiError
      */
-    public static createFlowApiFlowsPost(
+    public createFlowApiFlowsPost(
         requestBody: FlowCreateRequest,
     ): CancelablePromise<FlowResponse> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/flows',
             body: requestBody,
@@ -50,10 +50,10 @@ export class FlowsService {
      * @returns FlowResponse Successful Response
      * @throws ApiError
      */
-    public static getFlowApiFlowsFlowIdGet(
+    public getFlowApiFlowsFlowIdGet(
         flowId: string,
     ): CancelablePromise<FlowResponse> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/flows/{flow_id}',
             path: {
@@ -71,10 +71,10 @@ export class FlowsService {
      * @returns void
      * @throws ApiError
      */
-    public static deleteFlowApiFlowsFlowIdDelete(
+    public deleteFlowApiFlowsFlowIdDelete(
         flowId: string,
     ): CancelablePromise<void> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'DELETE',
             url: '/api/flows/{flow_id}',
             path: {
@@ -93,11 +93,11 @@ export class FlowsService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static exportFlowDslApiFlowsFlowIdDslGet(
+    public exportFlowDslApiFlowsFlowIdDslGet(
         flowId: string,
         format: string = 'yaml',
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/flows/{flow_id}/dsl',
             path: {
@@ -118,10 +118,10 @@ export class FlowsService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static validateFlowApiFlowsFlowIdValidatePost(
+    public validateFlowApiFlowsFlowIdValidatePost(
         flowId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/flows/{flow_id}/validate',
             path: {
@@ -136,13 +136,13 @@ export class FlowsService {
      * List Flow Routines
      * List all routines in a flow.
      * @param flowId
-     * @returns RoutineInfo Successful Response
+     * @returns routilux__api__models__flow__RoutineInfo Successful Response
      * @throws ApiError
      */
-    public static listFlowRoutinesApiFlowsFlowIdRoutinesGet(
+    public listFlowRoutinesApiFlowsFlowIdRoutinesGet(
         flowId: string,
-    ): CancelablePromise<Record<string, RoutineInfo>> {
-        return __request(OpenAPI, {
+    ): CancelablePromise<Record<string, routilux__api__models__flow__RoutineInfo>> {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/flows/{flow_id}/routines',
             path: {
@@ -163,13 +163,13 @@ export class FlowsService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static addRoutineToFlowApiFlowsFlowIdRoutinesPost(
+    public addRoutineToFlowApiFlowsFlowIdRoutinesPost(
         flowId: string,
         routineId: string,
         classPath: string,
         requestBody?: (Record<string, any> | null),
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/flows/{flow_id}/routines',
             path: {
@@ -193,10 +193,10 @@ export class FlowsService {
      * @returns ConnectionInfo Successful Response
      * @throws ApiError
      */
-    public static listFlowConnectionsApiFlowsFlowIdConnectionsGet(
+    public listFlowConnectionsApiFlowsFlowIdConnectionsGet(
         flowId: string,
     ): CancelablePromise<Array<ConnectionInfo>> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'GET',
             url: '/api/flows/{flow_id}/connections',
             path: {
@@ -219,7 +219,7 @@ export class FlowsService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static addConnectionToFlowApiFlowsFlowIdConnectionsPost(
+    public addConnectionToFlowApiFlowsFlowIdConnectionsPost(
         flowId: string,
         sourceRoutine: string,
         sourceEvent: string,
@@ -227,7 +227,7 @@ export class FlowsService {
         targetSlot: string,
         requestBody?: (Record<string, string> | null),
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'POST',
             url: '/api/flows/{flow_id}/connections',
             path: {
@@ -254,11 +254,11 @@ export class FlowsService {
      * @returns void
      * @throws ApiError
      */
-    public static removeRoutineFromFlowApiFlowsFlowIdRoutinesRoutineIdDelete(
+    public removeRoutineFromFlowApiFlowsFlowIdRoutinesRoutineIdDelete(
         flowId: string,
         routineId: string,
     ): CancelablePromise<void> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'DELETE',
             url: '/api/flows/{flow_id}/routines/{routine_id}',
             path: {
@@ -278,11 +278,11 @@ export class FlowsService {
      * @returns void
      * @throws ApiError
      */
-    public static removeConnectionFromFlowApiFlowsFlowIdConnectionsConnectionIndexDelete(
+    public removeConnectionFromFlowApiFlowsFlowIdConnectionsConnectionIndexDelete(
         flowId: string,
         connectionIndex: number,
     ): CancelablePromise<void> {
-        return __request(OpenAPI, {
+        return this.httpRequest.request({
             method: 'DELETE',
             url: '/api/flows/{flow_id}/connections/{connection_index}',
             path: {
