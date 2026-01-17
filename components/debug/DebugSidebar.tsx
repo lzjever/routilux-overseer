@@ -14,6 +14,8 @@ import { BreakpointControls } from "./BreakpointControls";
 import { VariableInspector } from "./VariableInspector";
 import { ExpressionEvaluator } from "./ExpressionEvaluator";
 import { CallStackViewer } from "./CallStackViewer";
+import { QueueStatusPanel } from "@/components/job/QueueStatusPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface DebugSidebarProps {
   jobId: string;
@@ -99,60 +101,71 @@ export function DebugSidebar({
         {/* Content */}
         <ScrollArea className={cn("flex-1", isExpanded ? "p-4" : "px-2 py-4")}>
           {isExpanded ? (
-            <div className="space-y-4">
-              {/* Debug Session Monitor */}
-              <DebugSessionMonitor jobId={jobId} serverUrl={serverUrl} />
+            <Tabs defaultValue="debug" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="debug">Debug</TabsTrigger>
+                <TabsTrigger value="queues">Queues</TabsTrigger>
+              </TabsList>
 
-              <Separator />
+              <TabsContent value="debug" className="space-y-4 mt-0">
+                {/* Debug Session Monitor */}
+                <DebugSessionMonitor jobId={jobId} serverUrl={serverUrl} />
 
-              {/* Step Execution Controls */}
-              <StepExecutionControls
-                jobId={jobId}
-                serverUrl={serverUrl}
-                status={jobStatus}
-                onStep={onStep}
-                embedded
-              />
+                <Separator />
 
-              <Separator />
+                {/* Step Execution Controls */}
+                <StepExecutionControls
+                  jobId={jobId}
+                  serverUrl={serverUrl}
+                  status={jobStatus}
+                  onStep={onStep}
+                  embedded
+                />
 
-              {/* Breakpoint Controls */}
-              <BreakpointControls
-                jobId={jobId}
-                serverUrl={serverUrl}
-                availableRoutines={availableRoutines}
-                embedded
-              />
+                <Separator />
 
-              <Separator />
+                {/* Breakpoint Controls */}
+                <BreakpointControls
+                  jobId={jobId}
+                  serverUrl={serverUrl}
+                  availableRoutines={availableRoutines}
+                  embedded
+                />
 
-              {/* Variable Inspector */}
-              <VariableInspector
-                jobId={jobId}
-                serverUrl={serverUrl}
-                availableRoutines={availableRoutines}
-                embedded
-              />
+                <Separator />
 
-              <Separator />
+                {/* Variable Inspector */}
+                <VariableInspector
+                  jobId={jobId}
+                  serverUrl={serverUrl}
+                  availableRoutines={availableRoutines}
+                  embedded
+                />
 
-              {/* Expression Evaluator */}
-              <ExpressionEvaluator
-                jobId={jobId}
-                serverUrl={serverUrl}
-                jobStatus={jobStatus}
-                availableRoutines={availableRoutines}
-                embedded
-              />
+                <Separator />
 
-              <Separator />
+                {/* Expression Evaluator */}
+                <ExpressionEvaluator
+                  jobId={jobId}
+                  serverUrl={serverUrl}
+                  jobStatus={jobStatus}
+                  availableRoutines={availableRoutines}
+                  embedded
+                />
 
-              {/* Call Stack Viewer */}
-              <div>
-                <div className="text-sm font-semibold mb-2">Call Stack</div>
-                <CallStackViewer jobId={jobId} serverUrl={serverUrl} embedded />
-              </div>
-            </div>
+                <Separator />
+
+                {/* Call Stack Viewer */}
+                <div>
+                  <div className="text-sm font-semibold mb-2">Call Stack</div>
+                  <CallStackViewer jobId={jobId} serverUrl={serverUrl} embedded />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="queues" className="mt-0">
+                <QueueStatusPanel jobId={jobId} serverUrl={serverUrl} embedded />
+              </TabsContent>
+            </Tabs>
           ) : (
             <div className="flex flex-col items-center gap-4 py-4">
               <button

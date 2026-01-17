@@ -6,14 +6,46 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Trash2 } from "lucide-react";
 import type { FlowResponse } from "@/lib/types/api";
 
 interface RoutineDetailsProps {
   routines: Record<string, { routine_id: string; class_name: string; slots: string[]; events: string[]; config: Record<string, any> }>;
+  flowId?: string;
+  serverUrl?: string;
+  onRoutineRemoved?: () => void;
 }
 
-export function RoutineDetails({ routines }: RoutineDetailsProps) {
+export function RoutineDetails({
+  routines,
+  flowId,
+  serverUrl,
+  onRoutineRemoved,
+}: RoutineDetailsProps) {
   const [selectedRoutine, setSelectedRoutine] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
+
+  const handleRemove = async (routineId: string) => {
+    if (!flowId || !serverUrl) return;
+    if (!confirm(`Are you sure you want to remove routine "${routineId}"?`)) return;
+
+    setRemoving(routineId);
+    try {
+      const { createAPI } = await import("@/lib/api");
+      const api = createAPI(serverUrl);
+      await api.flows.removeRoutine(flowId, routineId);
+      if (selectedRoutine === routineId) {
+        setSelectedRoutine(null);
+      }
+      onRoutineRemoved?.();
+    } catch (error) {
+      alert(
+        `Failed to remove routine: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+    } finally {
+      setRemoving(null);
+    }
+  };
 
   return (
     <Card>
@@ -26,14 +58,26 @@ export function RoutineDetails({ routines }: RoutineDetailsProps) {
           <ScrollArea className="h-96 border rounded">
             <div className="p-2 space-y-1">
               {Object.entries(routines).map(([id]) => (
-                <Button
-                  key={id}
-                  variant={selectedRoutine === id ? "default" : "ghost"}
-                  className="w-full justify-start font-mono text-sm"
-                  onClick={() => setSelectedRoutine(id)}
-                >
-                  {id}
-                </Button>
+                <div key={id} className="flex items-center gap-1">
+                  <Button
+                    variant={selectedRoutine === id ? "default" : "ghost"}
+                    className="flex-1 justify-start font-mono text-sm"
+                    onClick={() => setSelectedRoutine(id)}
+                  >
+                    {id}
+                  </Button>
+                  {flowId && serverUrl && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemove(id)}
+                      disabled={removing === id}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
               ))}
             </div>
           </ScrollArea>

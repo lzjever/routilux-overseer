@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useJobStore } from "@/lib/stores/jobStore";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
+import { useDiscoveryStore } from "@/lib/stores/discoveryStore";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +14,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Loader2, Play, Wifi, WifiOff, RefreshCw, Plug, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Play, Wifi, WifiOff, RefreshCw, Plug, Trash2, Download, CheckSquare, X } from "lucide-react";
+import { ActiveFiltersBar } from "@/components/job/ActiveFiltersBar";
+import { QuickFilters } from "@/components/job/QuickFilters";
+import { BulkActionsToolbar } from "@/components/common/BulkActionsToolbar";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { createAPI } from "@/lib/api";
@@ -23,6 +29,13 @@ export default function JobsPage() {
   const { connected, serverUrl } = useConnectionStore();
   const { jobs, loading, loadJobs, wsConnected, connectWebSocket, disconnectWebSocket } = useJobStore();
   const { flows } = useFlowStore();
+  const {
+    discoveredJobs,
+    syncingJobs,
+    lastJobSync,
+    discoverJobs: discoverJobsAction,
+    syncJobs: syncJobsAction,
+  } = useDiscoveryStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filterFlowId, setFilterFlowId] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -30,6 +43,9 @@ export default function JobsPage() {
   const [cleanupAge, setCleanupAge] = useState(24);
   const [cleanupStatus, setCleanupStatus] = useState<string>("completed");
   const [isCleaning, setIsCleaning] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
+  const [bulkCancelling, setBulkCancelling] = useState(false);
 
   useEffect(() => {
     if (serverUrl) {
@@ -40,6 +56,11 @@ export default function JobsPage() {
       if (connected) {
         connectWebSocket(serverUrl);
       }
+
+      // Discover jobs on mount
+      if (connected) {
+        discoverJobsAction(serverUrl);
+      }
     }
 
     // Cleanup on unmount
@@ -48,7 +69,7 @@ export default function JobsPage() {
         disconnectWebSocket();
       }
     };
-  }, [serverUrl, connected, filterFlowId, filterStatus]);
+  }, [serverUrl, connected, filterFlowId, filterStatus, discoverJobsAction]);
 
   const loadJobsWithFilters = async () => {
     if (!serverUrl) return;
@@ -76,8 +97,26 @@ export default function JobsPage() {
     setIsRefreshing(true);
     try {
       await loadJobsWithFilters();
+      // Also refresh discovery
+      await discoverJobsAction(serverUrl);
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const handleSync = async () => {
+    if (!serverUrl || syncing) return;
+    setSyncing(true);
+    try {
+      const count = await syncJobsAction(serverUrl);
+      // Reload jobs after sync
+      await loadJobsWithFilters();
+      // Show success message
+      alert(`Successfully synced ${count} job${count !== 1 ? "s" : ""} from registry`);
+    } catch (error) {
+      alert(`Failed to sync jobs: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -102,18 +141,57 @@ export default function JobsPage() {
     }
   };
 
-  const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
-    switch (status) {
-      case "running":
-        return "default";
-      case "completed":
-        return "secondary";
-      case "failed":
-        return "destructive";
-      default:
-        return "outline";
+  const handleBulkCancel = async () => {
+    if (!serverUrl || bulkCancelling || selectedJobs.size === 0) return;
+    if (!confirm(`Are you sure you want to cancel ${selectedJobs.size} job${selectedJobs.size !== 1 ? "s" : ""}?`)) {
+      return;
+    }
+    setBulkCancelling(true);
+    try {
+      const api = createAPI(serverUrl);
+      await Promise.all(
+        Array.from(selectedJobs).map((jobId) => api.jobs.cancel(jobId))
+      );
+      setSelectedJobs(new Set());
+      await loadJobsWithFilters();
+      alert(`Successfully cancelled ${selectedJobs.size} job${selectedJobs.size !== 1 ? "s" : ""}`);
+    } catch (error) {
+      alert(`Failed to cancel jobs: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setBulkCancelling(false);
     }
   };
+
+  const toggleJobSelection = (jobId: string) => {
+    setSelectedJobs((prev) => {
+      const next = new Set(prev);
+      if (next.has(jobId)) {
+        next.delete(jobId);
+      } else {
+        next.add(jobId);
+      }
+      return next;
+    });
+  };
+
+  const activeFilters = [
+    filterFlowId !== "all" && {
+      key: "flow",
+      label: "Flow",
+      value: filterFlowId,
+    },
+    filterStatus !== "all" && {
+      key: "status",
+      label: "Status",
+      value: filterStatus,
+    },
+  ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
+
+  const filteredJobs = Array.from(jobs.values()).filter((job) => {
+    if (filterFlowId !== "all" && job.flow_id !== filterFlowId) return false;
+    if (filterStatus !== "all" && job.status !== filterStatus) return false;
+    return true;
+  });
 
   if (!connected) {
     return (
@@ -178,6 +256,31 @@ export default function JobsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {discoveredJobs.length > 0 && (
+            <Badge variant="outline" className="gap-1">
+              <Download className="h-3 w-3" />
+              {discoveredJobs.length} available
+            </Badge>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSync}
+            disabled={syncing || syncingJobs || discoveredJobs.length === 0}
+            className="gap-2"
+          >
+            {syncing || syncingJobs ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Syncing...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4" />
+                Sync from Registry
+              </>
+            )}
+          </Button>
           <Dialog open={cleanupDialogOpen} onOpenChange={setCleanupDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
@@ -246,7 +349,65 @@ export default function JobsPage() {
             Refresh
           </Button>
         </div>
+        {lastJobSync && (
+          <div className="text-xs text-muted-foreground mt-2">
+            Last synced: {lastJobSync.toLocaleString()}
+          </div>
+        )}
       </div>
+
+      {/* Quick Filters */}
+      <div className="mb-4">
+        <QuickFilters
+          activeFilter={filterStatus}
+          onFilterChange={setFilterStatus}
+        />
+      </div>
+
+      {/* Active Filters Bar */}
+      {activeFilters.length > 0 && (
+        <ActiveFiltersBar
+          filters={activeFilters}
+          onRemove={(key) => {
+            if (key === "flow") setFilterFlowId("all");
+            if (key === "status") setFilterStatus("all");
+          }}
+          onClearAll={() => {
+            setFilterFlowId("all");
+            setFilterStatus("all");
+          }}
+          className="mb-4"
+        />
+      )}
+
+      {/* Filter Summary */}
+      {filteredJobs.length !== jobs.size && (
+        <div className="mb-4 text-sm text-muted-foreground">
+          Showing {filteredJobs.length} of {jobs.size} jobs
+        </div>
+      )}
+
+      {/* Bulk Actions Toolbar */}
+      {selectedJobs.size > 0 && (
+        <BulkActionsToolbar
+          selectedCount={selectedJobs.size}
+          totalCount={filteredJobs.length}
+          onSelectAll={() => {
+            setSelectedJobs(new Set(filteredJobs.map((j) => j.job_id)));
+          }}
+          onDeselectAll={() => setSelectedJobs(new Set())}
+          actions={[
+            {
+              label: "Cancel",
+              icon: X,
+              onClick: handleBulkCancel,
+              variant: "destructive",
+              disabled: bulkCancelling,
+            },
+          ]}
+          className="mb-4"
+        />
+      )}
 
       {/* Filters */}
       <Card className="mb-6">
@@ -294,43 +455,69 @@ export default function JobsPage() {
         <div className="flex items-center justify-center min-h-[200px]">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-      ) : jobs.size === 0 ? (
+      ) : filteredJobs.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-              <Play className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">No jobs yet</h3>
-            <p className="text-sm text-muted-foreground text-center mb-6 max-w-md">
-              Get started by creating a job from one of your flows.
-            </p>
-            <Link href="/flows">
-              <Button size="lg">
-                <Play className="mr-2 h-4 w-4" />
-                Start a Job
-              </Button>
-            </Link>
-          </CardContent>
+          <EmptyState
+            icon={Play}
+            title={jobs.size === 0 ? "No jobs yet" : "No jobs match filters"}
+            description={
+              jobs.size === 0
+                ? "Get started by creating a job from one of your flows."
+                : "Try adjusting your filters to see more jobs."
+            }
+            action={
+              jobs.size === 0
+                ? {
+                    label: "Start a Job",
+                    href: "/flows",
+                  }
+                : undefined
+            }
+          />
         </Card>
       ) : (
         <div className="grid gap-4">
-          {[...jobs.values()].map((job) => (
+          {filteredJobs.map((job) => (
             <Card
               key={job.job_id}
-              className="group hover:shadow-lg transition-all duration-200 cursor-pointer hover:border-primary/50"
-              onClick={() => router.push(`/jobs/${job.job_id}`)}
+              className={cn(
+                "group hover:shadow-lg transition-all duration-200",
+                selectedJobs.has(job.job_id) && "ring-2 ring-primary"
+              )}
             >
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{job.job_id}</CardTitle>
-                    <CardDescription className="mt-1">
-                      Flow: {job.flow_id}
-                    </CardDescription>
+                  <div className="flex items-center gap-2 flex-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleJobSelection(job.job_id);
+                      }}
+                    >
+                      <CheckSquare
+                        className={cn(
+                          "h-4 w-4",
+                          selectedJobs.has(job.job_id)
+                            ? "text-primary fill-primary"
+                            : "text-muted-foreground"
+                        )}
+                      />
+                    </button>
+                    <div
+                      className="flex-1 cursor-pointer"
+                      onClick={() => router.push(`/jobs/${job.job_id}`)}
+                    >
+                      <CardTitle className="text-lg">{job.job_id}</CardTitle>
+                      <CardDescription className="mt-1">
+                        Flow: {job.flow_id}
+                      </CardDescription>
+                    </div>
                   </div>
-                  <Badge variant={getStatusBadgeVariant(job.status)}>
-                    {job.status}
-                  </Badge>
+                  <StatusBadge
+                    status={job.status}
+                    showSpinner={job.status === "running"}
+                    errorMessage={job.error}
+                  />
                 </div>
               </CardHeader>
               <CardContent>

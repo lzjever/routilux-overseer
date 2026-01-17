@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/layout/Navbar";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { Activity, Zap, ArrowRight, Play, TrendingUp, Clock, Plug, Settings } from "lucide-react";
 
 export default function HomePage() {
@@ -82,8 +85,15 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid gap-4 md:grid-cols-4 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -104,9 +114,15 @@ export default function HomePage() {
 
         {/* Statistics Cards */}
         <div className="grid gap-4 md:grid-cols-4 mb-8 max-w-5xl mx-auto">
-          <Card>
+          <Card
+            className="cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
+            onClick={() => router.push("/flows")}
+          >
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Total Flows</CardTitle>
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                Total Flows
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{flowCount}</div>
@@ -114,9 +130,15 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            className="cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
+            onClick={() => router.push("/jobs")}
+          >
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                Total Jobs
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{jobCount}</div>
@@ -124,9 +146,15 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            className="cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
+            onClick={() => router.push("/jobs?status=running")}
+          >
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Running Jobs</CardTitle>
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Play className="h-4 w-4" />
+                Running Jobs
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-blue-600">{runningJobs}</div>
@@ -138,11 +166,17 @@ export default function HomePage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-2">
               <Button asChild className="w-full" size="sm">
                 <Link href="/flows">
                   <Play className="h-4 w-4 mr-2" />
                   Start Job
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full" size="sm">
+                <Link href="/flows">
+                  <Activity className="h-4 w-4 mr-2" />
+                  Create Flow
                 </Link>
               </Button>
             </CardContent>
@@ -166,9 +200,15 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               {recentJobs.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  No jobs yet. Start a job from the Flows page.
-                </p>
+                <EmptyState
+                  icon={Play}
+                  title="No jobs yet"
+                  description="Start a job from the Flows page to see it here."
+                  action={{
+                    label: "Go to Flows",
+                    href: "/flows",
+                  }}
+                />
               ) : (
                 <div className="space-y-3">
                   {recentJobs.map((job) => (
@@ -179,20 +219,11 @@ export default function HomePage() {
                             <span className="font-mono text-sm font-medium truncate">
                               {job.job_id}
                             </span>
-                            <Badge
-                              variant={
-                                job.status === "running"
-                                  ? "default"
-                                  : job.status === "completed"
-                                  ? "secondary"
-                                  : job.status === "failed"
-                                  ? "destructive"
-                                  : "outline"
-                              }
+                            <StatusBadge
+                              status={job.status}
+                              showSpinner={job.status === "running"}
                               className="text-xs"
-                            >
-                              {job.status}
-                            </Badge>
+                            />
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
                             {job.flow_id}

@@ -3,17 +3,17 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CancelablePromise } from '../core/CancelablePromise';
-import type { BaseHttpRequest } from '../core/BaseHttpRequest';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class DefaultService {
-    constructor(public readonly httpRequest: BaseHttpRequest) {}
     /**
      * Root
      * Root endpoint.
      * @returns any Successful Response
      * @throws ApiError
      */
-    public rootGet(): CancelablePromise<any> {
-        return this.httpRequest.request({
+    public static rootGet(): CancelablePromise<any> {
+        return __request(OpenAPI, {
             method: 'GET',
             url: '/',
         });
@@ -30,8 +30,8 @@ export class DefaultService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public healthApiHealthGet(): CancelablePromise<any> {
-        return this.httpRequest.request({
+    public static healthApiHealthGet(): CancelablePromise<any> {
+        return __request(OpenAPI, {
             method: 'GET',
             url: '/api/health',
         });

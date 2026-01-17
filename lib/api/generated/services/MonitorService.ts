@@ -9,9 +9,9 @@ import type { RoutineExecutionStatus } from '../models/RoutineExecutionStatus';
 import type { RoutineInfo } from '../models/RoutineInfo';
 import type { SlotQueueStatus } from '../models/SlotQueueStatus';
 import type { CancelablePromise } from '../core/CancelablePromise';
-import type { BaseHttpRequest } from '../core/BaseHttpRequest';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class MonitorService {
-    constructor(public readonly httpRequest: BaseHttpRequest) {}
     /**
      * Get Job Metrics
      * Get execution metrics for a job.
@@ -19,10 +19,10 @@ export class MonitorService {
      * @returns ExecutionMetricsResponse Successful Response
      * @throws ApiError
      */
-    public getJobMetricsApiJobsJobIdMetricsGet(
+    public static getJobMetricsApiJobsJobIdMetricsGet(
         jobId: string,
     ): CancelablePromise<ExecutionMetricsResponse> {
-        return this.httpRequest.request({
+        return __request(OpenAPI, {
             method: 'GET',
             url: '/api/jobs/{job_id}/metrics',
             path: {
@@ -41,11 +41,11 @@ export class MonitorService {
      * @returns ExecutionTraceResponse Successful Response
      * @throws ApiError
      */
-    public getJobTraceApiJobsJobIdTraceGet(
+    public static getJobTraceApiJobsJobIdTraceGet(
         jobId: string,
         limit?: (number | null),
     ): CancelablePromise<ExecutionTraceResponse> {
-        return this.httpRequest.request({
+        return __request(OpenAPI, {
             method: 'GET',
             url: '/api/jobs/{job_id}/trace',
             path: {
@@ -66,10 +66,10 @@ export class MonitorService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public getJobLogsApiJobsJobIdLogsGet(
+    public static getJobLogsApiJobsJobIdLogsGet(
         jobId: string,
     ): CancelablePromise<any> {
-        return this.httpRequest.request({
+        return __request(OpenAPI, {
             method: 'GET',
             url: '/api/jobs/{job_id}/logs',
             path: {
@@ -87,10 +87,10 @@ export class MonitorService {
      * @returns any Successful Response
      * @throws ApiError
      */
-    public getFlowMetricsApiFlowsFlowIdMetricsGet(
+    public static getFlowMetricsApiFlowsFlowIdMetricsGet(
         flowId: string,
     ): CancelablePromise<any> {
-        return this.httpRequest.request({
+        return __request(OpenAPI, {
             method: 'GET',
             url: '/api/flows/{flow_id}/metrics',
             path: {
@@ -109,11 +109,11 @@ export class MonitorService {
      * @returns SlotQueueStatus Successful Response
      * @throws ApiError
      */
-    public getRoutineQueueStatusApiJobsJobIdRoutinesRoutineIdQueueStatusGet(
+    public static getRoutineQueueStatusApiJobsJobIdRoutinesRoutineIdQueueStatusGet(
         jobId: string,
         routineId: string,
     ): CancelablePromise<Array<SlotQueueStatus>> {
-        return this.httpRequest.request({
+        return __request(OpenAPI, {
             method: 'GET',
             url: '/api/jobs/{job_id}/routines/{routine_id}/queue-status',
             path: {
@@ -132,10 +132,10 @@ export class MonitorService {
      * @returns SlotQueueStatus Successful Response
      * @throws ApiError
      */
-    public getJobQueuesStatusApiJobsJobIdQueuesStatusGet(
+    public static getJobQueuesStatusApiJobsJobIdQueuesStatusGet(
         jobId: string,
     ): CancelablePromise<Record<string, Array<SlotQueueStatus>>> {
-        return this.httpRequest.request({
+        return __request(OpenAPI, {
             method: 'GET',
             url: '/api/jobs/{job_id}/queues/status',
             path: {
@@ -154,11 +154,11 @@ export class MonitorService {
      * @returns RoutineInfo Successful Response
      * @throws ApiError
      */
-    public getRoutineInfoApiFlowsFlowIdRoutinesRoutineIdInfoGet(
+    public static getRoutineInfoApiFlowsFlowIdRoutinesRoutineIdInfoGet(
         flowId: string,
         routineId: string,
     ): CancelablePromise<RoutineInfo> {
-        return this.httpRequest.request({
+        return __request(OpenAPI, {
             method: 'GET',
             url: '/api/flows/{flow_id}/routines/{routine_id}/info',
             path: {
@@ -177,10 +177,10 @@ export class MonitorService {
      * @returns RoutineExecutionStatus Successful Response
      * @throws ApiError
      */
-    public getRoutinesStatusApiJobsJobIdRoutinesStatusGet(
+    public static getRoutinesStatusApiJobsJobIdRoutinesStatusGet(
         jobId: string,
     ): CancelablePromise<Record<string, RoutineExecutionStatus>> {
-        return this.httpRequest.request({
+        return __request(OpenAPI, {
             method: 'GET',
             url: '/api/jobs/{job_id}/routines/status',
             path: {
@@ -198,10 +198,10 @@ export class MonitorService {
      * @returns JobMonitoringData Successful Response
      * @throws ApiError
      */
-    public getJobMonitoringDataApiJobsJobIdMonitoringGet(
+    public static getJobMonitoringDataApiJobsJobIdMonitoringGet(
         jobId: string,
     ): CancelablePromise<JobMonitoringData> {
-        return this.httpRequest.request({
+        return __request(OpenAPI, {
             method: 'GET',
             url: '/api/jobs/{job_id}/monitoring',
             path: {

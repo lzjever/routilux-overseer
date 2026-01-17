@@ -1,25 +1,49 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { JobsAPI } from "../jobs";
-import { APIClient } from "../client";
 import { mockJobState } from "@/test/test-utils";
+import { JobsService } from "../generated/services/JobsService";
+import { MonitorService } from "../generated/services/MonitorService";
 
-// Mock fetch globally
-global.fetch = vi.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve({}),
-    text: () => Promise.resolve("{}"),
-  } as Response)
-) as any;
+// Mock the generated services
+vi.mock("../generated/services/JobsService", () => ({
+  JobsService: {
+    listJobsApiJobsGet: vi.fn(),
+    getJobApiJobsJobIdGet: vi.fn(),
+    startJobApiJobsPost: vi.fn(),
+    pauseJobApiJobsJobIdPausePost: vi.fn(),
+    resumeJobApiJobsJobIdResumePost: vi.fn(),
+    cancelJobApiJobsJobIdCancelPost: vi.fn(),
+    getJobStateApiJobsJobIdStateGet: vi.fn(),
+    cleanupJobsApiJobsCleanupPost: vi.fn(),
+  },
+}));
 
-describe("JobsAPI", () => {
-  let apiClient: APIClient;
-  let jobsAPI: JobsAPI;
+vi.mock("../generated/services/MonitorService", () => ({
+  MonitorService: {
+    getJobMetricsApiJobsJobIdMetricsGet: vi.fn(),
+    getJobTraceApiJobsJobIdTraceGet: vi.fn(),
+    getJobLogsApiJobsJobIdLogsGet: vi.fn(),
+  },
+}));
 
-  beforeEach(() => {
-    apiClient = new APIClient("http://localhost:20555");
-    jobsAPI = new JobsAPI(apiClient);
+vi.mock("../generated/RoutiluxAPI", () => ({
+  RoutiluxAPI: vi.fn().mockImplementation(() => ({})),
+}));
+
+vi.mock("../generated/core/OpenAPI", () => ({
+  OpenAPI: {
+    BASE: "",
+    HEADERS: undefined,
+  },
+}));
+
+describe("Jobs API", () => {
+  let api: any;
+
+  beforeEach(async () => {
     vi.clearAllMocks();
+    const { createAPI, OpenAPI } = await import("../index");
+    OpenAPI.BASE = "http://localhost:20555";
+    api = createAPI("http://localhost:20555");
   });
 
   describe("list", () => {
@@ -29,41 +53,35 @@ describe("JobsAPI", () => {
         { job_id: "job-2", flow_id: "flow-1", status: "completed" },
       ];
 
-      global.fetch = vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ jobs: mockJobs }),
-        } as Response)
-      );
+      vi.mocked(JobsService.listJobsApiJobsGet).mockResolvedValue({
+        jobs: mockJobs,
+      } as any);
 
-      const result = await jobsAPI.list();
+      const result = await api.jobs.list();
 
-      expect(result).toEqual({ jobs: mockJobs });
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/jobs"),
-        expect.any(Object)
+      expect(result.jobs).toEqual(mockJobs);
+      expect(JobsService.listJobsApiJobsGet).toHaveBeenCalledWith(
+        null,
+        null,
+        100,
+        undefined
       );
     });
 
     it("should list jobs with query parameters", async () => {
       const mockJobs = [{ job_id: "job-1", flow_id: "flow-1", status: "running" }];
 
-      global.fetch = vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ jobs: mockJobs }),
-        } as Response)
-      );
+      vi.mocked(JobsService.listJobsApiJobsGet).mockResolvedValue({
+        jobs: mockJobs,
+      } as any);
 
-      await jobsAPI.list({ flow_id: "flow-1", status: "running" });
+      await api.jobs.list({ flowId: "flow-1", status: "running" });
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("flow_id=flow-1"),
-        expect.any(Object)
-      );
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("status=running"),
-        expect.any(Object)
+      expect(JobsService.listJobsApiJobsGet).toHaveBeenCalledWith(
+        "flow-1",
+        "running",
+        100,
+        undefined
       );
     });
   });
@@ -72,45 +90,26 @@ describe("JobsAPI", () => {
     it("should get a specific job", async () => {
       const mockJob = { job_id: "job-1", flow_id: "flow-1", status: "running" };
 
-      global.fetch = vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockJob),
-        } as Response)
-      );
+      vi.mocked(JobsService.getJobApiJobsJobIdGet).mockResolvedValue(mockJob as any);
 
-      const result = await jobsAPI.get("job-1");
+      const result = await api.jobs.get("job-1");
 
       expect(result).toEqual(mockJob);
-      expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:20555/api/jobs/job-1",
-        expect.any(Object)
-      );
+      expect(JobsService.getJobApiJobsJobIdGet).toHaveBeenCalledWith("job-1");
     });
   });
 
   describe("start", () => {
     it("should start a job", async () => {
       const mockJob = { job_id: "job-1", flow_id: "flow-1", status: "running" };
-      const request = { flow_id: "flow-1" };
+      const request = { flow_id: "flow-1", entry_routine_id: "routine-1", entry_params: {} };
 
-      global.fetch = vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockJob),
-        } as Response)
-      );
+      vi.mocked(JobsService.startJobApiJobsPost).mockResolvedValue(mockJob as any);
 
-      const result = await jobsAPI.start(request);
+      const result = await api.jobs.start(request);
 
       expect(result).toEqual(mockJob);
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/jobs"),
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify(request),
-        })
-      );
+      expect(JobsService.startJobApiJobsPost).toHaveBeenCalledWith(request);
     });
   });
 
@@ -118,22 +117,12 @@ describe("JobsAPI", () => {
     it("should pause a job", async () => {
       const mockResponse = { status: "paused" };
 
-      global.fetch = vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockResponse),
-        } as Response)
-      );
+      vi.mocked(JobsService.pauseJobApiJobsJobIdPausePost).mockResolvedValue(mockResponse as any);
 
-      const result = await jobsAPI.pause("job-1");
+      const result = await api.jobs.pause("job-1");
 
       expect(result).toEqual(mockResponse);
-      expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:20555/api/jobs/job-1/pause",
-        expect.objectContaining({
-          method: "POST",
-        })
-      );
+      expect(JobsService.pauseJobApiJobsJobIdPausePost).toHaveBeenCalledWith("job-1");
     });
   });
 
@@ -141,22 +130,12 @@ describe("JobsAPI", () => {
     it("should resume a paused job", async () => {
       const mockResponse = { status: "running" };
 
-      global.fetch = vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockResponse),
-        } as Response)
-      );
+      vi.mocked(JobsService.resumeJobApiJobsJobIdResumePost).mockResolvedValue(mockResponse as any);
 
-      const result = await jobsAPI.resume("job-1");
+      const result = await api.jobs.resume("job-1");
 
       expect(result).toEqual(mockResponse);
-      expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:20555/api/jobs/job-1/resume",
-        expect.objectContaining({
-          method: "POST",
-        })
-      );
+      expect(JobsService.resumeJobApiJobsJobIdResumePost).toHaveBeenCalledWith("job-1");
     });
   });
 
@@ -164,41 +143,23 @@ describe("JobsAPI", () => {
     it("should cancel a job", async () => {
       const mockResponse = { status: "cancelled" };
 
-      global.fetch = vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockResponse),
-        } as Response)
-      );
+      vi.mocked(JobsService.cancelJobApiJobsJobIdCancelPost).mockResolvedValue(mockResponse as any);
 
-      const result = await jobsAPI.cancel("job-1");
+      const result = await api.jobs.cancel("job-1");
 
       expect(result).toEqual(mockResponse);
-      expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:20555/api/jobs/job-1/cancel",
-        expect.objectContaining({
-          method: "POST",
-        })
-      );
+      expect(JobsService.cancelJobApiJobsJobIdCancelPost).toHaveBeenCalledWith("job-1");
     });
   });
 
   describe("getState", () => {
     it("should get job state", async () => {
-      global.fetch = vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockJobState),
-        } as Response)
-      );
+      vi.mocked(JobsService.getJobStateApiJobsJobIdStateGet).mockResolvedValue(mockJobState as any);
 
-      const result = await jobsAPI.getState("job-1");
+      const result = await api.jobs.getState("job-1");
 
       expect(result).toEqual(mockJobState);
-      expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:20555/api/jobs/job-1/state",
-        expect.any(Object)
-      );
+      expect(JobsService.getJobStateApiJobsJobIdStateGet).toHaveBeenCalledWith("job-1");
     });
   });
 
@@ -217,20 +178,12 @@ describe("JobsAPI", () => {
         errors: [],
       };
 
-      global.fetch = vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockMetrics),
-        } as Response)
-      );
+      vi.mocked(MonitorService.getJobMetricsApiJobsJobIdMetricsGet).mockResolvedValue(mockMetrics as any);
 
-      const result = await jobsAPI.getMetrics("job-1");
+      const result = await api.jobs.getMetrics("job-1");
 
       expect(result).toEqual(mockMetrics);
-      expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:20555/api/jobs/job-1/metrics",
-        expect.any(Object)
-      );
+      expect(MonitorService.getJobMetricsApiJobsJobIdMetricsGet).toHaveBeenCalledWith("job-1");
     });
   });
 
@@ -241,20 +194,12 @@ describe("JobsAPI", () => {
         total: 0,
       };
 
-      global.fetch = vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockTrace),
-        } as Response)
-      );
+      vi.mocked(MonitorService.getJobTraceApiJobsJobIdTraceGet).mockResolvedValue(mockTrace as any);
 
-      const result = await jobsAPI.getTrace("job-1");
+      const result = await api.jobs.getTrace("job-1");
 
       expect(result).toEqual(mockTrace);
-      expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:20555/api/jobs/job-1/trace",
-        expect.any(Object)
-      );
+      expect(MonitorService.getJobTraceApiJobsJobIdTraceGet).toHaveBeenCalledWith("job-1", null);
     });
 
     it("should get job trace with limit", async () => {
@@ -263,19 +208,11 @@ describe("JobsAPI", () => {
         total: 0,
       };
 
-      global.fetch = vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockTrace),
-        } as Response)
-      );
+      vi.mocked(MonitorService.getJobTraceApiJobsJobIdTraceGet).mockResolvedValue(mockTrace as any);
 
-      await jobsAPI.getTrace("job-1", 100);
+      await api.jobs.getTrace("job-1", 100);
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:20555/api/jobs/job-1/trace?limit=100",
-        expect.any(Object)
-      );
+      expect(MonitorService.getJobTraceApiJobsJobIdTraceGet).toHaveBeenCalledWith("job-1", 100);
     });
   });
 
@@ -287,20 +224,25 @@ describe("JobsAPI", () => {
         total: 0,
       };
 
-      global.fetch = vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(mockLogs),
-        } as Response)
-      );
+      vi.mocked(MonitorService.getJobLogsApiJobsJobIdLogsGet).mockResolvedValue(mockLogs as any);
 
-      const result = await jobsAPI.getLogs("job-1");
+      const result = await api.jobs.getLogs("job-1");
 
       expect(result).toEqual(mockLogs);
-      expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:20555/api/jobs/job-1/logs",
-        expect.any(Object)
-      );
+      expect(MonitorService.getJobLogsApiJobsJobIdLogsGet).toHaveBeenCalledWith("job-1");
+    });
+  });
+
+  describe("cleanup", () => {
+    it("should cleanup jobs", async () => {
+      const mockResponse = { removed: 5 };
+
+      vi.mocked(JobsService.cleanupJobsApiJobsCleanupPost).mockResolvedValue(mockResponse as any);
+
+      const result = await api.jobs.cleanup(24, ["completed"]);
+
+      expect(result).toEqual(mockResponse);
+      expect(JobsService.cleanupJobsApiJobsCleanupPost).toHaveBeenCalledWith(24, ["completed"]);
     });
   });
 });

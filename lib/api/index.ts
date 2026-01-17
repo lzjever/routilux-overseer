@@ -1,5 +1,15 @@
 import { RoutiluxAPI, OpenAPI } from "./generated";
-import type { JobMonitoringData, RoutineMonitoringData, SlotQueueStatus, RoutineInfo, RoutineExecutionStatus } from "./generated";
+
+// Re-export OpenAPI for testing
+export { OpenAPI };
+import type { JobMonitoringData, RoutineMonitoringData, SlotQueueStatus, RoutineInfo, RoutineExecutionStatus, FlowCreateRequest, JobStartRequest, BreakpointCreateRequest, ExpressionEvalRequest, VariableSetRequest } from "./generated";
+import { FlowsService } from "./generated/services/FlowsService";
+import { JobsService } from "./generated/services/JobsService";
+import { MonitorService } from "./generated/services/MonitorService";
+import { DebugService } from "./generated/services/DebugService";
+import { BreakpointsService } from "./generated/services/BreakpointsService";
+import { DiscoveryService } from "./generated/services/DiscoveryService";
+import { DefaultService } from "./generated/services/DefaultService";
 
 /**
  * Create and configure a Routilux API client
@@ -12,7 +22,7 @@ export function createAPI(baseURL: string, apiKey?: string) {
       "X-API-Key": apiKey,
     };
   } else {
-    OpenAPI. HEADERS = undefined;
+    OpenAPI.HEADERS = undefined;
   }
 
   // Create the main API instance
@@ -26,60 +36,67 @@ export function createAPI(baseURL: string, apiKey?: string) {
     // Flows API (backward compatible)
     flows: {
       listFlows: async () => {
-        return await api.flows.listFlowsApiFlowsGet();
+        return await FlowsService.listFlowsApiFlowsGet();
       },
       getFlow: async (flowId: string) => {
-        return await api.flows.getFlowApiFlowsFlowIdGet(flowId);
+        return await FlowsService.getFlowApiFlowsFlowIdGet(flowId);
       },
-      createFlow: async (request: any) => {
-        return await api.flows.createFlowApiFlowsPost(request);
+      createFlow: async (request: FlowCreateRequest) => {
+        return await FlowsService.createFlowApiFlowsPost(request);
       },
       deleteFlow: async (flowId: string) => {
-        await api.flows.deleteFlowApiFlowsFlowIdDelete(flowId);
+        await FlowsService.deleteFlowApiFlowsFlowIdDelete(flowId);
       },
       // Get flow metrics
       getFlowMetrics: async (flowId: string) => {
         try {
-          return await api.monitor.getFlowMetricsApiFlowsFlowIdMetricsGet(flowId);
+          return await MonitorService.getFlowMetricsApiFlowsFlowIdMetricsGet(flowId);
         } catch {
-          // Fallback if endpoint doesn't exist
           return null;
         }
       },
       // Export flow DSL
       exportFlowDSL: async (flowId: string, format: string = "yaml") => {
-        return await api.flows.exportFlowDslApiFlowsFlowIdDslGet(flowId, format);
+        return await FlowsService.exportFlowDslApiFlowsFlowIdDslGet(flowId, format);
       },
       // Get flow routines
       getFlowRoutines: async (flowId: string) => {
-        return await api.flows.listFlowRoutinesApiFlowsFlowIdRoutinesGet(flowId);
+        return await FlowsService.listFlowRoutinesApiFlowsFlowIdRoutinesGet(flowId);
       },
       // Get flow connections
       getFlowConnections: async (flowId: string) => {
-        return await api.flows.listFlowConnectionsApiFlowsFlowIdConnectionsGet(flowId);
+        return await FlowsService.listFlowConnectionsApiFlowsFlowIdConnectionsGet(flowId);
       },
       // Validate flow
       validateFlow: async (flowId: string) => {
-        return await api.flows.validateFlowApiFlowsFlowIdValidatePost(flowId);
+        return await FlowsService.validateFlowApiFlowsFlowIdValidatePost(flowId);
       },
       // Get routine info
       getRoutineInfo: async (flowId: string, routineId: string): Promise<RoutineInfo> => {
-        return await api.flows.getRoutineInfoApiFlowsFlowIdRoutinesRoutineIdInfoGet(flowId, routineId);
+        return await MonitorService.getRoutineInfoApiFlowsFlowIdRoutinesRoutineIdInfoGet(flowId, routineId);
+      },
+      // Add routine to flow
+      addRoutine: async (flowId: string, routineId: string, classPath: string, config?: Record<string, any>) => {
+        return await FlowsService.addRoutineToFlowApiFlowsFlowIdRoutinesPost(flowId, routineId, classPath, config || null);
       },
       // Remove routine from flow
       removeRoutine: async (flowId: string, routineId: string) => {
-        await api.flows.removeRoutineFromFlowApiFlowsFlowIdRoutinesRoutineIdDelete(flowId, routineId);
+        await FlowsService.removeRoutineFromFlowApiFlowsFlowIdRoutinesRoutineIdDelete(flowId, routineId);
+      },
+      // Add connection to flow
+      addConnection: async (flowId: string, sourceRoutine: string, sourceEvent: string, targetRoutine: string, targetSlot: string, paramMapping?: Record<string, string>) => {
+        return await FlowsService.addConnectionToFlowApiFlowsFlowIdConnectionsPost(flowId, sourceRoutine, sourceEvent, targetRoutine, targetSlot, paramMapping || null);
       },
       // Remove connection from flow
       removeConnection: async (flowId: string, connectionIndex: number) => {
-        await api.flows.removeConnectionFromFlowApiFlowsFlowIdConnectionsConnectionIndexDelete(flowId, connectionIndex);
+        await FlowsService.removeConnectionFromFlowApiFlowsFlowIdConnectionsConnectionIndexDelete(flowId, connectionIndex);
       },
     },
 
     // Jobs API (backward compatible)
     jobs: {
       list: async (params?: { flowId?: string | null; status?: string | null; limit?: number; offset?: number }) => {
-        return await api.jobs.getJobs(
+        return await JobsService.listJobsApiJobsGet(
           params?.flowId || null,
           params?.status || null,
           params?.limit || 100,
@@ -87,145 +104,146 @@ export function createAPI(baseURL: string, apiKey?: string) {
         );
       },
       get: async (jobId: string) => {
-        return await api.jobs.getJobsJobIdGet(jobId);
+        return await JobsService.getJobApiJobsJobIdGet(jobId);
       },
-      start: async (request: any) => {
-        return await api.jobs.postJobs(request);
+      start: async (request: JobStartRequest) => {
+        return await JobsService.startJobApiJobsPost(request);
       },
       pause: async (jobId: string) => {
-        return await api.jobs.postJobsJobIdPausePost(jobId);
+        return await JobsService.pauseJobApiJobsJobIdPausePost(jobId);
       },
       resume: async (jobId: string) => {
-        return await api.jobs.postJobsJobIdResumePost(jobId);
+        return await JobsService.resumeJobApiJobsJobIdResumePost(jobId);
       },
       cancel: async (jobId: string) => {
-        return await api.jobs.deleteJobsJobIdCancelDelete(jobId);
+        return await JobsService.cancelJobApiJobsJobIdCancelPost(jobId);
       },
       getStatus: async (jobId: string) => {
-        return await api.jobs.getJobsJobIdStatusGet(jobId);
+        return await JobsService.getJobStatusApiJobsJobIdStatusGet(jobId);
       },
       getState: async (jobId: string) => {
-        return await api.jobs.getJobsJobIdStateGet(jobId);
+        return await JobsService.getJobStateApiJobsJobIdStateGet(jobId);
+      },
+      // Cleanup jobs
+      cleanup: async (maxAgeHours: number = 24, statuses?: string[]) => {
+        return await JobsService.cleanupJobsApiJobsCleanupPost(maxAgeHours, statuses || null);
       },
       // Get monitoring data
       getJobMonitoringData: async (jobId: string): Promise<JobMonitoringData> => {
-        return await api.monitor.getJobMonitoringDataApiJobsJobIdMonitoringGet(jobId);
+        return await MonitorService.getJobMonitoringDataApiJobsJobIdMonitoringGet(jobId);
       },
-      // Get routine monitoring data - get full JobMonitoringData then extract routine data
+      // Get routine monitoring data
       getRoutineMonitoringData: async (jobId: string, routineId: string): Promise<RoutineMonitoringData> => {
-        const jobData = await api.monitor.getJobMonitoringDataApiJobsJobIdMonitoringGet(jobId);
-        if (jobData && jobData.routines) {
-          const routineData = jobData.routines[routineId];
-          if (routineData) {
-            return routineData;
-          }
+        const jobData = await MonitorService.getJobMonitoringDataApiJobsJobIdMonitoringGet(jobId);
+        if (jobData && jobData.routines && jobData.routines[routineId]) {
+          return jobData.routines[routineId];
         }
         // Fallback: Get routines status and queue status
-        const status = await api.monitor.getRoutinesStatusApiJobsJobIdRoutinesStatusGet(jobId);
-        const queueStatus = await api.monitor.getRoutineQueueStatusApiJobsJobIdRoutinesRoutineIdQueueStatusGet(jobId, routineId);
+        const status = await MonitorService.getRoutinesStatusApiJobsJobIdRoutinesStatusGet(jobId);
+        const queueStatus = await MonitorService.getRoutineQueueStatusApiJobsJobIdRoutinesRoutineIdQueueStatusGet(jobId, routineId);
         return {
           routine_id: routineId,
-          execution_status: status.routines?.[routineId] || null,
-          queue_status: queueStatus?.[routineId] || [],
-          info: status.routine_info?.[routineId] || null,
-        };
+          execution_status: status[routineId] || null,
+          queue_status: queueStatus || [],
+          info: null,
+        } as RoutineMonitoringData;
       },
       // Get routine queue status
-      getRoutineQueueStatus: async (jobId: string, routineId: string): Promise<SlotQueueStatus> => {
-        return await api.monitor.getRoutineQueueStatusApiJobsJobIdRoutinesRoutineIdQueueStatusGet(jobId, routineId);
+      getRoutineQueueStatus: async (jobId: string, routineId: string): Promise<Array<SlotQueueStatus>> => {
+        return await MonitorService.getRoutineQueueStatusApiJobsJobIdRoutinesRoutineIdQueueStatusGet(jobId, routineId);
+      },
+      // Get all queues status
+      getQueuesStatus: async (jobId: string) => {
+        return await MonitorService.getJobQueuesStatusApiJobsJobIdQueuesStatusGet(jobId);
+      },
+      // Get routines status
+      getRoutinesStatus: async (jobId: string) => {
+        return await MonitorService.getRoutinesStatusApiJobsJobIdRoutinesStatusGet(jobId);
       },
       getMetrics: async (jobId: string) => {
-        return await api.monitor.getJobMetricsApiJobsJobIdMetricsGet(jobId);
+        return await MonitorService.getJobMetricsApiJobsJobIdMetricsGet(jobId);
       },
       getTrace: async (jobId: string, limit?: number) => {
-        return await api.monitor.getJobTraceApiJobsJobIdTraceTraceGet(jobId, limit || null);
+        return await MonitorService.getJobTraceApiJobsJobIdTraceGet(jobId, limit || null);
       },
       getLogs: async (jobId: string) => {
-        return await api.monitor.getJobLogsApiJobsJobIdLogsLogsGet(jobId);
-      },
-      cleanup: async (maxAgeHours: number = 24, statuses?: string[]) => {
-        return await api.jobs.postJobsCleanup(maxAgeHours, statuses || null);
+        return await MonitorService.getJobLogsApiJobsJobIdLogsGet(jobId);
       },
     },
 
     // Debug API (backward compatible)
     debug: {
       getSession: async (jobId: string) => {
-        return await api.debug.getJobsJobIdDebugSessionGet(jobId);
+        return await DebugService.getDebugSessionApiJobsJobIdDebugSessionGet(jobId);
       },
       resume: async (jobId: string) => {
-        return await api.debug.postJobsJobIdDebugResumePost(jobId);
+        return await DebugService.resumeDebugApiJobsJobIdDebugResumePost(jobId);
       },
       stepOver: async (jobId: string) => {
-        return await api.debug.postJobsJobIdDebugStepOverPost(jobId);
+        return await DebugService.stepOverApiJobsJobIdDebugStepOverPost(jobId);
       },
       stepInto: async (jobId: string) => {
-        return await api.debug.postJobsJobIdDebugStepIntoPost(jobId);
+        return await DebugService.stepIntoApiJobsJobIdDebugStepIntoPost(jobId);
       },
       getVariables: async (jobId: string, routineId?: string) => {
-        return await api.debug.getJobsJobIdDebugVariablesVariablesGet(jobId, routineId || null);
+        return await DebugService.getVariablesApiJobsJobIdDebugVariablesGet(jobId, routineId);
       },
       setVariable: async (jobId: string, name: string, value: any) => {
-        return await api.debug.putJobsJobIdDebugVariablesNamePut(name, jobId, { value });
+        const request: VariableSetRequest = { value };
+        return await DebugService.setVariableApiJobsJobIdDebugVariablesNamePut(jobId, name, request);
       },
       getCallStack: async (jobId: string) => {
-        return await api.debug.getJobsJobIdDebugCallStackCallStackGet(jobId);
+        return await DebugService.getCallStackApiJobsJobIdDebugCallStackGet(jobId);
       },
-      evaluateExpression: async (jobId: string, request: any) => {
-        return await api.debug.postJobsJobIdDebugEvaluatePost(jobId, request);
+      evaluateExpression: async (jobId: string, request: ExpressionEvalRequest) => {
+        return await DebugService.evaluateExpressionApiJobsJobIdDebugEvaluatePost(jobId, request);
       },
     },
 
     // Breakpoints API (backward compatible)
     breakpoints: {
       list: async (jobId: string) => {
-        return await api.breakpoints.getJobsJobIdBreakpointsGet(jobId);
+        return await BreakpointsService.listBreakpointsApiJobsJobIdBreakpointsGet(jobId);
       },
-      create: async (jobId: string, request: any) => {
-        return await api.breakpoints.postJobsJobIdBreakpointsPost(jobId, request);
+      create: async (jobId: string, request: BreakpointCreateRequest) => {
+        return await BreakpointsService.createBreakpointApiJobsJobIdBreakpointsPost(jobId, request);
       },
       update: async (jobId: string, breakpointId: string, enabled: boolean) => {
-        return await api.breakpoints.patchJobsJobIdBreakpointsBreakpointIdPatch(jobId, breakpointId, { enabled });
+        return await BreakpointsService.updateBreakpointApiJobsJobIdBreakpointsBreakpointIdPut(jobId, breakpointId, enabled);
       },
       delete: async (jobId: string, breakpointId: string) => {
-        return await api.breakpoints.deleteJobsJobIdBreakpointsBreakpointIdDelete(jobId, breakpointId);
+        await BreakpointsService.deleteBreakpointApiJobsJobIdBreakpointsBreakpointIdDelete(jobId, breakpointId);
       },
     },
 
-    // Monitor API (new!)
+    // Monitor API
     monitor: {
       getJobMonitoringData: async (jobId: string): Promise<JobMonitoringData> => {
-        return await api.monitor.getJobMonitoringDataApiJobsJobIdMonitoringGet(jobId);
+        return await MonitorService.getJobMonitoringDataApiJobsJobIdMonitoringGet(jobId);
       },
-      getRoutineMonitoringData: async (jobId: string, routineId: string): Promise<RoutineMonitoringData> => {
-        const jobData = await api.monitor.getJobMonitoringDataApiJobsJobIdMonitoringGet(jobId);
-        if (jobData && jobData.routines) {
-          const routineData = jobData.routines[routineId];
-          if (routineData) {
-            return routineData;
-          }
-        }
-        // Fallback: Get routines status and queue status manually
-        const status = await api.monitor.getRoutinesStatusApiJobsJobIdRoutinesStatusGet(jobId);
-        const queueStatus = await api.monitor.getRoutineQueueStatusApiJobsJobIdRoutinesRoutineIdQueueStatusGet(jobId, routineId);
-        return {
-          routine_id: routineId,
-          execution_status: status.routines?.[routineId] || null,
-          queue_status: queueStatus?.[routineId] || [],
-          info: status.routine_info?.[routineId] || null,
-        };
+      getJobMetrics: async (jobId: string) => {
+        return await MonitorService.getJobMetricsApiJobsJobIdMetricsGet(jobId);
       },
-      getRoutineQueueStatus: async (jobId: string, routineId: string): Promise<SlotQueueStatus> => {
-        const jobData = await api.monitor.getJobMonitoringDataApiJobsJobIdMonitoringGet(jobId);
-        if (jobData && jobData.routines) {
-          const routineData = jobData.routines[routineId];
-          if (routineData && routineData.queue_status && routineData.queue_status.length > 0) {
-            return routineData.queue_status[0];
-          }
-        }
-        // Fallback: direct query
-        const queueStatus = await api.monitor.getRoutineQueueStatusApiJobsJobIdRoutinesRoutineIdQueueStatusGet(jobId, routineId);
-        return queueStatus || { routine_id: routineId, slots: [] };
+      getJobTrace: async (jobId: string, limit?: number) => {
+        return await MonitorService.getJobTraceApiJobsJobIdTraceGet(jobId, limit || null);
+      },
+      getJobLogs: async (jobId: string) => {
+        return await MonitorService.getJobLogsApiJobsJobIdLogsGet(jobId);
+      },
+      getFlowMetrics: async (flowId: string) => {
+        return await MonitorService.getFlowMetricsApiFlowsFlowIdMetricsGet(flowId);
+      },
+      getRoutineQueueStatus: async (jobId: string, routineId: string): Promise<Array<SlotQueueStatus>> => {
+        return await MonitorService.getRoutineQueueStatusApiJobsJobIdRoutinesRoutineIdQueueStatusGet(jobId, routineId);
+      },
+      getJobQueuesStatus: async (jobId: string) => {
+        return await MonitorService.getJobQueuesStatusApiJobsJobIdQueuesStatusGet(jobId);
+      },
+      getRoutineInfo: async (flowId: string, routineId: string): Promise<RoutineInfo> => {
+        return await MonitorService.getRoutineInfoApiFlowsFlowIdRoutinesRoutineIdInfoGet(flowId, routineId);
+      },
+      getRoutinesStatus: async (jobId: string) => {
+        return await MonitorService.getRoutinesStatusApiJobsJobIdRoutinesStatusGet(jobId);
       },
     },
 
@@ -233,14 +251,28 @@ export function createAPI(baseURL: string, apiKey?: string) {
     discovery: {
       syncFlows: async () => {
         try {
-          return await api.discovery.postDiscoveryFlowsSyncPost();
+          return await DiscoveryService.syncFlowsApiDiscoveryFlowsSyncPost();
+        } catch {
+          return null;
+        }
+      },
+      discoverFlows: async () => {
+        try {
+          return await DiscoveryService.discoverFlowsApiDiscoveryFlowsGet();
         } catch {
           return null;
         }
       },
       syncJobs: async () => {
         try {
-          return await api.discovery.postDiscoveryJobsSyncPost();
+          return await DiscoveryService.syncJobsApiDiscoveryJobsSyncPost();
+        } catch {
+          return null;
+        }
+      },
+      discoverJobs: async () => {
+        try {
+          return await DiscoveryService.discoverJobsApiDiscoveryJobsGet();
         } catch {
           return null;
         }
@@ -250,7 +282,7 @@ export function createAPI(baseURL: string, apiKey?: string) {
     // Health check
     health: async () => {
       try {
-        return await api.default.getHealthHealthGet();
+        return await DefaultService.healthApiHealthGet();
       } catch {
         return null;
       }
@@ -259,7 +291,7 @@ export function createAPI(baseURL: string, apiKey?: string) {
     // Client methods
     testConnection: async (): Promise<boolean> => {
       try {
-        const response = await api.default.getHealthHealthGet();
+        const response = await DefaultService.healthApiHealthGet();
         return response !== undefined && response !== null;
       } catch {
         return false;

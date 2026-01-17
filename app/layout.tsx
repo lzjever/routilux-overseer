@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { PluginSystemProvider } from "@/components/providers/PluginSystemProvider";
+import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,7 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <PluginSystemProvider>{children}</PluginSystemProvider>
+        <PluginSystemProvider>
+          {children}
+          <GlobalSearchModal />
+        </PluginSystemProvider>
       </body>
     </html>
   );

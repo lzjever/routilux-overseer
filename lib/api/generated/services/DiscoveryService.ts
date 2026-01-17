@@ -5,9 +5,9 @@
 import type { FlowListResponse } from '../models/FlowListResponse';
 import type { JobListResponse } from '../models/JobListResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
-import type { BaseHttpRequest } from '../core/BaseHttpRequest';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class DiscoveryService {
-    constructor(public readonly httpRequest: BaseHttpRequest) {}
     /**
      * Sync Flows
      * Sync flows from global registry to API store.
@@ -20,8 +20,8 @@ export class DiscoveryService {
      * @returns FlowListResponse Successful Response
      * @throws ApiError
      */
-    public syncFlowsApiDiscoveryFlowsSyncPost(): CancelablePromise<FlowListResponse> {
-        return this.httpRequest.request({
+    public static syncFlowsApiDiscoveryFlowsSyncPost(): CancelablePromise<FlowListResponse> {
+        return __request(OpenAPI, {
             method: 'POST',
             url: '/api/discovery/flows/sync',
         });
@@ -38,8 +38,8 @@ export class DiscoveryService {
      * @returns FlowListResponse Successful Response
      * @throws ApiError
      */
-    public discoverFlowsApiDiscoveryFlowsGet(): CancelablePromise<FlowListResponse> {
-        return this.httpRequest.request({
+    public static discoverFlowsApiDiscoveryFlowsGet(): CancelablePromise<FlowListResponse> {
+        return __request(OpenAPI, {
             method: 'GET',
             url: '/api/discovery/flows',
         });
@@ -56,8 +56,8 @@ export class DiscoveryService {
      * @returns JobListResponse Successful Response
      * @throws ApiError
      */
-    public syncJobsApiDiscoveryJobsSyncPost(): CancelablePromise<JobListResponse> {
-        return this.httpRequest.request({
+    public static syncJobsApiDiscoveryJobsSyncPost(): CancelablePromise<JobListResponse> {
+        return __request(OpenAPI, {
             method: 'POST',
             url: '/api/discovery/jobs/sync',
         });
@@ -74,8 +74,8 @@ export class DiscoveryService {
      * @returns JobListResponse Successful Response
      * @throws ApiError
      */
-    public discoverJobsApiDiscoveryJobsGet(): CancelablePromise<JobListResponse> {
-        return this.httpRequest.request({
+    public static discoverJobsApiDiscoveryJobsGet(): CancelablePromise<JobListResponse> {
+        return __request(OpenAPI, {
             method: 'GET',
             url: '/api/discovery/jobs',
         });

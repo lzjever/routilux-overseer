@@ -1,15 +1,17 @@
 "use client";
 
 import { useConnectionStore } from "@/lib/stores/connectionStore";
+import { useSearchStore } from "@/lib/stores/searchStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Wifi, WifiOff } from "lucide-react";
+import { Settings, Wifi, WifiOff, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export function Navbar() {
   const router = useRouter();
   const { connected, serverUrl, disconnect } = useConnectionStore();
+  const { open } = useSearchStore();
 
   const handleDisconnect = () => {
     disconnect();
@@ -36,8 +38,24 @@ export function Navbar() {
             </div>
           </div>
 
-          {/* Connection Status */}
+          {/* Actions */}
           <div className="flex items-center gap-3">
+            {/* Global Search Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={open}
+              className="gap-2"
+              title="Search (Ctrl+K or Cmd+K)"
+            >
+              <Search className="h-4 w-4" />
+              <span className="hidden sm:inline">Search</span>
+              <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </Button>
+
+            {/* Connection Status */}
             <div className="flex items-center gap-2 text-sm">
               {connected ? (
                 <>
