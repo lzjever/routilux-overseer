@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { createAPI } from "@/lib/api";
 import { Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function FlowsPage() {
   const router = useRouter();
