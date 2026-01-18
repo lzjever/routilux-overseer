@@ -22,6 +22,7 @@ export interface RoutineNodeData {
   lastExecutionTime: number | null;
   breakpoints: Breakpoint[];
   routineState?: any; // Routine state from job state
+  mode?: 'job' | 'flow'; // Display mode: 'job' shows runtime info, 'flow' shows static config
   onToggleBreakpoint?: () => void;
   onViewDetails?: () => void;
   onPauseAtRoutine?: () => void;

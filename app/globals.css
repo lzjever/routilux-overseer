@@ -125,6 +125,12 @@
   }
 }
 
+@keyframes dash {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
 /* Apply animations */
 .animate-spin-slow {
   animation: spin-slow 3s linear infinite;

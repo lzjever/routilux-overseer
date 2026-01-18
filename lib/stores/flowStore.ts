@@ -32,6 +32,9 @@ interface FlowState {
   isFlowLocked: (flowId: string) => boolean;
   unlockFlow: (flowId: string) => void;
   lockFlow: (flowId: string) => void;
+  
+  // Edit mode management
+  updateEditMode: (isEditable: boolean) => void;
 }
 
 export const useFlowStore = create<FlowState>((set, get) => ({
@@ -43,8 +46,8 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   loading: false,
   error: null,
   serverUrl: null,
-  lockedFlows: new Set(),  // All flows are locked by default
-  unlockedFlows: new Set(),
+  lockedFlows: new Set<string>(),  // All flows are locked by default
+  unlockedFlows: new Set<string>(),
 
   // Set server URL
   setServerUrl: (url) => set({ serverUrl: url }),
@@ -102,8 +105,10 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         connectionsCount: flow.connections?.length || 0,
       });
 
-      const nodes = convertFlowToNodes(flow);
-      const edges = convertFlowToEdges(flow);
+      // Determine if flow is editable (unlocked)
+      const isEditable = !get().isFlowLocked(flowId);
+      const nodes = convertFlowToNodes(flow, isEditable);
+      const edges = convertFlowToEdges(flow, isEditable);
 
       console.log(`Converted to ReactFlow format:`, {
         nodes: nodes.length,
@@ -196,25 +201,55 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
   // Unlock flow (user confirmed)
   unlockFlow: (flowId: string) => {
-    set((state) => {
-      const newUnlockedFlows = new Set(state.unlockedFlows);
-      newUnlockedFlows.add(flowId);
-      return { unlockedFlows: newUnlockedFlows };
-    });
+    const { unlockedFlows, nodes, edges, selectedFlowId } = get();
+    const updated = new Set(unlockedFlows);
+    updated.add(flowId);
+    
+    // Update deletable property when flow is unlocked (only for selected flow)
+    if (selectedFlowId === flowId) {
+      const updatedNodes = nodes.map(node => ({ ...node, deletable: true }));
+      const updatedEdges = edges.map(edge => ({ ...edge, deletable: true }));
+      set({ 
+        unlockedFlows: updated,
+        nodes: updatedNodes,
+        edges: updatedEdges,
+      });
+    } else {
+      set({ unlockedFlows: updated });
+    }
   },
 
   // Lock flow
   lockFlow: (flowId: string) => {
-    set((state) => {
-      const newUnlockedFlows = new Set(state.unlockedFlows);
-      newUnlockedFlows.delete(flowId);
-      return { unlockedFlows: newUnlockedFlows };
-    });
+    const { unlockedFlows, nodes, edges, selectedFlowId } = get();
+    const updated = new Set(unlockedFlows);
+    updated.delete(flowId);
+    
+    // Update deletable property when flow is locked (only for selected flow)
+    if (selectedFlowId === flowId) {
+      const updatedNodes = nodes.map(node => ({ ...node, deletable: false }));
+      const updatedEdges = edges.map(edge => ({ ...edge, deletable: false }));
+      set({ 
+        unlockedFlows: updated,
+        nodes: updatedNodes,
+        edges: updatedEdges,
+      });
+    } else {
+      set({ unlockedFlows: updated });
+    }
+  },
+  
+  // Update edit mode for all nodes and edges
+  updateEditMode: (isEditable: boolean) => {
+    const { nodes, edges } = get();
+    const updatedNodes = nodes.map(node => ({ ...node, deletable: isEditable }));
+    const updatedEdges = edges.map(edge => ({ ...edge, deletable: isEditable }));
+    set({ nodes: updatedNodes, edges: updatedEdges });
   },
 }));
 
 // Helper functions
-function convertFlowToNodes(flow: FlowResponse): Node[] {
+function convertFlowToNodes(flow: FlowResponse, isEditable: boolean = false): Node[] {
   if (!flow.routines || typeof flow.routines !== 'object') {
     console.error("Invalid flow.routines:", flow.routines);
     return [];
@@ -230,6 +265,7 @@ function convertFlowToNodes(flow: FlowResponse): Node[] {
         id,
         type: "routine",
         position: { x: 0, y: 0 }, // Will be set by layout
+        deletable: isEditable, // Set deletable at creation time
         data: {
           routineId: routine.routine_id || id,
           className: routine.class_name || "",
@@ -252,7 +288,7 @@ function convertFlowToNodes(flow: FlowResponse): Node[] {
   }
 }
 
-function convertFlowToEdges(flow: FlowResponse): Edge[] {
+function convertFlowToEdges(flow: FlowResponse, isEditable: boolean = false): Edge[] {
   if (!flow.connections || !Array.isArray(flow.connections)) {
     console.error("Invalid flow.connections:", flow.connections);
     return [];
@@ -272,6 +308,7 @@ function convertFlowToEdges(flow: FlowResponse): Edge[] {
         targetHandle: conn.target_slot,
         type: "connection",
         animated: false,
+        deletable: isEditable, // Set deletable at creation time
         data: {
           sourceRoutine: conn.source_routine,
           sourceEvent: conn.source_event,

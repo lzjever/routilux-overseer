@@ -8,9 +8,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, Play, MoreVertical, Download, Upload, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Play, MoreVertical, Download, Upload, CheckCircle2, XCircle, Lock, Unlock } from "lucide-react";
 import Link from "next/link";
 import type { FlowResponse } from "@/lib/types/api";
+import { useFlowStore } from "@/lib/stores/flowStore";
 
 interface FlowDetailHeaderProps {
   flow: FlowResponse;
@@ -38,6 +39,17 @@ export function FlowDetailHeader({
   onRefresh,
   onValidate,
 }: FlowDetailHeaderProps) {
+  const { isFlowLocked, unlockFlow, lockFlow } = useFlowStore();
+  const locked = isFlowLocked(flowId);
+
+  const handleToggleLock = () => {
+    if (locked) {
+      unlockFlow(flowId);
+    } else {
+      lockFlow(flowId);
+    }
+  };
+
   return (
     <div className="h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-4 gap-4">
       {/* Left Section */}
@@ -85,6 +97,27 @@ export function FlowDetailHeader({
 
       {/* Right Section */}
       <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Lock/Unlock Toggle */}
+        <Button
+          variant={locked ? "outline" : "default"}
+          size="sm"
+          className="h-8"
+          onClick={handleToggleLock}
+          title={locked ? "Unlock to edit flow" : "Lock to prevent editing"}
+        >
+          {locked ? (
+            <>
+              <Lock className="mr-2 h-3 w-3" />
+              Locked
+            </>
+          ) : (
+            <>
+              <Unlock className="mr-2 h-3 w-3" />
+              Unlocked
+            </>
+          )}
+        </Button>
+        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">

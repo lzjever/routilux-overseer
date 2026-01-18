@@ -12,6 +12,7 @@ import { Loader2 } from "lucide-react";
 import { useJobStore } from "@/lib/stores/jobStore";
 import { createAPI } from "@/lib/api";
 import { StartJobDialog } from "@/components/job/StartJobDialog";
+import { Edge, Node } from "reactflow";
 
 export default function FlowDetailPage() {
   const router = useRouter();
@@ -166,17 +167,29 @@ export default function FlowDetailPage() {
   }, [nodes]);
 
   const handleConnectionClick = useCallback((connectionIndex: number) => {
-    // Highlight edge in canvas
+    // Highlight edge in canvas and zoom to it
     if (typeof window !== "undefined" && (window as any).reactFlowInstance) {
       const instance = (window as any).reactFlowInstance;
       const { edges: currentEdges } = useFlowStore.getState();
       const edge = currentEdges[connectionIndex] || null;
       if (edge) {
-        // TODO: Add visual highlight effect for edge
-        console.log("Highlight connection:", edge);
+        // Select the edge in ReactFlow
+        instance.setEdges((eds: Edge[]) =>
+          eds.map((e) => ({ ...e, selected: e.id === edge.id }))
+        );
+        // Deselect all nodes
+        instance.setNodes((nds: Node[]) =>
+          nds.map((n) => ({ ...n, selected: false }))
+        );
+        // Zoom to edge by zooming to connected nodes
+        const sourceNode = nodes.find(n => n.id === edge.source);
+        const targetNode = nodes.find(n => n.id === edge.target);
+        if (sourceNode && targetNode) {
+          instance.fitView({ padding: 0.2, duration: 800, nodes: [sourceNode, targetNode] });
+        }
       }
     }
-  }, []);
+  }, [nodes]);
 
   if (!connected) {
     return null;

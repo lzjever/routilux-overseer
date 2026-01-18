@@ -10,12 +10,13 @@ export function layoutNodes(
   const dagreGraph = new dagre.graphlib.Graph({ directed: true });
   dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-  // Set graph options with better spacing
+  // Set graph options with compact spacing (more commonly used defaults)
   dagreGraph.setGraph({
     rankdir: direction,
-    nodesep: 350,  // Horizontal spacing between nodes at the same rank (increased to prevent overlap)
-    ranksep: 250,  // Vertical spacing between ranks
-    edgesep: 100,  // Spacing between edges
+    nodesep: 100,  // Horizontal spacing between nodes at the same rank (compact)
+    ranksep: 80,   // Vertical spacing between ranks (compact)
+    edgesep: 10,   // Spacing between edges
+    ranker: "tight-tree", // Use tight-tree ranker for more compact layout
   });
 
   // Fixed node dimensions (should match actual rendered size)
