@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Edge, Node, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange } from "reactflow";
+import { Edge, Node, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange, MarkerType } from "reactflow";
 import type { Slot, Event, FlowResponse, ConnectionInfo } from "@/lib/types/flow";
 import type { RoutineInfo } from "@/lib/types/api";
 import { createAPI } from "@/lib/api";
@@ -307,15 +307,18 @@ function convertFlowToEdges(flow: FlowResponse, isEditable: boolean = false): Ed
         target: conn.target_routine,
         targetHandle: conn.target_slot,
         type: "connection",
-        animated: false,
-        deletable: isEditable, // Set deletable at creation time
+        deletable: isEditable,
+        selectable: true,
+        focusable: true,
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 20,
+          height: 20,
+        },
         data: {
-          sourceRoutine: conn.source_routine,
           sourceEvent: conn.source_event,
-          targetRoutine: conn.target_routine,
           targetSlot: conn.target_slot,
           active: false,
-          lastActivity: null,
         },
       };
     }).filter((edge) => edge !== null) as Edge[];

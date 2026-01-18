@@ -10,11 +10,12 @@ import ReactFlow, {
   Node,
   Edge,
   Connection,
+  MarkerType,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { RoutineNode } from "./RoutineNode";
-import { ConnectionEdge, ConnectionEdgeData } from "./ConnectionEdge";
-import { nodeTypes, edgeTypes } from "./flowTypes";
+import { ConnectionEdgeData } from "./ConnectionEdge";
+import { nodeTypes, edgeTypes, defaultEdgeOptions } from "./flowTypes";
 import { Button } from "@/components/ui/button";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useUIStore } from "@/lib/stores/uiStore";
@@ -131,14 +132,17 @@ export function FlowCanvas({
         target: connection.target,
         targetHandle: connection.targetHandle,
         type: "connection",
-        animated: false,
+        selectable: true,
+        focusable: true,
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 20,
+          height: 20,
+        },
         data: {
-          sourceRoutine: connection.source,
           sourceEvent: connection.sourceHandle,
-          targetRoutine: connection.target,
           targetSlot: connection.targetHandle,
           active: false,
-          lastActivity: null,
         },
       };
       
@@ -262,28 +266,20 @@ export function FlowCanvas({
     });
 
     // Update edges with heat visualization (only if jobId is provided)
-    if (jobId) {
+    if (jobId && monitoring) {
       const updatedEdges = edges.map((edge) => {
         const edgeData = edge.data as ConnectionEdgeData;
-        const hasBreakpoint = jobBreakpoints.some(
-          (bp) =>
-            bp.type === "connection" &&
-            bp.source_event_name === (edgeData?.sourceEvent || edge.sourceHandle) &&
-            bp.target_routine_id === edge.target &&
-            bp.target_slot_name === (edgeData?.targetSlot || edge.targetHandle)
-        );
 
         // Calculate edge heat if monitoring data is available
-        let heat = 0;
         let strokeColor = "";
-        let strokeWidth = 1;
-        if (monitoring && monitoring.routines[edge.target]) {
+        let strokeWidth = 2;
+        if (monitoring.routines[edge.target]) {
           const targetRoutine = monitoring.routines[edge.target];
           const queueStatus = targetRoutine.queue_status.find(
             (q) => q.slot_name === (edgeData?.targetSlot || edge.targetHandle)
           );
           if (queueStatus) {
-            heat = calculateEdgeHeat(queueStatus);
+            const heat = calculateEdgeHeat(queueStatus);
             strokeColor = getHeatStrokeColor(heat);
             strokeWidth = getHeatStrokeWidth(heat);
           }
@@ -291,16 +287,7 @@ export function FlowCanvas({
 
         return {
           ...edge,
-          style: {
-            ...edge.style,
-            stroke: strokeColor || edge.style?.stroke,
-            strokeWidth: strokeWidth,
-          },
-          data: {
-            ...edgeData,
-            hasBreakpoint,
-            heat,
-          },
+          style: strokeColor ? { stroke: strokeColor, strokeWidth } : edge.style,
         };
       });
 
@@ -448,18 +435,20 @@ export function FlowCanvas({
           onEdgeClick={onEdgeClick}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
+          defaultEdgeOptions={defaultEdgeOptions}
           fitView
-          nodesDraggable={!isLocked} // Allow dragging even when locked (for viewing)
-          nodesConnectable={isEditable} // Only allow connections when editable
+          nodesDraggable={true}
+          nodesConnectable={isEditable}
           elementsSelectable={true}
+          edgesFocusable={true}
           selectNodesOnDrag={false}
-          deleteKeyCode={isEditable ? "Delete" : null} // Control deletion via keyboard
-          connectionLineType="smoothstep" // Use smoothstep to route around nodes
+          deleteKeyCode={isEditable ? ["Delete", "Backspace"] : null}
+          connectionLineType="smoothstep"
           connectionRadius={10}
-          className="bg-background"
+          elevateEdgesOnSelect={true}
+          className="bg-background [&_.react-flow__edges]:z-[1000]"
           onInit={(instance) => {
             (window as any).reactFlowInstance = instance;
-            // Fit view after initialization
             setTimeout(() => {
               instance.fitView({ padding: 0.2, duration: 800 });
             }, 100);

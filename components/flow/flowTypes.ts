@@ -7,7 +7,7 @@
  * These should NEVER be recreated or modified after module initialization.
  */
 
-import { NodeTypes, EdgeTypes } from "reactflow";
+import { NodeTypes, EdgeTypes, MarkerType } from "reactflow";
 import { RoutineNode } from "./RoutineNode";
 import { ConnectionEdge } from "./ConnectionEdge";
 
@@ -25,4 +25,16 @@ export const nodeTypes: NodeTypes = {
  */
 export const edgeTypes: EdgeTypes = {
   connection: ConnectionEdge,
+} as const;
+
+/**
+ * Default edge options for all edges
+ */
+export const defaultEdgeOptions = {
+  type: "connection",
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+    width: 20,
+    height: 20,
+  },
 } as const;
