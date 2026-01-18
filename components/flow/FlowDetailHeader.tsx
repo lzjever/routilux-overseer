@@ -8,10 +8,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, Play, MoreVertical, Download, Upload, CheckCircle2, XCircle, Lock, Unlock } from "lucide-react";
+import { ArrowLeft, Play, MoreVertical, Download, Upload, CheckCircle2, XCircle, Lock, Unlock, Plus } from "lucide-react";
 import Link from "next/link";
 import type { FlowResponse } from "@/lib/types/api";
 import { useFlowStore } from "@/lib/stores/flowStore";
+import { AddRoutineDialog } from "./AddRoutineDialog";
 
 interface FlowDetailHeaderProps {
   flow: FlowResponse;
@@ -97,6 +98,21 @@ export function FlowDetailHeader({
 
       {/* Right Section */}
       <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Add Routine Button - only show when unlocked */}
+        {serverUrl && !locked && (
+          <AddRoutineDialog
+            flowId={flowId}
+            serverUrl={serverUrl}
+            onSuccess={onRefresh}
+            trigger={
+              <Button variant="outline" size="sm" className="h-8">
+                <Plus className="mr-2 h-3 w-3" />
+                Add Routine
+              </Button>
+            }
+          />
+        )}
+
         {/* Lock/Unlock Toggle */}
         <Button
           variant={locked ? "outline" : "default"}

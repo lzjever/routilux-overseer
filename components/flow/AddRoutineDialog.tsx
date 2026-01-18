@@ -24,9 +24,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createAPI } from "@/lib/api";
-import { Loader2, Search, Inbox, Send, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, Search, Inbox, Send, ChevronDown, ChevronRight, ArrowLeft, CheckCircle2 } from "lucide-react";
 import type { ObjectInfo } from "@/lib/api/generated";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface AddRoutineDialogProps {
   flowId: string;
@@ -40,6 +41,8 @@ interface RoutineInterface {
   events?: string[];
 }
 
+type DialogStep = "select" | "configure";
+
 export function AddRoutineDialog({
   flowId,
   serverUrl,
@@ -47,12 +50,12 @@ export function AddRoutineDialog({
   trigger,
 }: AddRoutineDialogProps) {
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<DialogStep>("select");
   const [routineId, setRoutineId] = useState("");
   const [selectedRoutine, setSelectedRoutine] = useState<ObjectInfo | null>(null);
   const [routines, setRoutines] = useState<ObjectInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingRoutines, setLoadingRoutines] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [interfaceInfo, setInterfaceInfo] = useState<RoutineInterface | null>(null);
@@ -60,7 +63,21 @@ export function AddRoutineDialog({
   const [showInterface, setShowInterface] = useState(false);
   const [config, setConfig] = useState("");
 
-  // Load routines from factory
+  // Reset state when dialog opens/closes
+  useEffect(() => {
+    if (!open) {
+      setStep("select");
+      setSelectedRoutine(null);
+      setRoutineId("");
+      setConfig("");
+      setSearchQuery("");
+      setSelectedCategory("all");
+      setShowInterface(false);
+      setInterfaceInfo(null);
+    }
+  }, [open]);
+
+  // Load routines from factory - filter to only get routines, not flows
   useEffect(() => {
     if (open && serverUrl) {
       setLoadingRoutines(true);
@@ -68,10 +85,16 @@ export function AddRoutineDialog({
         try {
           const api = createAPI(serverUrl);
           const response = await api.factory.listObjects({ objectType: "routine" });
-          setRoutines(response.objects || []);
+          // Double-check: filter to ensure only routines are included
+          const routinesOnly = (response.objects || []).filter(
+            (obj) => obj.object_type === "routine"
+          );
+          setRoutines(routinesOnly);
         } catch (err) {
           console.error("Failed to load routines:", err);
-          setError(err instanceof Error ? err.message : "Failed to load routines");
+          toast.error("Failed to load routines", {
+            description: err instanceof Error ? err.message : "Unknown error",
+          });
         } finally {
           setLoadingRoutines(false);
         }
@@ -135,12 +158,24 @@ export function AddRoutineDialog({
     });
   }, [routines, selectedCategory, searchQuery]);
 
+  // Handle routine selection and move to configure step
+  const handleRoutineSelect = (routine: ObjectInfo) => {
+    setSelectedRoutine(routine);
+    setRoutineId(routine.name); // Default to routine name
+    setStep("configure");
+  };
+
+  // Handle back to selection
+  const handleBack = () => {
+    setStep("select");
+  };
+
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!routineId || !selectedRoutine || !serverUrl) return;
 
     setLoading(true);
-    setError(null);
     try {
       const api = createAPI(serverUrl);
       let configObj: Record<string, any> = {};
@@ -148,25 +183,30 @@ export function AddRoutineDialog({
         try {
           configObj = JSON.parse(config);
         } catch {
-          setError("Invalid JSON in config field");
+          toast.error("Invalid JSON", {
+            description: "Please check your config JSON format",
+          });
           setLoading(false);
           return;
         }
       }
       await api.flows.addRoutine(flowId, {
         routine_id: routineId,
-        object_name: selectedRoutine.name, // Use factory name
+        object_name: selectedRoutine.name,
         config: Object.keys(configObj).length > 0 ? configObj : undefined,
       });
+      
+      toast.success("Routine added successfully", {
+        description: `Added "${routineId}" to flow`,
+      });
+      
       setOpen(false);
-      setRoutineId("");
-      setSelectedRoutine(null);
-      setConfig("");
-      setSearchQuery("");
-      setSelectedCategory("all");
       onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add routine");
+      const errorMessage = err instanceof Error ? err.message : "Failed to add routine";
+      toast.error("Failed to add routine", {
+        description: errorMessage,
+      });
     } finally {
       setLoading(false);
     }
@@ -177,234 +217,247 @@ export function AddRoutineDialog({
       <DialogTrigger asChild>
         {trigger || <Button size="sm">Add Routine</Button>}
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <DialogHeader>
-            <DialogTitle>Add Routine to Flow</DialogTitle>
-            <DialogDescription>
-              Select a routine from the factory to add to this flow.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex-1 overflow-hidden flex flex-col gap-4 py-4">
-            {/* Search and Filter */}
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search routines..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
-                />
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
+        {step === "select" ? (
+          <>
+            <DialogHeader className="px-6 pt-6 pb-4 border-b">
+              <DialogTitle>Select Routine</DialogTitle>
+              <DialogDescription>
+                Choose a routine from the factory to add to this flow
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex-1 overflow-hidden flex flex-col gap-4 px-6 py-4">
+              {/* Search and Filter */}
+              <div className="flex gap-2 flex-shrink-0">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search routines..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+              {/* Routine List */}
+              <div className="flex-1 min-h-0 border rounded-lg">
+                {loadingRoutines ? (
+                  <div className="flex items-center justify-center h-64">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : filteredRoutines.length === 0 ? (
+                  <div className="flex items-center justify-center h-64 text-muted-foreground">
+                    {searchQuery || selectedCategory !== "all"
+                      ? "No routines found matching your filters"
+                      : "No routines available"}
+                  </div>
+                ) : (
+                  <ScrollArea className="h-full">
+                    <div className="p-3 space-y-2">
+                      {filteredRoutines.map((routine) => (
+                        <button
+                          key={routine.name}
+                          type="button"
+                          onClick={() => handleRoutineSelect(routine)}
+                          className={cn(
+                            "w-full text-left p-4 rounded-lg border transition-all",
+                            "hover:bg-accent/50 hover:border-primary/50",
+                            "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="font-semibold text-base">{routine.name}</span>
+                                {routine.category && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {routine.category}
+                                  </Badge>
+                                )}
+                              </div>
+                              {routine.description && (
+                                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                                  {routine.description}
+                                </p>
+                              )}
+                              {routine.tags && routine.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mb-2">
+                                  {routine.tags.map((tag) => (
+                                    <Badge
+                                      key={tag}
+                                      variant="outline"
+                                      className="text-[10px] px-2 py-0.5"
+                                    >
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                              {routine.example_config &&
+                                Object.keys(routine.example_config).length > 0 && (
+                                  <div className="mt-2 text-xs text-muted-foreground">
+                                    <span className="font-medium">Example config:</span>{" "}
+                                    {JSON.stringify(routine.example_config)}
+                                  </div>
+                                )}
+                            </div>
+                            <div className="flex-shrink-0">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRoutineSelect(routine);
+                                }}
+                              >
+                                Select
+                              </Button>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
+              </div>
             </div>
 
-            {/* Routine List */}
-            <div className="flex-1 min-h-0 border rounded-lg">
-              {loadingRoutines ? (
-                <div className="flex items-center justify-center h-48">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <DialogFooter className="px-6 py-4 border-t">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          <>
+            <DialogHeader className="px-6 pt-6 pb-4 border-b">
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleBack}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div className="flex-1">
+                  <DialogTitle>Configure Routine</DialogTitle>
+                  <DialogDescription>
+                    Configure "{selectedRoutine?.name}" before adding to flow
+                  </DialogDescription>
                 </div>
-              ) : filteredRoutines.length === 0 ? (
-                <div className="flex items-center justify-center h-48 text-muted-foreground">
-                  {searchQuery || selectedCategory !== "all"
-                    ? "No routines found matching your filters"
-                    : "No routines available"}
-                </div>
-              ) : (
-                <ScrollArea className="h-full">
-                  <div className="p-2 space-y-2">
-                    {filteredRoutines.map((routine) => (
-                      <button
-                        key={routine.name}
-                        type="button"
-                        onClick={() => setSelectedRoutine(routine)}
-                        className={cn(
-                          "w-full text-left p-3 rounded-lg border transition-colors",
-                          selectedRoutine?.name === routine.name
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:bg-accent/50"
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-sm">{routine.name}</span>
-                              {routine.category && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {routine.category}
-                                </Badge>
-                              )}
-                            </div>
-                            {routine.description && (
-                              <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                                {routine.description}
-                              </p>
-                            )}
-                            {routine.tags && routine.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mb-2">
-                                {routine.tags.slice(0, 3).map((tag) => (
-                                  <Badge
-                                    key={tag}
-                                    variant="outline"
-                                    className="text-[10px] px-1.5 py-0"
-                                  >
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                            {/* Show interface info if available */}
-                            {interfaceInfo && selectedRoutine?.name === routine.name && (
-                              <div className="mt-2 pt-2 border-t border-border/50">
-                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                  <span className="flex items-center gap-1">
-                                    <Inbox className="h-3 w-3 text-blue-500" />
-                                    {interfaceInfo.slots?.length || 0} slots
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Send className="h-3 w-3 text-emerald-500" />
-                                    {interfaceInfo.events?.length || 0} events
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          {selectedRoutine?.name === routine.name && (
-                            <div className="flex-shrink-0">
-                              {loadingInterface ? (
-                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                              ) : (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowInterface(!showInterface);
-                                  }}
-                                >
-                                  {showInterface ? (
-                                    <ChevronDown className="h-4 w-4" />
-                                  ) : (
-                                    <ChevronRight className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              )}
-                            </div>
+              </div>
+            </DialogHeader>
+
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+                {/* Routine Info Card */}
+                {selectedRoutine && (
+                  <div className="bg-muted/50 rounded-lg p-4 border">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-semibold text-lg">{selectedRoutine.name}</h3>
+                          {selectedRoutine.category && (
+                            <Badge variant="secondary">{selectedRoutine.category}</Badge>
                           )}
                         </div>
-                        {/* Expanded interface details */}
-                        {showInterface &&
-                          interfaceInfo &&
-                          selectedRoutine?.name === routine.name && (
-                            <div className="mt-2 pt-2 border-t border-border/50 space-y-2">
-                              {interfaceInfo.slots && interfaceInfo.slots.length > 0 && (
-                                <div>
-                                  <div className="text-xs font-semibold text-muted-foreground mb-1">
-                                    Input Slots:
-                                  </div>
-                                  <div className="flex flex-wrap gap-1">
-                                    {interfaceInfo.slots.map((slot) => (
-                                      <Badge
-                                        key={slot}
-                                        variant="outline"
-                                        className="text-[10px] px-1.5 py-0 bg-blue-50 border-blue-200"
-                                      >
-                                        {slot}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              {interfaceInfo.events && interfaceInfo.events.length > 0 && (
-                                <div>
-                                  <div className="text-xs font-semibold text-muted-foreground mb-1">
-                                    Output Events:
-                                  </div>
-                                  <div className="flex flex-wrap gap-1">
-                                    {interfaceInfo.events.map((event) => (
-                                      <Badge
-                                        key={event}
-                                        variant="outline"
-                                        className="text-[10px] px-1.5 py-0 bg-emerald-50 border-emerald-200"
-                                      >
-                                        {event}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                      </button>
-                    ))}
+                        {selectedRoutine.description && (
+                          <p className="text-sm text-muted-foreground mb-3">
+                            {selectedRoutine.description}
+                          </p>
+                        )}
+                        {interfaceInfo && (
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="flex items-center gap-1.5">
+                              <Inbox className="h-4 w-4 text-blue-500" />
+                              {interfaceInfo.slots?.length || 0} input slots
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Send className="h-4 w-4 text-emerald-500" />
+                              {interfaceInfo.events?.length || 0} output events
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </ScrollArea>
-              )}
-            </div>
+                )}
 
-            {/* Routine ID and Config */}
-            {selectedRoutine && (
-              <div className="space-y-4 border-t pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="routineId">Routine ID *</Label>
-                  <Input
-                    id="routineId"
-                    value={routineId}
-                    onChange={(e) => setRoutineId(e.target.value)}
-                    placeholder="e.g., processor"
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Unique identifier for this routine in the flow
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="config">Config (JSON, optional)</Label>
-                  <Textarea
-                    id="config"
-                    value={config}
-                    onChange={(e) => setConfig(e.target.value)}
-                    placeholder='{"key": "value"}'
-                    rows={3}
-                  />
-                  {selectedRoutine.example_config &&
-                    Object.keys(selectedRoutine.example_config).length > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Example: {JSON.stringify(selectedRoutine.example_config)}
-                      </p>
-                    )}
+                {/* Configuration Form */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="routineId">
+                      Routine ID <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="routineId"
+                      value={routineId}
+                      onChange={(e) => setRoutineId(e.target.value)}
+                      placeholder="e.g., processor"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Unique identifier for this routine in the flow
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="config">Config (JSON, optional)</Label>
+                    <Textarea
+                      id="config"
+                      value={config}
+                      onChange={(e) => setConfig(e.target.value)}
+                      placeholder='{"key": "value"}'
+                      rows={6}
+                      className="font-mono text-sm"
+                    />
+                    {selectedRoutine?.example_config &&
+                      Object.keys(selectedRoutine.example_config).length > 0 && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-muted-foreground">
+                            Example config:
+                          </p>
+                          <pre className="text-xs bg-muted p-2 rounded border overflow-x-auto">
+                            {JSON.stringify(selectedRoutine.example_config, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                  </div>
                 </div>
               </div>
-            )}
 
-            {error && <div className="text-sm text-destructive">{error}</div>}
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading || !selectedRoutine || !routineId}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Add Routine
-            </Button>
-          </DialogFooter>
-        </form>
+              <DialogFooter className="px-6 py-4 border-t">
+                <Button type="button" variant="outline" onClick={handleBack}>
+                  Back
+                </Button>
+                <Button type="submit" disabled={loading || !routineId}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Add Routine
+                </Button>
+              </DialogFooter>
+            </form>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -13,6 +13,7 @@ import { useJobStore } from "@/lib/stores/jobStore";
 import { createAPI } from "@/lib/api";
 import { StartJobDialog } from "@/components/job/StartJobDialog";
 import { Edge, Node } from "reactflow";
+import { toast } from "sonner";
 
 export default function FlowDetailPage() {
   const router = useRouter();
@@ -134,8 +135,13 @@ export default function FlowDetailPage() {
       a.download = `${flowId}.yaml`;
       a.click();
       URL.revokeObjectURL(url);
+      toast.success("DSL exported successfully", {
+        description: `Downloaded ${flowId}.yaml`,
+      });
     } catch (error) {
-      alert(`Failed to export DSL: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast.error("Failed to export DSL", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   };
 

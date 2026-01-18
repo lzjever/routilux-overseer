@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { PluginSystemProvider } from "@/components/providers/PluginSystemProvider";
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +23,7 @@ export default function RootLayout({
         <PluginSystemProvider>
           {children}
           <GlobalSearchModal />
+          <Toaster position="bottom-right" richColors />
         </PluginSystemProvider>
       </body>
     </html>

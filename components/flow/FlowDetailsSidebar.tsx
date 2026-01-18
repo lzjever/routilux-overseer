@@ -1,22 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { ChevronLeft, ChevronRight, Plus, Inbox, Send, X } from "lucide-react";
 import { AddRoutineDialog } from "./AddRoutineDialog";
 import { AddConnectionDialog } from "./AddConnectionDialog";
-import { createAPI } from "@/lib/api";
+import {
+  DeleteConfirmDialog,
+  DeleteItem,
+  ConnectionInfo,
+  getAffectedConnections,
+} from "./DeleteConfirmDialog";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import type { FlowResponse } from "@/lib/types/api";
 
@@ -43,43 +38,54 @@ export function FlowDetailsSidebar({
   onRoutineClick,
   onConnectionClick,
 }: FlowDetailsSidebarProps) {
-  const { isFlowLocked } = useFlowStore();
+  const { isFlowLocked, selectFlow } = useFlowStore();
   const [activeTab, setActiveTab] = useState<"routines" | "connections">("routines");
-  const [deleteRoutineId, setDeleteRoutineId] = useState<string | null>(null);
-  const [deleteConnectionIndex, setDeleteConnectionIndex] = useState<number | null>(null);
+  
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteItems, setDeleteItems] = useState<DeleteItem[]>([]);
+  const [affectedConnections, setAffectedConnections] = useState<ConnectionInfo[]>([]);
 
   const locked = isFlowLocked(flowId);
 
-  const handleRemoveRoutine = async (routineId: string) => {
-    if (!serverUrl) return;
-    try {
-      const api = createAPI(serverUrl);
-      await api.flows.removeRoutine(flowId, routineId);
-      setDeleteRoutineId(null);
-      onRefresh?.();
-    } catch (error) {
-      alert(
-        `Failed to remove routine: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    }
+  // Handle routine delete click
+  const handleRoutineDeleteClick = (routineId: string) => {
+    const items: DeleteItem[] = [{
+      type: 'routine',
+      id: routineId,
+      routineId,
+    }];
+    
+    // Calculate affected connections
+    const affected = getAffectedConnections([routineId], flow.connections);
+    
+    setDeleteItems(items);
+    setAffectedConnections(affected);
+    setDeleteDialogOpen(true);
   };
 
-  const handleRemoveConnection = async (index: number) => {
-    if (!serverUrl) return;
-    try {
-      const api = createAPI(serverUrl);
-      await api.flows.removeConnection(flowId, index);
-      setDeleteConnectionIndex(null);
-      onRefresh?.();
-    } catch (error) {
-      alert(
-        `Failed to remove connection: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+  // Handle connection delete click
+  const handleConnectionDeleteClick = (index: number, conn: any) => {
+    const items: DeleteItem[] = [{
+      type: 'connection',
+      id: `conn-${index}`,
+      sourceRoutine: conn.source_routine,
+      sourceEvent: conn.source_event,
+      targetRoutine: conn.target_routine,
+      targetSlot: conn.target_slot,
+    }];
+    
+    setDeleteItems(items);
+    setAffectedConnections([]);
+    setDeleteDialogOpen(true);
+  };
+
+  // Handle delete success
+  const handleDeleteSuccess = async () => {
+    if (serverUrl) {
+      await selectFlow(flowId, serverUrl);
     }
+    onRefresh?.();
   };
 
   if (collapsed) {
@@ -157,9 +163,8 @@ export function FlowDetailsSidebar({
                 const inCount = routine.slots?.length ?? 0;
                 const outCount = routine.events?.length ?? 0;
                 return (
-                  <button
+                  <div
                     key={id}
-                    type="button"
                     className="w-full text-left p-2.5 pr-2 bg-background rounded-lg border border-border/80 cursor-pointer hover:bg-accent/50 hover:border-border transition-colors group flex items-start gap-2 border-l-[3px] border-l-blue-300"
                     onClick={() => onRoutineClick?.(id)}
                   >
@@ -186,14 +191,14 @@ export function FlowDetailsSidebar({
                         className="h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setDeleteRoutineId(id);
+                          handleRoutineDeleteClick(id);
                         }}
                         aria-label="Remove routine"
                       >
                         <X className="h-3.5 w-3.5" />
                       </Button>
                     )}
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -249,7 +254,7 @@ export function FlowDetailsSidebar({
                         className="h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setDeleteConnectionIndex(index);
+                          handleConnectionDeleteClick(index, conn);
                         }}
                         aria-label="Remove connection"
                       >
@@ -264,47 +269,18 @@ export function FlowDetailsSidebar({
         </Tabs>
       </div>
 
-      {/* Delete Routine Confirmation */}
-      <AlertDialog open={deleteRoutineId !== null} onOpenChange={(open) => !open && setDeleteRoutineId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Routine</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove routine "{deleteRoutineId}"? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteRoutineId && handleRemoveRoutine(deleteRoutineId)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Delete Connection Confirmation */}
-      <AlertDialog open={deleteConnectionIndex !== null} onOpenChange={(open) => !open && setDeleteConnectionIndex(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Connection</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove this connection? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteConnectionIndex !== null && handleRemoveConnection(deleteConnectionIndex)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete Confirmation Dialog */}
+      {serverUrl && (
+        <DeleteConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          items={deleteItems}
+          flowId={flowId}
+          serverUrl={serverUrl}
+          affectedConnections={affectedConnections}
+          onSuccess={handleDeleteSuccess}
+        />
+      )}
     </div>
   );
 }
