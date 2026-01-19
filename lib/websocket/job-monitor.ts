@@ -44,7 +44,7 @@ export class JobMonitor {
     const wsManager = getWebSocketManager(this.serverUrl);
 
     // Unsubscribe from job events
-    wsManager.unsubscribeFromJob();
+    wsManager.unsubscribeFromJob(this.jobId);
 
     // Remove all event handlers
     this.unsubscribeCallbacks.forEach((callback) => callback());
@@ -56,7 +56,9 @@ export class JobMonitor {
     const unsubscribeStarted = wsManager.on("job_started", (message: WebSocketMessage) => {
       console.log("Job started:", message);
       this.updateJobStatus("running");
-      this.addEventToStore("job_start", this.jobId, message.data);
+      const data = (message.data as Record<string, any>) || {};
+      this.addEventToStore("job_start", this.jobId, data);
+      this.handleProgress(message);
     });
     this.unsubscribeCallbacks.push(unsubscribeStarted);
 
@@ -64,7 +66,9 @@ export class JobMonitor {
     const unsubscribeCompleted = wsManager.on("job_completed", (message: WebSocketMessage) => {
       console.log("Job completed:", message);
       this.updateJobStatus("completed");
-      this.addEventToStore("job_end", this.jobId, message.data);
+      const data = (message.data as Record<string, any>) || {};
+      this.addEventToStore("job_end", this.jobId, data);
+      this.handleProgress(message);
     });
     this.unsubscribeCallbacks.push(unsubscribeCompleted);
 
@@ -72,80 +76,85 @@ export class JobMonitor {
     const unsubscribeFailed = wsManager.on("job_failed", (message: WebSocketMessage) => {
       console.log("Job failed:", message);
       this.updateJobStatus("failed");
-      this.addEventToStore("error", this.jobId, message.data);
+      const data = (message.data as Record<string, any>) || {};
+      this.addEventToStore("error", this.jobId, data);
+      this.handleProgress(message);
     });
     this.unsubscribeCallbacks.push(unsubscribeFailed);
 
     // Routine started
     const unsubscribeRoutineStarted = wsManager.on("routine_started", (message: WebSocketMessage) => {
       console.log("Routine started:", message);
-      this.updateRoutineStatus(message.data.routine_id, "running");
-      this.highlightConnection(message.data.routine_id, message.data.event_name);
-      this.addEventToStore("routine_start", message.data.routine_id, message.data);
+      const data = (message.data as Record<string, any>) || {};
+      if (!data.routine_id) return;
+      this.updateRoutineStatus(data.routine_id, "running");
+      this.highlightConnection(data.routine_id, data.event_name);
+      this.addEventToStore("routine_start", data.routine_id, data);
+      this.handleProgress(message);
     });
     this.unsubscribeCallbacks.push(unsubscribeRoutineStarted);
 
     // Routine completed
     const unsubscribeRoutineCompleted = wsManager.on("routine_completed", (message: WebSocketMessage) => {
       console.log("Routine completed:", message);
-      this.updateRoutineStatus(message.data.routine_id, "completed");
-      this.incrementExecutionCount(message.data.routine_id);
-      this.addEventToStore("routine_end", message.data.routine_id, message.data);
+      const data = (message.data as Record<string, any>) || {};
+      if (!data.routine_id) return;
+      this.updateRoutineStatus(data.routine_id, "completed");
+      this.incrementExecutionCount(data.routine_id);
+      this.addEventToStore("routine_end", data.routine_id, data);
+      this.handleProgress(message);
     });
     this.unsubscribeCallbacks.push(unsubscribeRoutineCompleted);
 
     // Routine failed
     const unsubscribeRoutineFailed = wsManager.on("routine_failed", (message: WebSocketMessage) => {
       console.log("Routine failed:", message);
-      this.updateRoutineStatus(message.data.routine_id, "failed");
-      this.addEventToStore("error", message.data.routine_id, message.data);
+      const data = (message.data as Record<string, any>) || {};
+      if (!data.routine_id) return;
+      this.updateRoutineStatus(data.routine_id, "failed");
+      this.addEventToStore("error", data.routine_id, data);
+      this.handleProgress(message);
     });
     this.unsubscribeCallbacks.push(unsubscribeRoutineFailed);
 
     // Event emitted
     const unsubscribeEventEmitted = wsManager.on("event_emitted", (message: WebSocketMessage) => {
       console.log("Event emitted:", message);
-      this.highlightEdge(message.data.routine_id, message.data.event_name);
-      this.addEventToStore("event_emit", message.data.routine_id, {
-        event_name: message.data.event_name,
-        ...message.data,
+      const data = (message.data as Record<string, any>) || {};
+      if (!data.routine_id) return;
+      this.highlightEdge(data.routine_id, data.event_name);
+      this.addEventToStore("event_emit", data.routine_id, {
+        event_name: data.event_name,
+        ...data,
       });
+      this.handleProgress(message);
     });
     this.unsubscribeCallbacks.push(unsubscribeEventEmitted);
 
     // Slot called
     const unsubscribeSlotCalled = wsManager.on("slot_called", (message: WebSocketMessage) => {
       console.log("Slot called:", message);
-      this.highlightEdge(message.data.routine_id, message.data.slot_name);
-      this.addEventToStore("slot_call", message.data.routine_id, {
-        slot_name: message.data.slot_name,
-        ...message.data,
+      const data = (message.data as Record<string, any>) || {};
+      if (!data.routine_id) return;
+      this.highlightEdge(data.routine_id, data.slot_name);
+      this.addEventToStore("slot_call", data.routine_id, {
+        slot_name: data.slot_name,
+        ...data,
       });
+      this.handleProgress(message);
     });
     this.unsubscribeCallbacks.push(unsubscribeSlotCalled);
 
     // Breakpoint hit
     const unsubscribeBreakpointHit = wsManager.on("breakpoint_hit", (message: WebSocketMessage) => {
       console.log("Breakpoint hit:", message);
-      this.updateRoutineStatus(message.data.routine_id, "paused");
-      this.addEventToStore("breakpoint", message.data.routine_id, message.data);
+      const data = (message.data as Record<string, any>) || {};
+      if (!data.routine_id) return;
+      this.updateRoutineStatus(data.routine_id, "paused");
+      this.addEventToStore("breakpoint", data.routine_id, data);
+      this.handleProgress(message);
     });
     this.unsubscribeCallbacks.push(unsubscribeBreakpointHit);
-
-    // Error
-    const unsubscribeError = wsManager.on("error", (message: WebSocketMessage) => {
-      console.error("Job error:", message);
-      this.updateRoutineStatus(message.data.routine_id, "failed");
-      this.addEventToStore("error", message.data.routine_id || this.jobId, message.data);
-    });
-    this.unsubscribeCallbacks.push(unsubscribeError);
-
-    // Progress update
-    const unsubscribeProgress = wsManager.on("progress", (message: WebSocketMessage) => {
-      console.log("Progress update:", message);
-      this.updateRoutineProgress(message.data.routine_id, message.data.progress, message.data.message);
-    });
-    this.unsubscribeCallbacks.push(unsubscribeProgress);
   }
 
   private updateJobStatus(status: ExecutionStatus): void {
@@ -171,6 +180,17 @@ export class JobMonitor {
       progress,
       progressMessage: message
     });
+  }
+
+  private handleProgress(message: WebSocketMessage): void {
+    const payload = message.data as Record<string, any> | undefined;
+    const progress = payload?._progress as
+      | { percentage?: number; message?: string }
+      | undefined;
+    if (!payload?.routine_id || !progress) return;
+    const percentage = typeof progress.percentage === "number" ? progress.percentage : undefined;
+    if (percentage == null) return;
+    this.updateRoutineProgress(payload.routine_id, percentage, progress.message);
   }
 
   private incrementExecutionCount(routineId: string): void {

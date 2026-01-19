@@ -30,7 +30,6 @@ import { useJobStore } from "@/lib/stores/jobStore";
 import { RoutineDetailPanel } from "@/components/job/RoutineDetailPanel";
 import { layoutNodes } from "@/lib/utils/flow-layout";
 import { ZoomIn, ZoomOut, Maximize, Lock } from "lucide-react";
-import { BreakpointCreateRequest } from "@/lib/api/generated";
 import { calculateNodeHeat, calculateEdgeHeat, getHeatBorderColor, getHeatStrokeColor, getHeatStrokeWidth } from "@/lib/utils/heatmap";
 import { createAPI } from "@/lib/api";
 import { toast } from "sonner";
@@ -65,7 +64,7 @@ export function FlowCanvas({
   } = useFlowStore();
   const { selectedRoutine, selectRoutine, closeDetailPanel } = useUIStore();
   const { jobStates } = useJobStateStore();
-  const { breakpoints, addBreakpoint, removeBreakpoint } = useBreakpointStore();
+  const { breakpoints } = useBreakpointStore();
   const { monitoringData } = useJobStore();
   const [pendingConnectionBp, setPendingConnectionBp] = useState<Edge | null>(null);
 
@@ -183,7 +182,7 @@ export function FlowCanvas({
       });
       console.error("Connection creation error:", error);
     }
-  }, [flowId, serverUrl, isFlowLocked]);
+  }, [flowId, serverUrl, isFlowLocked, isEditable]);
 
   // Handle node click
   const onNodeClick = useCallback(

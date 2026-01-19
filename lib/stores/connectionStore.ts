@@ -5,6 +5,7 @@ export interface ConnectionState {
   // State
   connected: boolean;
   serverUrl: string;
+  apiKey: string | null;
   connecting: boolean;
   error: string | null;
   lastConnected: string | null;
@@ -12,6 +13,7 @@ export interface ConnectionState {
 
   // Actions
   setServerUrl: (url: string) => void;
+  setApiKey: (apiKey: string | null) => void;
   setConnecting: (connecting: boolean) => void;
   setConnected: (connected: boolean) => void;
   setError: (error: string | null) => void;
@@ -27,6 +29,7 @@ export const useConnectionStore = create<ConnectionState>()(
       // Initial state
       connected: false,
       serverUrl: "http://localhost:20555",
+      apiKey: null,
       connecting: false,
       error: null,
       lastConnected: null,
@@ -34,6 +37,7 @@ export const useConnectionStore = create<ConnectionState>()(
 
       // Actions
       setServerUrl: (url) => set({ serverUrl: url }),
+      setApiKey: (apiKey) => set({ apiKey }),
 
       setConnecting: (connecting) => set({ connecting }),
 
@@ -49,6 +53,7 @@ export const useConnectionStore = create<ConnectionState>()(
           connecting: false,
           error: null,
           lastConnected: null,
+          apiKey: null,
         }),
 
       disconnect: () =>
@@ -66,6 +71,7 @@ export const useConnectionStore = create<ConnectionState>()(
         serverUrl: state.serverUrl,
         lastConnected: state.lastConnected,
         connected: state.connected,
+        apiKey: state.apiKey,
       }),
       onRehydrateStorage: () => (state) => {
         // Called when state is rehydrated from localStorage

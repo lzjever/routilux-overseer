@@ -3,26 +3,24 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Request model for creating a breakpoint.
+ * Request model for creating a slot-level breakpoint.
  */
 export type BreakpointCreateRequest = {
-    type: BreakpointCreateRequest.type;
-    routine_id?: (string | null);
-    slot_name?: (string | null);
-    event_name?: (string | null);
-    source_routine_id?: (string | null);
-    source_event_name?: (string | null);
-    target_routine_id?: (string | null);
-    target_slot_name?: (string | null);
+    /**
+     * Routine ID where the slot is located
+     */
+    routine_id: string;
+    /**
+     * Slot name where breakpoint is set
+     */
+    slot_name: string;
+    /**
+     * Optional Python expression to evaluate (e.g., "data.get('value') > 10")
+     */
     condition?: (string | null);
+    /**
+     * Whether breakpoint is active
+     */
     enabled?: boolean;
 };
-export namespace BreakpointCreateRequest {
-    export enum type {
-        ROUTINE = 'routine',
-        SLOT = 'slot',
-        EVENT = 'event',
-        CONNECTION = 'connection',
-    }
-}
 

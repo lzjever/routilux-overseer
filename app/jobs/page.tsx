@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useJobStore } from "@/lib/stores/jobStore";
 import { useFlowStore } from "@/lib/stores/flowStore";
@@ -23,13 +23,14 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { createAPI } from "@/lib/api";
+import type { HealthReadinessSummary } from "@/lib/types/api";
 import { cn } from "@/lib/utils";
 
 export default function JobsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { connected, serverUrl } = useConnectionStore();
-  const { jobs, loading, loadJobs, wsConnected, connectWebSocket, disconnectWebSocket } = useJobStore();
+  const { jobs, loading, loadJobs, setJobs, wsConnected, connectWebSocket, disconnectWebSocket } = useJobStore();
   const { flows } = useFlowStore();
   const {
     discoveredJobs,
@@ -46,6 +47,45 @@ export default function JobsPage() {
   const [bulkCancelling, setBulkCancelling] = useState(false);
   const [healthSummary, setHealthSummary] = useState<{ status: string; activeWorkers?: number } | null>(null);
   const [healthLoading, setHealthLoading] = useState(false);
+
+  const loadJobsWithFilters = useCallback(async () => {
+    if (!serverUrl) return;
+
+    try {
+      const api = createAPI(serverUrl);
+      const params: any = {};
+      if (filterFlowId !== "all") params.flow_id = filterFlowId;
+      if (filterStatus !== "all") params.status = filterStatus;
+
+      const response = await api.jobs.list(
+        null, // workerId
+        params.flow_id || null, // flowId
+        params.status || null, // status
+        params.limit || 100, // limit
+        params.offset // offset
+      );
+
+      setJobs(response.jobs || []);
+    } catch (error) {
+      console.error("Failed to load jobs:", error);
+    }
+  }, [serverUrl, filterFlowId, filterStatus, setJobs]);
+
+  const loadHealthSummary = useCallback(async () => {
+    if (!serverUrl) return;
+    setHealthLoading(true);
+    try {
+      const api = createAPI(serverUrl);
+      const readiness = (await api.health.readiness()) as HealthReadinessSummary | null;
+      const activeWorkers = readiness?.runtime?.active_workers;
+      const status = readiness?.status || "unknown";
+      setHealthSummary({ status, activeWorkers });
+    } catch (error) {
+      setHealthSummary(null);
+    } finally {
+      setHealthLoading(false);
+    }
+  }, [serverUrl]);
 
   useEffect(() => {
     if (serverUrl) {
@@ -69,56 +109,21 @@ export default function JobsPage() {
         disconnectWebSocket();
       }
     };
-  }, [serverUrl, connected, filterFlowId, filterStatus, discoverJobsAction]);
-
-  const loadHealthSummary = async () => {
-    if (!serverUrl) return;
-    setHealthLoading(true);
-    try {
-      const api = createAPI(serverUrl);
-      const readiness = await api.health.readiness();
-      const activeWorkers = readiness?.runtime?.active_workers;
-      const status = readiness?.status || "unknown";
-      setHealthSummary({ status, activeWorkers });
-    } catch (error) {
-      setHealthSummary(null);
-    } finally {
-      setHealthLoading(false);
-    }
-  };
+  }, [
+    serverUrl,
+    connected,
+    discoverJobsAction,
+    connectWebSocket,
+    disconnectWebSocket,
+    loadJobsWithFilters,
+    wsConnected,
+  ]);
 
   useEffect(() => {
     if (serverUrl && connected) {
       loadHealthSummary();
     }
-  }, [serverUrl, connected]);
-
-  const loadJobsWithFilters = async () => {
-    if (!serverUrl) return;
-
-    try {
-      const api = createAPI(serverUrl);
-      const params: any = {};
-      if (filterFlowId !== "all") params.flow_id = filterFlowId;
-      if (filterStatus !== "all") params.status = filterStatus;
-
-      const response = await api.jobs.list(
-        null, // workerId
-        params.flow_id || null, // flowId
-        params.status || null, // status
-        params.limit || 100, // limit
-        params.offset // offset
-      );
-
-      // Update jobs in store
-      jobs.clear();
-      response.jobs.forEach((job: any) => {
-        jobs.set(job.job_id, job);
-      });
-    } catch (error) {
-      console.error("Failed to load jobs:", error);
-    }
-  };
+  }, [serverUrl, connected, loadHealthSummary]);
 
   const handleRefresh = async () => {
     if (!serverUrl) return;
@@ -347,7 +352,7 @@ export default function JobsPage() {
           onDeselectAll={() => setSelectedJobs(new Set())}
           actions={[
             {
-              label: "Cancel",
+              label: "Cancel (worker only)",
               icon: X,
               onClick: handleBulkCancel,
               variant: "destructive",
@@ -390,10 +395,11 @@ export default function JobsPage() {
                   <SelectItem value="running">Running</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="failed">Failed</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                Job pause/cancel events are not emitted. Use Worker controls for pause/stop.
+              </p>
             </div>
           </div>
         </CardContent>

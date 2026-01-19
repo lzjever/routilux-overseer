@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
 import { createAPI } from "@/lib/api";
+import type { HealthReadinessSummary } from "@/lib/types/api";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -48,12 +49,12 @@ export default function FlowsPage() {
     }
   }, [serverUrl, connected, loadFlows, discoverFlowsAction]);
 
-  const loadHealthSummary = async () => {
+  const loadHealthSummary = useCallback(async () => {
     if (!serverUrl) return;
     setHealthLoading(true);
     try {
       const api = createAPI(serverUrl);
-      const readiness = await api.health.readiness();
+      const readiness = (await api.health.readiness()) as HealthReadinessSummary | null;
       const activeWorkers = readiness?.runtime?.active_workers;
       const status = readiness?.status || "unknown";
       setHealthSummary({ status, activeWorkers });
@@ -62,13 +63,13 @@ export default function FlowsPage() {
     } finally {
       setHealthLoading(false);
     }
-  };
+  }, [serverUrl]);
 
   useEffect(() => {
     if (serverUrl && connected) {
       loadHealthSummary();
     }
-  }, [serverUrl, connected]);
+  }, [serverUrl, connected, loadHealthSummary]);
 
   const handleSync = async () => {
     if (!serverUrl || syncing) return;

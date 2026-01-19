@@ -127,13 +127,13 @@ export class FactoryService {
                          * @returns ObjectListResponse Successful Response
                          * @throws ApiError
                          */
-                        public static listFactoryObjectsApiFactoryObjectsGet(
+                        public static listFactoryObjectsApiV1FactoryObjectsGet(
                             category?: (string | null),
                             objectType?: (string | null),
                         ): CancelablePromise<ObjectListResponse> {
                             return __request(OpenAPI, {
                                 method: 'GET',
-                                url: '/api/factory/objects',
+                                url: '/api/v1/factory/objects',
                                 query: {
                                     'category': category,
                                     'object_type': objectType,
@@ -201,12 +201,12 @@ export class FactoryService {
                                  * @returns ObjectMetadataResponse Successful Response
                                  * @throws ApiError
                                  */
-                                public static getFactoryObjectMetadataApiFactoryObjectsNameGet(
+                                public static getFactoryObjectMetadataApiV1FactoryObjectsNameGet(
                                     name: string,
                                 ): CancelablePromise<ObjectMetadataResponse> {
                                     return __request(OpenAPI, {
                                         method: 'GET',
-                                        url: '/api/factory/objects/{name}',
+                                        url: '/api/v1/factory/objects/{name}',
                                         path: {
                                             'name': name,
                                         },
@@ -324,12 +324,12 @@ export class FactoryService {
                                                                  * @returns any Successful Response
                                                                  * @throws ApiError
                                                                  */
-                                                                public static getFactoryObjectInterfaceApiFactoryObjectsNameInterfaceGet(
+                                                                public static getFactoryObjectInterfaceApiV1FactoryObjectsNameInterfaceGet(
                                                                     name: string,
                                                                 ): CancelablePromise<any> {
                                                                     return __request(OpenAPI, {
                                                                         method: 'GET',
-                                                                        url: '/api/factory/objects/{name}/interface',
+                                                                        url: '/api/v1/factory/objects/{name}/interface',
                                                                         path: {
                                                                             'name': name,
                                                                         },

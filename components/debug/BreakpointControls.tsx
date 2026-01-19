@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import { useBreakpointStore } from "@/lib/stores/breakpointStore";
 import { BreakpointCreateRequest } from "@/lib/api/generated";
+import { useFlowStore } from "@/lib/stores/flowStore";
 
 interface BreakpointControlsProps {
   jobId: string;
@@ -34,22 +34,28 @@ export function BreakpointControls({
     useBreakpointStore();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newBpRoutine, setNewBpRoutine] = useState("");
+  const [newBpSlot, setNewBpSlot] = useState("");
+  const routineSlots = useFlowStore((state) => {
+    const node = state.nodes.find((item) => item.id === newBpRoutine);
+    return (node?.data as { slots?: { name: string }[] } | undefined)?.slots ?? [];
+  });
 
   const currentBreakpoints = breakpoints.get(jobId) || [];
 
   const handleAddBreakpoint = async () => {
-    if (!newBpRoutine) return;
+    if (!newBpRoutine || !newBpSlot) return;
 
     try {
       const request: BreakpointCreateRequest = {
-        type: BreakpointCreateRequest.type.ROUTINE,
         routine_id: newBpRoutine,
+        slot_name: newBpSlot,
         enabled: true,
       };
 
       await addBreakpoint(jobId, request, serverUrl);
       setShowAddForm(false);
       setNewBpRoutine("");
+      setNewBpSlot("");
     } catch (error) {
       console.error("Failed to add breakpoint:", error);
       alert("Failed to add breakpoint");
@@ -104,12 +110,33 @@ export function BreakpointControls({
               </option>
             ))}
           </select>
+          {routineSlots.length > 0 ? (
+            <select
+              value={newBpSlot}
+              onChange={(e) => setNewBpSlot(e.target.value)}
+              className="w-full px-2 py-1.5 text-sm rounded border bg-background"
+            >
+              <option value="">Select slot...</option>
+              {routineSlots.map((slot) => (
+                <option key={slot.name} value={slot.name}>
+                  {slot.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              value={newBpSlot}
+              onChange={(e) => setNewBpSlot(e.target.value)}
+              placeholder="Slot name (e.g. input)"
+              className="w-full px-2 py-1.5 text-sm rounded border bg-background"
+            />
+          )}
 
           <div className="flex gap-2">
             <Button
               size="sm"
               onClick={handleAddBreakpoint}
-              disabled={loading || !newBpRoutine}
+              disabled={loading || !newBpRoutine || !newBpSlot}
               className="h-7"
             >
               Add Breakpoint
@@ -120,6 +147,7 @@ export function BreakpointControls({
               onClick={() => {
                 setShowAddForm(false);
                 setNewBpRoutine("");
+                setNewBpSlot("");
               }}
               className="h-7"
             >
@@ -147,11 +175,11 @@ export function BreakpointControls({
                 <Bug className="h-4 w-4" />
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm font-medium truncate">
-                      {bp.routine_id}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-sm font-medium truncate">
+                    {bp.routine_id}.{bp.slot_name}
+                  </span>
+                </div>
 
                   {bp.hit_count > 0 && (
                     <div className="text-xs text-muted-foreground mt-1">

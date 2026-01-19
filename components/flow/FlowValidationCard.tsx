@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ export function FlowValidationCard({ flowId, serverUrl }: FlowValidationCardProp
     warnings?: string[];
   } | null>(null);
 
-  const validate = async () => {
+  const validate = useCallback(async () => {
     if (!serverUrl) return;
     setValidating(true);
     try {
@@ -41,13 +41,13 @@ export function FlowValidationCard({ flowId, serverUrl }: FlowValidationCardProp
     } finally {
       setValidating(false);
     }
-  };
+  }, [serverUrl, flowId]);
 
   useEffect(() => {
     if (flowId && serverUrl) {
       validate();
     }
-  }, [flowId, serverUrl]);
+  }, [flowId, serverUrl, validate]);
 
   return (
     <Card>

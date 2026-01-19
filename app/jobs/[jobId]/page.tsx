@@ -99,7 +99,7 @@ export default function JobDetailPage() {
     };
 
     loadData();
-  }, [hydrated, connected, serverUrl, jobId, loadJob, selectFlow, loadJobMonitoringData, loadJobMetrics]);
+  }, [hydrated, connected, serverUrl, jobId, loadJob, selectFlow, loadJobMonitoringData, loadJobMetrics, router]);
 
 
   const handleRefresh = async () => {

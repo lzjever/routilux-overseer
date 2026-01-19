@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useWorkersStore } from "@/lib/stores/workersStore";
 import { useFlowStore } from "@/lib/stores/flowStore";
@@ -19,6 +19,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { createAPI } from "@/lib/api";
+import type { HealthReadinessSummary } from "@/lib/types/api";
 
 export default function WorkersPage() {
   const router = useRouter();
@@ -36,35 +37,7 @@ export default function WorkersPage() {
   const [healthSummary, setHealthSummary] = useState<{ status: string; activeWorkers?: number } | null>(null);
   const [healthLoading, setHealthLoading] = useState(false);
 
-  useEffect(() => {
-    if (serverUrl) {
-      loadWorkersWithFilters();
-    }
-  }, [serverUrl, filterFlowId, filterStatus]);
-
-  const loadHealthSummary = async () => {
-    if (!serverUrl) return;
-    setHealthLoading(true);
-    try {
-      const api = createAPI(serverUrl);
-      const readiness = await api.health.readiness();
-      const activeWorkers = readiness?.runtime?.active_workers;
-      const status = readiness?.status || "unknown";
-      setHealthSummary({ status, activeWorkers });
-    } catch (error) {
-      setHealthSummary(null);
-    } finally {
-      setHealthLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (serverUrl && connected) {
-      loadHealthSummary();
-    }
-  }, [serverUrl, connected]);
-
-  const loadWorkersWithFilters = async () => {
+  const loadWorkersWithFilters = useCallback(async () => {
     if (!serverUrl) return;
 
     try {
@@ -76,7 +49,35 @@ export default function WorkersPage() {
     } catch (error) {
       console.error("Failed to load workers:", error);
     }
-  };
+  }, [serverUrl, filterFlowId, filterStatus, loadWorkers]);
+
+  const loadHealthSummary = useCallback(async () => {
+    if (!serverUrl) return;
+    setHealthLoading(true);
+    try {
+      const api = createAPI(serverUrl);
+      const readiness = (await api.health.readiness()) as HealthReadinessSummary | null;
+      const activeWorkers = readiness?.runtime?.active_workers;
+      const status = readiness?.status || "unknown";
+      setHealthSummary({ status, activeWorkers });
+    } catch (error) {
+      setHealthSummary(null);
+    } finally {
+      setHealthLoading(false);
+    }
+  }, [serverUrl]);
+
+  useEffect(() => {
+    if (serverUrl) {
+      loadWorkersWithFilters();
+    }
+  }, [serverUrl, loadWorkersWithFilters]);
+
+  useEffect(() => {
+    if (serverUrl && connected) {
+      loadHealthSummary();
+    }
+  }, [serverUrl, connected, loadHealthSummary]);
 
   const handleRefresh = async () => {
     if (!serverUrl) return;

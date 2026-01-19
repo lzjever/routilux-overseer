@@ -25,7 +25,7 @@ export interface PluginContext {
   /**
    * Routilux API 客户端（createAPI 的返回值）
    */
-  api: Pick<API, "flows" | "jobs" | "debug" | "breakpoints">;
+  api: Pick<API, "flows" | "jobs" | "breakpoints">;
 
   /**
    * WebSocket 访问

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
@@ -8,6 +8,7 @@ import { useFlowStore } from "@/lib/stores/flowStore";
 import { useJobStore } from "@/lib/stores/jobStore";
 import { useDiscoveryStore } from "@/lib/stores/discoveryStore";
 import { createAPI } from "@/lib/api";
+import type { HealthStatsResponse } from "@/lib/types/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,7 @@ export default function HomePage() {
   const { jobs } = useJobStore();
   const { lastFlowSync, lastJobSync, lastWorkerSync } = useDiscoveryStore();
   const [loading, setLoading] = useState(true);
-  const [healthStats, setHealthStats] = useState<Record<string, any> | null>(null);
+  const [healthStats, setHealthStats] = useState<HealthStatsResponse | null>(null);
   const [healthLoading, setHealthLoading] = useState(false);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [healthUpdatedAt, setHealthUpdatedAt] = useState<string | null>(null);
@@ -50,13 +51,13 @@ export default function HomePage() {
     loadData();
   }, [serverUrl]);
 
-  const loadHealthStats = async () => {
+  const loadHealthStats = useCallback(async () => {
     if (!serverUrl) return;
     setHealthLoading(true);
     setHealthError(null);
     try {
       const api = createAPI(serverUrl);
-      const stats = await api.health.stats();
+      const stats = (await api.health.stats()) as HealthStatsResponse | null;
       setHealthStats(stats || {});
       setHealthUpdatedAt(new Date().toISOString());
     } catch (error) {
@@ -65,13 +66,13 @@ export default function HomePage() {
     } finally {
       setHealthLoading(false);
     }
-  };
+  }, [serverUrl]);
 
   useEffect(() => {
     if (serverUrl && connected) {
       loadHealthStats();
     }
-  }, [serverUrl, connected]);
+  }, [serverUrl, connected, loadHealthStats]);
 
   // Show connection prompt if not connected
   if (!connected) {

@@ -40,13 +40,13 @@ export interface Event {
 }
 
 export interface Breakpoint {
-  breakpointId: string;
-  type: "routine" | "slot" | "event";
-  slotName?: string;
-  eventName?: string;
+  breakpoint_id: string;
+  job_id: string;
+  routine_id: string;
+  slot_name: string;
   enabled: boolean;
-  hitCount: number;
-  condition?: string;
+  hit_count: number;
+  condition?: string | null;
 }
 
 export interface ConnectionEdgeData {

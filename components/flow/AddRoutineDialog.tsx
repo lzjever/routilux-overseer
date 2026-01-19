@@ -361,7 +361,7 @@ export function AddRoutineDialog({
                 <div className="flex-1">
                   <DialogTitle>Configure Routine</DialogTitle>
                   <DialogDescription>
-                    Configure "{selectedRoutine?.name}" before adding to flow
+                    Configure &quot;{selectedRoutine?.name}&quot; before adding to flow
                   </DialogDescription>
                 </div>
               </div>

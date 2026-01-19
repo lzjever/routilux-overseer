@@ -49,7 +49,7 @@ export default function FlowDetailPage() {
         selectFlow(flowId, serverUrl);
       }
     }
-  }, [hydrated, connected, flowId, selectedFlowId, selectFlow, serverUrl, flow]);
+  }, [hydrated, connected, flowId, selectedFlowId, selectFlow, serverUrl, flow, router]);
 
   useEffect(() => {
     const loadRoutines = async () => {

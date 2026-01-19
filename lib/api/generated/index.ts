@@ -9,7 +9,7 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AddConnectionRequest } from './models/AddConnectionRequest';
 export type { AddRoutineRequest } from './models/AddRoutineRequest';
-export { BreakpointCreateRequest } from './models/BreakpointCreateRequest';
+export type { BreakpointCreateRequest } from './models/BreakpointCreateRequest';
 export type { BreakpointListResponse } from './models/BreakpointListResponse';
 export type { BreakpointResponse } from './models/BreakpointResponse';
 export type { BreakpointUpdateRequest } from './models/BreakpointUpdateRequest';

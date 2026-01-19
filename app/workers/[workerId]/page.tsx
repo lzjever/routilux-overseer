@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useWorkersStore } from "@/lib/stores/workersStore";
 import { useJobStore } from "@/lib/stores/jobStore";
@@ -43,6 +43,62 @@ export default function WorkerDetailPage() {
 
   const worker = workers.get(workerId);
 
+  const loadWorkerJobs = useCallback(async () => {
+    if (!serverUrl) return;
+    setLoadingJobs(true);
+    try {
+      const api = createAPI(serverUrl);
+      const response = await api.workers.listJobs(workerId, null, 100);
+      setWorkerJobs(response.jobs || []);
+    } catch (error) {
+      console.error("Failed to load worker jobs:", error);
+    } finally {
+      setLoadingJobs(false);
+    }
+  }, [serverUrl, workerId]);
+
+  const loadStatistics = useCallback(async () => {
+    if (!serverUrl) return;
+    setLoadingStats(true);
+    try {
+      const api = createAPI(serverUrl);
+      const stats = await api.workers.getStatistics(workerId);
+      setStatistics(stats);
+    } catch (error) {
+      console.error("Failed to load worker statistics:", error);
+    } finally {
+      setLoadingStats(false);
+    }
+  }, [serverUrl, workerId]);
+
+  const loadHistory = useCallback(async () => {
+    if (!serverUrl) return;
+    setLoadingHistory(true);
+    try {
+      const api = createAPI(serverUrl);
+      const hist = await api.workers.getHistory(workerId);
+      setHistory(Array.isArray(hist) ? hist : []);
+    } catch (error) {
+      console.error("Failed to load worker history:", error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [serverUrl, workerId]);
+
+  const loadRoutineStates = useCallback(async () => {
+    if (!serverUrl) return;
+    setLoadingRoutines(true);
+    try {
+      const api = createAPI(serverUrl);
+      const states = await api.workers.getRoutineStates(workerId);
+      setRoutineStates(states || {});
+    } catch (error) {
+      console.error("Failed to load routine states:", error);
+    } finally {
+      setLoadingRoutines(false);
+    }
+  }, [serverUrl, workerId]);
+
   useEffect(() => {
     // Wait for hydration before checking connection
     if (!hydrated) return;
@@ -74,63 +130,20 @@ export default function WorkerDetailPage() {
     };
 
     loadData();
-  }, [hydrated, connected, serverUrl, workerId, loadWorker, selectFlow]);
-
-  const loadWorkerJobs = async () => {
-    if (!serverUrl) return;
-    setLoadingJobs(true);
-    try {
-      const api = createAPI(serverUrl);
-      const response = await api.workers.listJobs(workerId, null, 100);
-      setWorkerJobs(response.jobs || []);
-    } catch (error) {
-      console.error("Failed to load worker jobs:", error);
-    } finally {
-      setLoadingJobs(false);
-    }
-  };
-
-  const loadStatistics = async () => {
-    if (!serverUrl) return;
-    setLoadingStats(true);
-    try {
-      const api = createAPI(serverUrl);
-      const stats = await api.workers.getStatistics(workerId);
-      setStatistics(stats);
-    } catch (error) {
-      console.error("Failed to load worker statistics:", error);
-    } finally {
-      setLoadingStats(false);
-    }
-  };
-
-  const loadHistory = async () => {
-    if (!serverUrl) return;
-    setLoadingHistory(true);
-    try {
-      const api = createAPI(serverUrl);
-      const hist = await api.workers.getHistory(workerId);
-      setHistory(Array.isArray(hist) ? hist : []);
-    } catch (error) {
-      console.error("Failed to load worker history:", error);
-    } finally {
-      setLoadingHistory(false);
-    }
-  };
-
-  const loadRoutineStates = async () => {
-    if (!serverUrl) return;
-    setLoadingRoutines(true);
-    try {
-      const api = createAPI(serverUrl);
-      const states = await api.workers.getRoutineStates(workerId);
-      setRoutineStates(states || {});
-    } catch (error) {
-      console.error("Failed to load routine states:", error);
-    } finally {
-      setLoadingRoutines(false);
-    }
-  };
+  }, [
+    hydrated,
+    connected,
+    serverUrl,
+    workerId,
+    loadWorker,
+    selectFlow,
+    loadWorkerJobs,
+    loadStatistics,
+    loadHistory,
+    loadRoutineStates,
+    router,
+    workers,
+  ]);
 
   const handlePause = async () => {
     if (!serverUrl) return;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { debounce } from "@/lib/utils/debounce";
 import { useSearchStore, type SearchResult } from "@/lib/stores/searchStore";
 import { useFlowStore } from "@/lib/stores/flowStore";
@@ -27,6 +27,11 @@ export function GlobalSearchModal() {
   const { connected, serverUrl } = useConnectionStore();
   const [searching, setSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const handleSelectResult = useCallback((result: SearchResult) => {
+    addRecentSearch(query);
+    router.push(result.url);
+    close();
+  }, [addRecentSearch, query, router, close]);
 
   // Keyboard shortcut: Cmd/Ctrl+K
   useKeyboardShortcut({
@@ -154,13 +159,7 @@ export function GlobalSearchModal() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, results, selectedIndex, setSelectedIndex]);
-
-  const handleSelectResult = (result: SearchResult) => {
-    addRecentSearch(query);
-    router.push(result.url);
-    close();
-  };
+  }, [isOpen, results, selectedIndex, setSelectedIndex, handleSelectResult]);
 
   const handleRecentSearch = (recentQuery: string) => {
     setQuery(recentQuery);

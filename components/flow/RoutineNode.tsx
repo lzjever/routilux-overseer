@@ -233,7 +233,7 @@ export function RoutineNode({ data, selected }: NodeProps<RoutineNodeData>) {
                       <MapPin className={cn("h-3 w-3", hasBreakpoint ? "text-violet-500 fill-violet-500" : "text-muted-foreground")} />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>{hasBreakpoint ? "Remove breakpoint" : "Set breakpoint"}</TooltipContent>
+                  <TooltipContent>Manage breakpoints</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -270,7 +270,7 @@ export function RoutineNode({ data, selected }: NodeProps<RoutineNodeData>) {
                     title={`In: ${slot.name}`}
                     className={cn(
                       "!w-3 !h-3 !min-w-0 !min-h-0 !bg-blue-500 !border-2 !border-white !-left-2.5 !z-10",
-                      data.breakpoints?.some((bp: { slotName?: string }) => bp.slotName === slot.name) && "!bg-violet-500"
+                      data.breakpoints?.some((bp: { slot_name?: string }) => bp.slot_name === slot.name) && "!bg-violet-500"
                     )}
                     style={{ zIndex: 10 }}
                   />
@@ -338,8 +338,7 @@ export function RoutineNode({ data, selected }: NodeProps<RoutineNodeData>) {
                     id={event.name}
                     title={`Out: ${event.name}`}
                     className={cn(
-                      "!w-3 !h-3 !min-w-0 !min-h-0 !bg-emerald-500 !border-2 !border-white !-right-2.5 !z-10",
-                      data.breakpoints?.some((bp: { eventName?: string }) => bp.eventName === event.name) && "!bg-violet-500"
+                      "!w-3 !h-3 !min-w-0 !min-h-0 !bg-emerald-500 !border-2 !border-white !-right-2.5 !z-10"
                     )}
                     style={{ zIndex: 10 }}
                   />

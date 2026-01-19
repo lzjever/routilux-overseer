@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -60,11 +60,27 @@ export function SubmitJobDialog({
   }, [open, serverUrl, flowId, loadWorkers]);
 
   // Load routines when flow changes
+  const loadRoutines = useCallback(async () => {
+    if (!serverUrl || !flowId) return;
+    setLoadingRoutines(true);
+    try {
+      const api = createAPI(serverUrl);
+      const response = await api.flows.getRoutines(flowId);
+      // Convert Record<string, RoutineInfo> to array
+      const routinesArray = Object.values(response);
+      setRoutines(routinesArray);
+    } catch (error) {
+      console.error("Failed to load routines:", error);
+    } finally {
+      setLoadingRoutines(false);
+    }
+  }, [serverUrl, flowId]);
+
   useEffect(() => {
     if (open && serverUrl && flowId) {
       loadRoutines();
     }
-  }, [open, serverUrl, flowId]);
+  }, [open, serverUrl, flowId, loadRoutines]);
 
   // Update slots when routine changes
   useEffect(() => {
@@ -79,21 +95,6 @@ export function SubmitJobDialog({
     }
   }, [selectedRoutineId, routines]);
 
-  const loadRoutines = async () => {
-    if (!serverUrl || !flowId) return;
-    setLoadingRoutines(true);
-    try {
-      const api = createAPI(serverUrl);
-      const response = await api.flows.getRoutines(flowId);
-      // Convert Record<string, RoutineInfo> to array
-      const routinesArray = Object.values(response);
-      setRoutines(routinesArray);
-    } catch (error) {
-      console.error("Failed to load routines:", error);
-    } finally {
-      setLoadingRoutines(false);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!serverUrl || !selectedRoutineId || !selectedSlotName) return;

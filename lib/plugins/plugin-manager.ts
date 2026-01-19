@@ -34,7 +34,6 @@ class PluginManager {
       api: {
         flows: api.flows,
         jobs: api.jobs,
-        debug: api.debug,
         breakpoints: api.breakpoints,
       },
       websocket: {

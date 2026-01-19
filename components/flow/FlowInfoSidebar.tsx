@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
+import Image from "next/image";
 import { CheckCircle2, XCircle, AlertCircle, Loader2, RefreshCw, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
 import { createAPI } from "@/lib/api";
 import { useFlowStore } from "@/lib/stores/flowStore";
@@ -153,9 +154,11 @@ export function FlowInfoSidebar({
         {/* Flow ID with Lock */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <img
+            <Image
               src={locked ? "/icons/lock.svg" : "/icons/unlock.svg"}
               alt={locked ? "Locked" : "Unlocked"}
+              width={16}
+              height={16}
               className="h-4 w-4 text-muted-foreground"
             />
             <Label className="text-xs text-muted-foreground">Flow ID</Label>

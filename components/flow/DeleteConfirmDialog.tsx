@@ -157,7 +157,7 @@ export function DeleteConfirmDialog({
                 <p>
                   Are you sure you want to delete routine{" "}
                   <span className="font-mono font-semibold text-foreground">
-                    "{routine.routineId}"
+                    &quot;{routine.routineId}&quot;
                   </span>
                   ?
                 </p>

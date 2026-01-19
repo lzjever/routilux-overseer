@@ -74,10 +74,10 @@ export class DiscoveryService {
                  * @returns FlowListResponse Successful Response
                  * @throws ApiError
                  */
-                public static syncFlowsApiDiscoveryFlowsSyncPost(): CancelablePromise<FlowListResponse> {
+                public static syncFlowsApiV1DiscoveryFlowsSyncPost(): CancelablePromise<FlowListResponse> {
                     return __request(OpenAPI, {
                         method: 'POST',
-                        url: '/api/discovery/flows/sync',
+                        url: '/api/v1/discovery/flows/sync',
                     });
                 }
                 /**
@@ -147,10 +147,10 @@ export class DiscoveryService {
                              * @returns FlowListResponse Successful Response
                              * @throws ApiError
                              */
-                            public static discoverFlowsApiDiscoveryFlowsGet(): CancelablePromise<FlowListResponse> {
+                            public static discoverFlowsApiV1DiscoveryFlowsGet(): CancelablePromise<FlowListResponse> {
                                 return __request(OpenAPI, {
                                     method: 'GET',
-                                    url: '/api/discovery/flows',
+                                    url: '/api/v1/discovery/flows',
                                 });
                             }
                             /**
@@ -227,10 +227,10 @@ export class DiscoveryService {
                                          * @returns JobListResponse Successful Response
                                          * @throws ApiError
                                          */
-                                        public static syncJobsApiDiscoveryJobsSyncPost(): CancelablePromise<JobListResponse> {
+                                        public static syncJobsApiV1DiscoveryJobsSyncPost(): CancelablePromise<JobListResponse> {
                                             return __request(OpenAPI, {
                                                 method: 'POST',
-                                                url: '/api/discovery/jobs/sync',
+                                                url: '/api/v1/discovery/jobs/sync',
                                             });
                                         }
                                         /**
@@ -308,10 +308,10 @@ export class DiscoveryService {
                                                      * @returns JobListResponse Successful Response
                                                      * @throws ApiError
                                                      */
-                                                    public static discoverJobsApiDiscoveryJobsGet(): CancelablePromise<JobListResponse> {
+                                                    public static discoverJobsApiV1DiscoveryJobsGet(): CancelablePromise<JobListResponse> {
                                                         return __request(OpenAPI, {
                                                             method: 'GET',
-                                                            url: '/api/discovery/jobs',
+                                                            url: '/api/v1/discovery/jobs',
                                                         });
                                                     }
                                                     /**
@@ -380,10 +380,10 @@ export class DiscoveryService {
                                                                  * @returns any Successful Response
                                                                  * @throws ApiError
                                                                  */
-                                                                public static syncWorkersApiDiscoveryWorkersSyncPost(): CancelablePromise<any> {
+                                                                public static syncWorkersApiV1DiscoveryWorkersSyncPost(): CancelablePromise<any> {
                                                                     return __request(OpenAPI, {
                                                                         method: 'POST',
-                                                                        url: '/api/discovery/workers/sync',
+                                                                        url: '/api/v1/discovery/workers/sync',
                                                                     });
                                                                 }
                                                             }

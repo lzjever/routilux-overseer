@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -27,7 +27,7 @@ export function FlowMetadata({ flow, flowId, serverUrl }: FlowMetadataProps) {
   const [jobCount, setJobCount] = useState<number | null>(null);
   const [loadingJobs, setLoadingJobs] = useState(false);
 
-  const validate = async () => {
+  const validate = useCallback(async () => {
     if (!serverUrl) return;
     setValidating(true);
     try {
@@ -47,9 +47,9 @@ export function FlowMetadata({ flow, flowId, serverUrl }: FlowMetadataProps) {
     } finally {
       setValidating(false);
     }
-  };
+  }, [serverUrl, flowId]);
 
-  const loadJobCount = async () => {
+  const loadJobCount = useCallback(async () => {
     if (!serverUrl) return;
     setLoadingJobs(true);
     try {
@@ -62,14 +62,14 @@ export function FlowMetadata({ flow, flowId, serverUrl }: FlowMetadataProps) {
     } finally {
       setLoadingJobs(false);
     }
-  };
+  }, [serverUrl, flowId]);
 
   useEffect(() => {
     if (flowId && serverUrl) {
       validate();
       loadJobCount();
     }
-  }, [flowId, serverUrl]);
+  }, [flowId, serverUrl, validate, loadJobCount]);
 
   return (
     <Card>

@@ -19,10 +19,11 @@ import { Loader2 } from "lucide-react";
 
 export default function ConnectPage() {
   const router = useRouter();
-  const { serverUrl, setServerUrl, setConnected, setLastConnected } =
+  const { serverUrl, apiKey, setServerUrl, setApiKey, setConnected, setLastConnected } =
     useConnectionStore();
 
   const [url, setUrl] = useState(serverUrl || "http://localhost:20555");
+  const [key, setKey] = useState(apiKey || "");
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,9 +42,10 @@ export default function ConnectPage() {
       console.log("Validated URL:", validUrl);
 
       setServerUrl(validUrl);
+      setApiKey(key.trim() ? key.trim() : null);
 
       // Test connection
-      const api = createAPI(validUrl);
+      const api = createAPI(validUrl, key.trim() ? key.trim() : undefined);
       console.log("Testing connection...");
       try {
         const isConnected = await api.testConnection();
@@ -107,6 +109,20 @@ export default function ConnectPage() {
               />
               <p className="text-xs text-muted-foreground">
                 Default: http://localhost:20555
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="apiKey">API Key (optional)</Label>
+              <Input
+                id="apiKey"
+                type="password"
+                placeholder="Your API key"
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+                disabled={connecting}
+              />
+              <p className="text-xs text-muted-foreground">
+                Used for authenticated API + WebSocket access.
               </p>
             </div>
 

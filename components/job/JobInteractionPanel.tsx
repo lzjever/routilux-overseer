@@ -28,7 +28,7 @@ export function JobInteractionPanel({ jobId, serverUrl, jobStatus }: JobInteract
     try {
       // Note: This API endpoint doesn't exist yet in Routilux
       // This is a proposed API extension
-      const response = await fetch(`${serverUrl}/api/jobs/${jobId}/shared-data/${sharedDataKey}`, {
+      const response = await fetch(`${serverUrl}/api/v1/jobs/${jobId}/shared-data/${sharedDataKey}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value: JSON.parse(sharedDataValue) }),

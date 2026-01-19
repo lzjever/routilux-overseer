@@ -34,8 +34,8 @@ import { useJobStateStore } from "@/lib/stores/jobStateStore";
 import { useJobEventsStore } from "@/lib/stores/jobEventsStore";
 import { useBreakpointStore } from "@/lib/stores/breakpointStore";
 import { useUIStore } from "@/lib/stores/uiStore";
+import { useFlowStore } from "@/lib/stores/flowStore";
 import { createAPI } from "@/lib/api";
-import { BreakpointCreateRequest } from "@/lib/api/generated";
 
 interface RoutineDetailPanelProps {
   routineId: string;
@@ -57,10 +57,26 @@ export function RoutineDetailPanel({
   );
   const { breakpoints } = useBreakpointStore();
   const jobBreakpoints = breakpoints.get(jobId) || [];
-  const hasBreakpoint = jobBreakpoints.some((bp) => bp.routine_id === routineId);
+  const routineSlots = useFlowStore((state) => {
+    const node = state.nodes.find((item) => item.id === routineId);
+    return (node?.data as { slots?: { name: string }[] } | undefined)?.slots ?? [];
+  });
+  const [selectedSlot, setSelectedSlot] = useState<string>("");
+  const hasBreakpoint = jobBreakpoints.some(
+    (bp) => bp.routine_id === routineId && bp.slot_name === selectedSlot
+  );
 
   const config = (routineState as any)?._config;
   const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+    if (!routineSlots.length) {
+      setSelectedSlot("");
+      return;
+    }
+    if (!routineSlots.some((slot) => slot.name === selectedSlot)) {
+      setSelectedSlot(routineSlots[0].name);
+    }
+  }, [routineSlots, selectedSlot]);
 
   // Get status from routine state
   const status = routineState?.status || "pending";
@@ -85,14 +101,16 @@ export function RoutineDetailPanel({
     try {
       const api = createAPI(serverUrl);
       if (hasBreakpoint) {
-        const bp = jobBreakpoints.find((bp) => bp.routine_id === routineId);
+        const bp = jobBreakpoints.find(
+          (item) => item.routine_id === routineId && item.slot_name === selectedSlot
+        );
         if (bp) {
           await api.breakpoints.delete(jobId, bp.breakpoint_id);
         }
       } else {
         await api.breakpoints.create(jobId, {
-          type: BreakpointCreateRequest.type.ROUTINE,
           routine_id: routineId,
+          slot_name: selectedSlot,
           enabled: true,
         });
       }
@@ -157,11 +175,11 @@ export function RoutineDetailPanel({
             </div>
 
             {((routineState as any)?.processed_count !== undefined || routineState?.execution_count !== undefined) && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Executions</span>
-                <Badge variant="secondary">{((routineState as any)?.processed_count || routineState?.execution_count || 0)}x</Badge>
-              </div>
-            )}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-slate-600">Executions</span>
+              <Badge variant="secondary">{((routineState as any)?.processed_count || routineState?.execution_count || 0)}x</Badge>
+            </div>
+          )}
 
             {(routineState as any)?.progress !== undefined && (
               <div className="space-y-1">
@@ -183,6 +201,47 @@ export function RoutineDetailPanel({
                   </div>
                 </div>
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Breakpoint Controls */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-violet-500" />
+              Breakpoint
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {routineSlots.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No input slots available for this routine.</p>
+            ) : (
+              <>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Slot</label>
+                  <select
+                    value={selectedSlot}
+                    onChange={(event) => setSelectedSlot(event.target.value)}
+                    className="w-full px-2 py-1.5 text-sm rounded border bg-background"
+                  >
+                    {routineSlots.map((slot) => (
+                      <option key={slot.name} value={slot.name}>
+                        {slot.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button
+                  variant={hasBreakpoint ? "default" : "outline"}
+                  size="sm"
+                  className={cn(hasBreakpoint && "bg-violet-500 hover:bg-violet-600")}
+                  onClick={handleToggleBreakpoint}
+                  disabled={isLoading || !selectedSlot}
+                >
+                  {hasBreakpoint ? "Remove BP" : "Set BP"}
+                </Button>
+              </>
             )}
           </CardContent>
         </Card>
@@ -271,19 +330,6 @@ export function RoutineDetailPanel({
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant={hasBreakpoint ? "default" : "outline"}
-                className={cn(
-                  "justify-start",
-                  hasBreakpoint && "bg-purple-500 hover:bg-purple-600"
-                )}
-                onClick={handleToggleBreakpoint}
-                disabled={isLoading}
-              >
-                <MapPin className="h-4 w-4 mr-2" />
-                {hasBreakpoint ? "Remove BP" : "Set BP"}
-              </Button>
-
               <Button
                 variant="outline"
                 className="justify-start"

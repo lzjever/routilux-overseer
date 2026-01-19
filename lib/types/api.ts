@@ -23,7 +23,7 @@ export interface RoutineState {
 }
 
 /**
- * Job state response from GET /api/jobs/{job_id}/state
+ * Job state response from GET /api/v1/jobs/{job_id}/state
  */
 export interface JobStateResponse {
   status: string;
@@ -38,3 +38,14 @@ export interface JobStateResponse {
 }
 
 export type { BreakpointResponse as Breakpoint } from "../api/generated";
+
+export interface HealthReadinessSummary {
+  status?: string;
+  runtime?: {
+    active_workers?: number;
+    shutdown?: boolean;
+  };
+  reason?: string;
+}
+
+export type HealthStatsResponse = Record<string, unknown>;

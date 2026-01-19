@@ -6,18 +6,33 @@
  * Response model for breakpoint details.
  */
 export type BreakpointResponse = {
+    /**
+     * Unique breakpoint identifier
+     */
     breakpoint_id: string;
+    /**
+     * Job ID this breakpoint applies to
+     */
     job_id: string;
-    type: string;
-    routine_id: (string | null);
-    slot_name: (string | null);
-    event_name: (string | null);
-    source_routine_id?: (string | null);
-    source_event_name?: (string | null);
-    target_routine_id?: (string | null);
-    target_slot_name?: (string | null);
-    condition: (string | null);
+    /**
+     * Routine ID where the slot is located
+     */
+    routine_id: string;
+    /**
+     * Slot name where breakpoint is set
+     */
+    slot_name: string;
+    /**
+     * Optional condition expression
+     */
+    condition?: (string | null);
+    /**
+     * Whether breakpoint is active
+     */
     enabled: boolean;
+    /**
+     * Number of times breakpoint has been hit
+     */
     hit_count: number;
 };
 

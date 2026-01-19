@@ -25,12 +25,26 @@ import { ExecuteService } from "./generated/services/ExecuteService";
 /**
  * Create and configure a Routilux API client
  */
+function readApiKeyFromStorage(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = window.localStorage.getItem("overseer-connection-storage");
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as { state?: { apiKey?: string | null } };
+    const key = parsed?.state?.apiKey;
+    return key || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function createAPI(baseURL: string, apiKey?: string) {
   // Configure OpenAPI base URL and headers
   OpenAPI.BASE = baseURL.replace(/\/$/, "");
-  if (apiKey) {
+  const resolvedApiKey = apiKey ?? readApiKeyFromStorage();
+  if (resolvedApiKey) {
     OpenAPI.HEADERS = {
-      "X-API-Key": apiKey,
+      "X-API-Key": resolvedApiKey,
     };
   } else {
     OpenAPI.HEADERS = undefined;
@@ -194,13 +208,13 @@ export function createAPI(baseURL: string, apiKey?: string) {
     // Breakpoints API
     breakpoints: {
       list: async (jobId: string) => {
-        return await BreakpointsService.listBreakpointsApiJobsJobIdBreakpointsGet(jobId);
+        return await BreakpointsService.listBreakpointsApiV1JobsJobIdBreakpointsGet(jobId);
       },
       create: async (jobId: string, request: BreakpointCreateRequest) => {
-        return await BreakpointsService.createBreakpointApiJobsJobIdBreakpointsPost(jobId, request);
+        return await BreakpointsService.createBreakpointApiV1JobsJobIdBreakpointsPost(jobId, request);
       },
       delete: async (jobId: string, breakpointId: string) => {
-        await BreakpointsService.deleteBreakpointApiJobsJobIdBreakpointsBreakpointIdDelete(jobId, breakpointId);
+        await BreakpointsService.deleteBreakpointApiV1JobsJobIdBreakpointsBreakpointIdDelete(jobId, breakpointId);
       },
       // Note: update (enable/disable) is now in workers.updateBreakpoint
     },
@@ -208,35 +222,35 @@ export function createAPI(baseURL: string, apiKey?: string) {
     // Discovery API
     discovery: {
       syncFlows: async () => {
-        return await DiscoveryService.syncFlowsApiDiscoveryFlowsSyncPost();
+        return await DiscoveryService.syncFlowsApiV1DiscoveryFlowsSyncPost();
       },
       discoverFlows: async () => {
-        return await DiscoveryService.discoverFlowsApiDiscoveryFlowsGet();
+        return await DiscoveryService.discoverFlowsApiV1DiscoveryFlowsGet();
       },
       syncJobs: async () => {
-        return await DiscoveryService.syncJobsApiDiscoveryJobsSyncPost();
+        return await DiscoveryService.syncJobsApiV1DiscoveryJobsSyncPost();
       },
       discoverJobs: async () => {
-        return await DiscoveryService.discoverJobsApiDiscoveryJobsGet();
+        return await DiscoveryService.discoverJobsApiV1DiscoveryJobsGet();
       },
       syncWorkers: async () => {
-        return await DiscoveryService.syncWorkersApiDiscoveryWorkersSyncPost();
+        return await DiscoveryService.syncWorkersApiV1DiscoveryWorkersSyncPost();
       },
     },
 
     // Factory/Objects API
     factory: {
       listObjects: async (filters?: { category?: string | null; objectType?: string | null }) => {
-        return await FactoryService.listFactoryObjectsApiFactoryObjectsGet(
+        return await FactoryService.listFactoryObjectsApiV1FactoryObjectsGet(
           filters?.category ?? null,
           filters?.objectType ?? null
         );
       },
       getObjectMetadata: async (name: string) => {
-        return await FactoryService.getFactoryObjectMetadataApiFactoryObjectsNameGet(name);
+        return await FactoryService.getFactoryObjectMetadataApiV1FactoryObjectsNameGet(name);
       },
       getObjectInterface: async (name: string) => {
-        return await FactoryService.getFactoryObjectInterfaceApiFactoryObjectsNameInterfaceGet(name);
+        return await FactoryService.getFactoryObjectInterfaceApiV1FactoryObjectsNameInterfaceGet(name);
       },
     },
 

@@ -19,6 +19,7 @@ interface JobState {
   submitJob: (request: JobSubmitRequest, serverUrl: string) => Promise<JobResponse>;
   loadJobMonitoringData: (jobId: string, serverUrl: string) => Promise<void>;
   loadJobMetrics: (jobId: string, serverUrl: string) => Promise<void>;
+  setJobs: (jobs: JobResponse[]) => void;
 
   // WebSocket actions
   connectWebSocket: (serverUrl: string) => Promise<void>;
@@ -112,6 +113,11 @@ export const useJobStore = create<JobState>((set, get) => ({
     }
   },
 
+  setJobs: (jobs: JobResponse[]) => {
+    const jobMap = new Map(jobs.map((job) => [job.job_id, job]));
+    set({ jobs: jobMap });
+  },
+
   // WebSocket methods
   connectWebSocket: async (serverUrl: string) => {
     try {
@@ -126,9 +132,6 @@ export const useJobStore = create<JobState>((set, get) => ({
         "job_started",
         "job_completed",
         "job_failed",
-        "job_paused",
-        "job_resumed",
-        "job_cancelled",
         "routine_started",
         "routine_completed",
         "routine_failed",
