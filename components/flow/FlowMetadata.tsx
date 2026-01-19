@@ -54,7 +54,7 @@ export function FlowMetadata({ flow, flowId, serverUrl }: FlowMetadataProps) {
     setLoadingJobs(true);
     try {
       const api = createAPI(serverUrl);
-      const response = await api.jobs.list(flowId);
+      const response = await api.jobs.list(null, flowId, null, 100);
       setJobCount(response.total || 0);
     } catch (error) {
       console.error("Failed to load job count:", error);

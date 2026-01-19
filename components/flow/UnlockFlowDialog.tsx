@@ -13,7 +13,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { createAPI } from "@/lib/api";
-import type { JobResponse } from "@/lib/types/api";
+import type { JobResponse } from "@/lib/api/generated";
 
 interface UnlockFlowDialogProps {
   open: boolean;
@@ -41,7 +41,7 @@ export function UnlockFlowDialog({
         try {
           const api = createAPI(serverUrl);
           // Get jobs for this flow with status=running
-          const response = await api.jobs.list(flowId, "running", 100);
+          const response = await api.jobs.list(null, flowId, "running", 100);
           setRunningJobs(response.jobs || []);
         } catch (error) {
           console.error("Failed to check running jobs:", error);

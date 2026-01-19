@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { JobResponse } from "@/lib/types/api";
+import type { JobResponse } from "@/lib/api/generated";
 import { Clock, Activity, Zap, AlertCircle, Calendar, Timer } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 

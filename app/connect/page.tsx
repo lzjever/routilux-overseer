@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/card";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
 import { createAPI } from "@/lib/api";
-import { Loader2, Plug } from "lucide-react";
+import { Logo, LogoIcon } from "@/components/ui/Logo";
+import { Loader2 } from "lucide-react";
 
 export default function ConnectPage() {
   const router = useRouter();
@@ -81,12 +82,14 @@ export default function ConnectPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Plug className="h-6 w-6 text-primary" />
+          <div className="mx-auto mb-4">
+            <LogoIcon size={48} />
           </div>
-          <CardTitle className="text-2xl">Connect to Routilux</CardTitle>
+          <CardTitle className="text-2xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+            Connect to Routilux
+          </CardTitle>
           <CardDescription>
-            Enter your Routilux API server address to start debugging
+            Enter your Routilux API server address to start monitoring
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -11,7 +11,7 @@ interface BreakpointState {
   loadBreakpoints: (jobId: string, serverUrl: string) => Promise<void>;
   addBreakpoint: (jobId: string, request: BreakpointCreateRequest, serverUrl: string) => Promise<void>;
   removeBreakpoint: (jobId: string, breakpointId: string, serverUrl: string) => Promise<void>;
-  toggleBreakpoint: (jobId: string, breakpointId: string, serverUrl: string) => Promise<void>;
+  toggleBreakpoint: (jobId: string, breakpointId: string, workerId: string, serverUrl: string) => Promise<void>;
   clearBreakpoints: () => void;
 }
 
@@ -83,7 +83,7 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
     }
   },
 
-  toggleBreakpoint: async (jobId: string, breakpointId: string, serverUrl: string) => {
+  toggleBreakpoint: async (jobId: string, breakpointId: string, workerId: string, serverUrl: string) => {
     const currentBreakpoints = get().breakpoints.get(jobId) || [];
     const breakpoint = currentBreakpoints.find((bp) => bp.breakpoint_id === breakpointId);
 
@@ -91,7 +91,8 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
 
     try {
       const api = createAPI(serverUrl);
-      await api.breakpoints.update(jobId, breakpointId, !breakpoint.enabled);
+      // Use workers API for breakpoint enable/disable
+      await api.workers.updateBreakpoint(workerId, breakpointId, !breakpoint.enabled);
 
       set((state) => {
         const updatedBreakpoints = currentBreakpoints.map((bp) =>

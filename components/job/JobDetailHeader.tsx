@@ -8,19 +8,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, Play, Pause, XCircle, RefreshCw, Bug, Wifi, MoreVertical } from "lucide-react";
+import { ArrowLeft, Play, RefreshCw, Wifi } from "lucide-react";
 import Link from "next/link";
-import type { JobResponse } from "@/lib/types/api";
+import type { JobResponse } from "@/lib/api/generated";
 
 interface JobDetailHeaderProps {
   job: JobResponse;
   serverUrl?: string;
   onRefresh: () => void;
-  onPause?: () => void;
-  onResume?: () => void;
-  onCancel?: () => void;
-  onToggleDebug?: () => void;
-  debugSidebarOpen?: boolean;
   actionLoading?: boolean;
   wsConnected?: boolean;
 }
@@ -29,16 +24,10 @@ export function JobDetailHeader({
   job,
   serverUrl,
   onRefresh,
-  onPause,
-  onResume,
-  onCancel,
-  onToggleDebug,
-  debugSidebarOpen = false,
   actionLoading = false,
   wsConnected = false,
 }: JobDetailHeaderProps) {
   const isRunning = job.status === "running";
-  const isPaused = job.status === "paused";
 
   return (
     <div className="h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-4 gap-4">
@@ -58,6 +47,17 @@ export function JobDetailHeader({
           <p className="text-sm text-muted-foreground truncate">
             Flow: {job.flow_id}
           </p>
+
+          {job.worker_id && (
+            <>
+              <span className="text-muted-foreground">•</span>
+              <Link href={`/workers/${job.worker_id}`}>
+                <Button variant="ghost" size="sm" className="h-6 text-xs px-2">
+                  Worker: {job.worker_id}
+                </Button>
+              </Link>
+            </>
+          )}
 
           <span className="text-muted-foreground">•</span>
 
@@ -103,56 +103,18 @@ export function JobDetailHeader({
           <RefreshCw className={`h-4 w-4 ${actionLoading ? "animate-spin" : ""}`} />
         </Button>
 
-        {onToggleDebug && (
-          <Button
-            variant={debugSidebarOpen ? "default" : "outline"}
-            size="sm"
-            onClick={onToggleDebug}
-            className="h-8"
-          >
-            <Bug className="mr-2 h-3 w-3" />
-            Debug
-            {debugSidebarOpen && " Panel"}
-          </Button>
-        )}
-
-        {isRunning && onPause && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onPause}
-            disabled={actionLoading}
-            className="h-8"
-          >
-            <Pause className="mr-2 h-3 w-3" />
-            Pause
-          </Button>
-        )}
-
-        {isPaused && onResume && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onResume}
-            disabled={actionLoading}
-            className="h-8"
-          >
-            <Play className="mr-2 h-3 w-3" />
-            Resume
-          </Button>
-        )}
-
-        {(isRunning || isPaused) && onCancel && (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={onCancel}
-            disabled={actionLoading}
-            className="h-8"
-          >
-            <XCircle className="mr-2 h-3 w-3" />
-            Cancel
-          </Button>
+        {job.worker_id && (
+          <Link href={`/workers/${job.worker_id}`}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              title="View Worker (pause/resume/stop operations are at Worker level)"
+            >
+              <Play className="mr-2 h-3 w-3" />
+              View Worker
+            </Button>
+          </Link>
         )}
       </div>
     </div>

@@ -24,7 +24,46 @@ export const useJobStateStore = create<JobStateStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const api = createAPI(serverUrl);
-      const state = await api.jobs.getState(jobId);
+      // Note: getState API is no longer available
+      // Use getJobMonitoringData or getJobTrace instead
+      // For now, we'll create a minimal state from monitoring data
+      const monitoringData = await api.jobs.getMonitoringData(jobId);
+      const trace = await api.jobs.getTrace(jobId);
+      
+      // Convert to JobStateResponse format for compatibility
+      // Extract routine states from monitoring data
+      const routineStates: Record<string, RoutineState> = {};
+      if (monitoringData.routines) {
+        for (const [routineId, routineData] of Object.entries(monitoringData.routines)) {
+          const execStatus = (routineData as any).execution_status;
+          if (execStatus) {
+            routineStates[routineId] = {
+              status: execStatus.status,
+              execution_count: execStatus.execution_count,
+              last_execution: execStatus.last_execution_time,
+              error: execStatus.error_count > 0 ? `${execStatus.error_count} errors` : undefined,
+            };
+          }
+        }
+      }
+      
+      const state: JobStateResponse = {
+        status: monitoringData.job_status || "unknown",
+        current_routine_id: null, // Not available in new API
+        routine_states: routineStates,
+        execution_history: (trace.trace_log || []).map((entry: any) => ({
+          routine_id: entry.routine_id || entry.routine || "",
+          timestamp: entry.timestamp || entry.time || new Date().toISOString(),
+          event_name: entry.event_type || entry.event || entry.type || "",
+          data: entry.data || entry || {},
+        })),
+        pause_points: [],
+        deferred_events: [],
+        created_at: new Date().toISOString(),
+        updated_at: monitoringData.updated_at || new Date().toISOString(),
+        shared_data: {},
+      };
+      
       set((prevState) => ({
         jobStates: new Map(prevState.jobStates).set(jobId, state),
         loading: false,

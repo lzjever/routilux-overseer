@@ -46,9 +46,9 @@ export class DiscoveryService {
     }
     /**
      * Sync Jobs
-     * Sync jobs from global registry to API store.
+     * Sync jobs from Runtime to API storage.
      *
-     * Discovers all jobs from the global registry and adds them to the API store.
+     * Discovers all jobs from the Runtime and syncs them to the job storage.
      * This allows the API to monitor jobs started outside the API.
      *
      * Returns:
@@ -64,10 +64,10 @@ export class DiscoveryService {
     }
     /**
      * Discover Jobs
-     * Discover jobs from global registry.
+     * Discover jobs from Runtime.
      *
-     * Returns jobs from the global registry that may not be in the API store.
-     * Does not modify the API store.
+     * Returns jobs from the Runtime that may not be in the API storage.
+     * Does not modify the storage.
      *
      * Returns:
      * List of discovered jobs.
@@ -78,6 +78,23 @@ export class DiscoveryService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/discovery/jobs',
+        });
+    }
+    /**
+     * Sync Workers
+     * Sync workers from Runtime to WorkerRegistry.
+     *
+     * Discovers all active workers from Runtime and ensures they are registered.
+     *
+     * Returns:
+     * List of discovered workers.
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static syncWorkersApiDiscoveryWorkersSyncPost(): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/discovery/workers/sync',
         });
     }
 }

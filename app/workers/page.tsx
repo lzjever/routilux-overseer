@@ -2,97 +2,51 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useJobStore } from "@/lib/stores/jobStore";
+import { useWorkersStore } from "@/lib/stores/workersStore";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
-import { useDiscoveryStore } from "@/lib/stores/discoveryStore";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Play, Wifi, WifiOff, RefreshCw, Plug, Trash2, Download, CheckSquare, X } from "lucide-react";
+import { Loader2, Play, RefreshCw, Plug, CheckSquare, Pause, PlayCircle, XCircle } from "lucide-react";
 import { ActiveFiltersBar } from "@/components/job/ActiveFiltersBar";
-import { QuickFilters } from "@/components/job/QuickFilters";
-import { BulkActionsToolbar } from "@/components/common/BulkActionsToolbar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { createAPI } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-export default function JobsPage() {
+export default function WorkersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { connected, serverUrl } = useConnectionStore();
-  const { jobs, loading, loadJobs, wsConnected, connectWebSocket, disconnectWebSocket } = useJobStore();
+  const { workers, loading, loadWorkers, stopWorker, pauseWorker, resumeWorker } = useWorkersStore();
   const { flows } = useFlowStore();
-  const {
-    discoveredJobs,
-    syncingJobs,
-    lastJobSync,
-    discoverJobs: discoverJobsAction,
-    syncJobs: syncJobsAction,
-  } = useDiscoveryStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filterFlowId, setFilterFlowId] = useState<string>(searchParams.get("flowId") || "all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [syncing, setSyncing] = useState(false);
-  const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
-  const [bulkCancelling, setBulkCancelling] = useState(false);
+  const [selectedWorkers, setSelectedWorkers] = useState<Set<string>>(new Set());
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (serverUrl) {
-      // Load initial jobs
-      loadJobsWithFilters();
-
-      // Connect to WebSocket for real-time updates
-      if (connected) {
-        connectWebSocket(serverUrl);
-      }
-
-      // Discover jobs on mount
-      if (connected) {
-        discoverJobsAction(serverUrl);
-      }
+      loadWorkersWithFilters();
     }
+  }, [serverUrl, filterFlowId, filterStatus]);
 
-    // Cleanup on unmount
-    return () => {
-      if (wsConnected) {
-        disconnectWebSocket();
-      }
-    };
-  }, [serverUrl, connected, filterFlowId, filterStatus, discoverJobsAction]);
-
-  const loadJobsWithFilters = async () => {
+  const loadWorkersWithFilters = async () => {
     if (!serverUrl) return;
 
     try {
-      const api = createAPI(serverUrl);
-      const params: any = {};
-      if (filterFlowId !== "all") params.flow_id = filterFlowId;
-      if (filterStatus !== "all") params.status = filterStatus;
-
-      const response = await api.jobs.list(
-        null, // workerId
-        params.flow_id || null, // flowId
-        params.status || null, // status
-        params.limit || 100, // limit
-        params.offset // offset
+      await loadWorkers(
+        serverUrl,
+        filterFlowId !== "all" ? filterFlowId : null,
+        filterStatus !== "all" ? filterStatus : null
       );
-
-      // Update jobs in store
-      jobs.clear();
-      response.jobs.forEach((job: any) => {
-        jobs.set(job.job_id, job);
-      });
     } catch (error) {
-      console.error("Failed to load jobs:", error);
+      console.error("Failed to load workers:", error);
     }
   };
 
@@ -100,46 +54,60 @@ export default function JobsPage() {
     if (!serverUrl) return;
     setIsRefreshing(true);
     try {
-      await loadJobsWithFilters();
-      // Also refresh discovery
-      await discoverJobsAction(serverUrl);
+      await loadWorkersWithFilters();
     } finally {
       setIsRefreshing(false);
     }
   };
 
-  const handleSync = async () => {
-    if (!serverUrl || syncing) return;
-    setSyncing(true);
+  const handleStop = async (workerId: string) => {
+    if (!serverUrl) return;
+    if (!confirm("Are you sure you want to stop this worker? All jobs in progress may be interrupted.")) return;
+
+    setActionLoading(workerId);
     try {
-      const count = await syncJobsAction(serverUrl);
-      // Reload jobs after sync
-      await loadJobsWithFilters();
-      // Show success message
-      alert(`Successfully synced ${count} job${count !== 1 ? "s" : ""} from registry`);
+      await stopWorker(workerId, serverUrl);
+      await loadWorkersWithFilters();
     } catch (error) {
-      alert(`Failed to sync jobs: ${error instanceof Error ? error.message : "Unknown error"}`);
+      alert(`Failed to stop worker: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
-      setSyncing(false);
+      setActionLoading(null);
     }
   };
 
-
-  const handleBulkCancel = async () => {
-    if (!serverUrl || bulkCancelling || selectedJobs.size === 0) return;
-    // Note: cancel API is no longer available at Job level
-    // To cancel jobs, navigate to the Worker page and stop the worker
-    alert("Job cancellation is no longer available at Job level. Please navigate to the Worker page to manage jobs.");
-    setSelectedJobs(new Set());
+  const handlePause = async (workerId: string) => {
+    if (!serverUrl) return;
+    setActionLoading(workerId);
+    try {
+      await pauseWorker(workerId, serverUrl);
+      await loadWorkersWithFilters();
+    } catch (error) {
+      alert(`Failed to pause worker: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
-  const toggleJobSelection = (jobId: string) => {
-    setSelectedJobs((prev) => {
+  const handleResume = async (workerId: string) => {
+    if (!serverUrl) return;
+    setActionLoading(workerId);
+    try {
+      await resumeWorker(workerId, serverUrl);
+      await loadWorkersWithFilters();
+    } catch (error) {
+      alert(`Failed to resume worker: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const toggleWorkerSelection = (workerId: string) => {
+    setSelectedWorkers((prev) => {
       const next = new Set(prev);
-      if (next.has(jobId)) {
-        next.delete(jobId);
+      if (next.has(workerId)) {
+        next.delete(workerId);
       } else {
-        next.add(jobId);
+        next.add(workerId);
       }
       return next;
     });
@@ -158,9 +126,9 @@ export default function JobsPage() {
     },
   ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
 
-  const filteredJobs = Array.from(jobs.values()).filter((job) => {
-    if (filterFlowId !== "all" && job.flow_id !== filterFlowId) return false;
-    if (filterStatus !== "all" && job.status !== filterStatus) return false;
+  const filteredWorkers = Array.from(workers.values()).filter((worker) => {
+    if (filterFlowId !== "all" && worker.flow_id !== filterFlowId) return false;
+    if (filterStatus !== "all" && worker.status !== filterStatus) return false;
     return true;
   });
 
@@ -176,7 +144,7 @@ export default function JobsPage() {
                 Not Connected
               </CardTitle>
               <CardDescription>
-                Connect to a Routilux server to view jobs
+                Connect to a Routilux server to view workers
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -197,54 +165,14 @@ export default function JobsPage() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Jobs</h1>
+          <h1 className="text-3xl font-bold">Workers</h1>
           <div className="flex items-center gap-2 mt-1">
             <p className="text-muted-foreground">
-              {jobs.size} job{jobs.size !== 1 ? "s" : ""}
+              {workers.size} worker{workers.size !== 1 ? "s" : ""}
             </p>
-            <span className="text-muted-foreground">•</span>
-            <div className="flex items-center gap-1">
-              {wsConnected ? (
-                <>
-                  <Wifi className="h-3 w-3 text-green-500" />
-                  <span className="text-xs text-green-600">Live</span>
-                </>
-              ) : (
-                <>
-                  <WifiOff className="h-3 w-3 text-gray-400" />
-                  <span className="text-xs text-muted-foreground">Offline</span>
-                </>
-              )}
-            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {discoveredJobs.length > 0 && (
-            <Badge variant="outline" className="gap-1">
-              <Download className="h-3 w-3" />
-              {discoveredJobs.length} available
-            </Badge>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSync}
-            disabled={syncing || syncingJobs || discoveredJobs.length === 0}
-            className="gap-2"
-          >
-            {syncing || syncingJobs ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Syncing...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="h-4 w-4" />
-                Sync from Registry
-              </>
-            )}
-          </Button>
-
           <Button
             variant="outline"
             size="sm"
@@ -255,19 +183,6 @@ export default function JobsPage() {
             Refresh
           </Button>
         </div>
-        {lastJobSync && (
-          <div className="text-xs text-muted-foreground mt-2">
-            Last synced: {lastJobSync.toLocaleString()}
-          </div>
-        )}
-      </div>
-
-      {/* Quick Filters */}
-      <div className="mb-4">
-        <QuickFilters
-          activeFilter={filterStatus}
-          onFilterChange={setFilterStatus}
-        />
       </div>
 
       {/* Active Filters Bar */}
@@ -287,32 +202,10 @@ export default function JobsPage() {
       )}
 
       {/* Filter Summary */}
-      {filteredJobs.length !== jobs.size && (
+      {filteredWorkers.length !== workers.size && (
         <div className="mb-4 text-sm text-muted-foreground">
-          Showing {filteredJobs.length} of {jobs.size} jobs
+          Showing {filteredWorkers.length} of {workers.size} workers
         </div>
-      )}
-
-      {/* Bulk Actions Toolbar */}
-      {selectedJobs.size > 0 && (
-        <BulkActionsToolbar
-          selectedCount={selectedJobs.size}
-          totalCount={filteredJobs.length}
-          onSelectAll={() => {
-            setSelectedJobs(new Set(filteredJobs.map((j) => j.job_id)));
-          }}
-          onDeselectAll={() => setSelectedJobs(new Set())}
-          actions={[
-            {
-              label: "Cancel",
-              icon: X,
-              onClick: handleBulkCancel,
-              variant: "destructive",
-              disabled: bulkCancelling,
-            },
-          ]}
-          className="mb-4"
-        />
       )}
 
       {/* Filters */}
@@ -345,9 +238,10 @@ export default function JobsPage() {
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="running">Running</SelectItem>
+                  <SelectItem value="idle">Idle</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="failed">Failed</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
@@ -356,25 +250,25 @@ export default function JobsPage() {
         </CardContent>
       </Card>
 
-      {/* Jobs List */}
+      {/* Workers List */}
       {loading ? (
         <div className="flex items-center justify-center min-h-[200px]">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-      ) : filteredJobs.length === 0 ? (
+      ) : filteredWorkers.length === 0 ? (
         <Card>
           <EmptyState
             icon={Play}
-            title={jobs.size === 0 ? "No jobs yet" : "No jobs match filters"}
+            title={workers.size === 0 ? "No workers yet" : "No workers match filters"}
             description={
-              jobs.size === 0
-                ? "Get started by creating a job from one of your flows."
-                : "Try adjusting your filters to see more jobs."
+              workers.size === 0
+                ? "Get started by creating a worker from one of your flows."
+                : "Try adjusting your filters to see more workers."
             }
             action={
-              jobs.size === 0
+              workers.size === 0
                 ? {
-                    label: "Start a Job",
+                    label: "Create a Worker",
                     href: "/flows",
                   }
                 : undefined
@@ -383,12 +277,12 @@ export default function JobsPage() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {filteredJobs.map((job) => (
+          {filteredWorkers.map((worker) => (
             <Card
-              key={job.job_id}
+              key={worker.worker_id}
               className={cn(
                 "group hover:shadow-lg transition-all duration-200",
-                selectedJobs.has(job.job_id) && "ring-2 ring-primary"
+                selectedWorkers.has(worker.worker_id) && "ring-2 ring-primary"
               )}
             >
               <CardHeader>
@@ -397,13 +291,13 @@ export default function JobsPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleJobSelection(job.job_id);
+                        toggleWorkerSelection(worker.worker_id);
                       }}
                     >
                       <CheckSquare
                         className={cn(
                           "h-4 w-4",
-                          selectedJobs.has(job.job_id)
+                          selectedWorkers.has(worker.worker_id)
                             ? "text-primary fill-primary"
                             : "text-muted-foreground"
                         )}
@@ -411,46 +305,105 @@ export default function JobsPage() {
                     </button>
                     <div
                       className="flex-1 cursor-pointer"
-                      onClick={() => router.push(`/jobs/${job.job_id}`)}
+                      onClick={() => router.push(`/workers/${worker.worker_id}`)}
                     >
-                      <CardTitle className="text-lg">{job.job_id}</CardTitle>
+                      <CardTitle className="text-lg">{worker.worker_id}</CardTitle>
                       <CardDescription className="mt-1">
-                        Flow: {job.flow_id}
+                        Flow: {worker.flow_id}
                       </CardDescription>
                     </div>
                   </div>
                   <StatusBadge
-                    status={job.status}
-                    showSpinner={job.status === "running"}
-                    errorMessage={job.error ?? undefined}
+                    status={worker.status}
+                    showSpinner={worker.status === "running"}
                   />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  {job.created_at && (
+                <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                  {worker.created_at && (
                     <span>
-                      Created {formatDistanceToNow(new Date(job.created_at), {
+                      Created {formatDistanceToNow(new Date(worker.created_at * 1000), {
                         addSuffix: true,
                       })}
                     </span>
                   )}
-                  {job.started_at && (
-                    <span>• Started {formatDistanceToNow(new Date(job.started_at), {
-                      addSuffix: true,
-                    })}</span>
-                  )}
-                  {job.completed_at && (
-                    <span>• Completed {formatDistanceToNow(new Date(job.completed_at), {
+                  {worker.started_at && (
+                    <span>• Started {formatDistanceToNow(new Date(worker.started_at * 1000), {
                       addSuffix: true,
                     })}</span>
                   )}
                 </div>
-                {job.error && (
-                  <div className="mt-2 text-sm text-destructive">
-                    Error: {job.error}
-                  </div>
-                )}
+                <div className="flex items-center gap-4 text-sm mb-3">
+                  {worker.jobs_processed !== undefined && (
+                    <span>
+                      <span className="text-muted-foreground">Jobs Processed:</span>{" "}
+                      <span className="font-medium">{worker.jobs_processed}</span>
+                    </span>
+                  )}
+                  {worker.jobs_failed !== undefined && worker.jobs_failed > 0 && (
+                    <span>
+                      <span className="text-muted-foreground">Jobs Failed:</span>{" "}
+                      <span className="font-medium text-destructive">{worker.jobs_failed}</span>
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 mt-4">
+                  {worker.status === "running" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePause(worker.worker_id);
+                      }}
+                      disabled={actionLoading === worker.worker_id}
+                    >
+                      {actionLoading === worker.worker_id ? (
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      ) : (
+                        <Pause className="mr-2 h-3 w-3" />
+                      )}
+                      Pause
+                    </Button>
+                  )}
+                  {worker.status === "paused" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleResume(worker.worker_id);
+                      }}
+                      disabled={actionLoading === worker.worker_id}
+                    >
+                      {actionLoading === worker.worker_id ? (
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      ) : (
+                        <PlayCircle className="mr-2 h-3 w-3" />
+                      )}
+                      Resume
+                    </Button>
+                  )}
+                  {(worker.status === "running" || worker.status === "paused" || worker.status === "idle") && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStop(worker.worker_id);
+                      }}
+                      disabled={actionLoading === worker.worker_id}
+                    >
+                      {actionLoading === worker.worker_id ? (
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      ) : (
+                        <XCircle className="mr-2 h-3 w-3" />
+                      )}
+                      Stop
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}

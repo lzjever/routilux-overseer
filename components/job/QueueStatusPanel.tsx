@@ -32,7 +32,7 @@ export function QueueStatusPanel({
       setError(null);
       try {
         const api = createAPI(serverUrl);
-        const status = await api.monitor.getJobQueuesStatus(jobId);
+        const status = await api.jobs.getQueuesStatus(jobId);
         setQueues(status);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load queue status");

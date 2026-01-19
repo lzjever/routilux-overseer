@@ -1,15 +1,19 @@
 "use client";
 
+import { useMemo } from "react";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
 import { useSearchStore } from "@/lib/stores/searchStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Wifi, WifiOff, Search } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
+import { Settings, Wifi, WifiOff, Search, Activity, Users, Zap } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { connected, serverUrl, disconnect } = useConnectionStore();
   const { open } = useSearchStore();
 
@@ -18,23 +22,51 @@ export function Navbar() {
     router.push("/connect");
   };
 
+  const navLinks = useMemo(
+    () => [
+      { href: "/flows", label: "Flows", icon: Activity },
+      { href: "/workers", label: "Workers", icon: Users },
+      { href: "/jobs", label: "Jobs", icon: Zap },
+    ],
+    []
+  );
+
+  const isActive = useMemo(
+    () => (href: string) => {
+      if (href === "/") return pathname === "/";
+      return pathname.startsWith(href);
+    },
+    [pathname]
+  );
+
   return (
-    <nav className="border-b bg-background">
-      <div className="container mx-auto px-4 py-3">
+    <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="w-full px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo / Title */}
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2">
-              <h1 className="text-xl font-bold">Routilux Overseer</h1>
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity" prefetch={false}>
+              <Logo size="sm" showText={true} />
             </Link>
 
-            <div className="flex items-center gap-4">
-              <Link href="/flows" className="text-sm font-medium hover:underline">
-                Flows
-              </Link>
-              <Link href="/jobs" className="text-sm font-medium hover:underline">
-                Jobs
-              </Link>
+            {/* Navigation Links */}
+            <div className="flex items-center gap-1">
+              {navLinks.map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  prefetch={false}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    isActive(href)
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Link>
+              ))}
             </div>
           </div>
 
@@ -59,17 +91,19 @@ export function Navbar() {
             <div className="flex items-center gap-2 text-sm">
               {connected ? (
                 <>
-                  <Wifi className="h-4 w-4 text-green-500" />
-                  <span className="text-green-600">Connected</span>
-                  <Badge variant="outline" className="text-xs">
+                  <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400">
+                    <Wifi className="h-4 w-4" />
+                    <span className="hidden sm:inline">Connected</span>
+                  </div>
+                  <Badge variant="outline" className="text-xs font-mono">
                     {new URL(serverUrl).host}
                   </Badge>
                 </>
               ) : (
-                <>
-                  <WifiOff className="h-4 w-4 text-gray-400" />
-                  <span className="text-muted-foreground">Not connected</span>
-                </>
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <WifiOff className="h-4 w-4" />
+                  <span className="hidden sm:inline">Not connected</span>
+                </div>
               )}
             </div>
 
@@ -81,7 +115,7 @@ export function Navbar() {
                 className="gap-2"
               >
                 <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">Change Server</span>
+                <span className="hidden sm:inline">Settings</span>
               </Button>
             )}
           </div>

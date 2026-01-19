@@ -19,9 +19,9 @@ import { RoutineStatesPanel } from "@/components/job/RoutineStatesPanel";
 import { SharedDataViewer } from "@/components/job/SharedDataViewer";
 import { ExecutionHistoryTimeline } from "@/components/job/ExecutionHistoryTimeline";
 import { MiniEventLog } from "@/components/monitoring/MiniEventLog";
-import { DebugSidebar } from "@/components/debug/DebugSidebar";
 import { JobDetailHeader } from "@/components/job/JobDetailHeader";
 import { JobDetailsSidebar } from "@/components/job/JobDetailsSidebar";
+import { Navbar } from "@/components/layout/Navbar";
 import { useJobMonitor } from "@/lib/websocket/job-monitor";
 import { Loader2 } from "lucide-react";
 
@@ -29,8 +29,8 @@ export default function JobDetailPage() {
   const router = useRouter();
   const params = useParams();
   const jobId = params.jobId as string;
-  const { connected, serverUrl } = useConnectionStore();
-  const { jobs, loadJob, pauseJob, resumeJob, cancelJob, loadJobMonitoringData, loadJobMetrics, wsConnected } = useJobStore();
+  const { connected, serverUrl, hydrated } = useConnectionStore();
+  const { jobs, loadJob, loadJobMonitoringData, loadJobMetrics, wsConnected } = useJobStore();
   const { selectFlow, nodes, flows } = useFlowStore();
   const { getEvents } = useJobEventsStore();
   const { loadBreakpoints } = useBreakpointStore();
@@ -39,7 +39,6 @@ export default function JobDetailPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"main" | "history">("main");
-  const [debugSidebarOpen, setDebugSidebarOpen] = useState(true);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
 
@@ -65,14 +64,11 @@ export default function JobDetailPage() {
     }
   }, [job, serverUrl, jobId, loadJobState, loadJobMonitoringData, loadJobMetrics]);
 
-  // Auto-open debug sidebar when job is paused
-  useEffect(() => {
-    if (job?.status === "paused") {
-      setDebugSidebarOpen(true);
-    }
-  }, [job?.status]);
 
   useEffect(() => {
+    // Wait for hydration before checking connection
+    if (!hydrated) return;
+    
     if (!connected || !serverUrl) {
       router.push("/connect");
       return;
@@ -104,40 +100,8 @@ export default function JobDetailPage() {
     };
 
     loadData();
-  }, [connected, serverUrl, jobId, loadJob, selectFlow, loadBreakpoints, loadJobMonitoringData, loadJobMetrics]);
+  }, [hydrated, connected, serverUrl, jobId, loadJob, selectFlow, loadBreakpoints, loadJobMonitoringData, loadJobMetrics]);
 
-  const handlePause = async () => {
-    if (!serverUrl) return;
-    setActionLoading(true);
-    try {
-      await pauseJob(jobId, serverUrl);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleResume = async () => {
-    if (!serverUrl) return;
-    setActionLoading(true);
-    try {
-      await resumeJob(jobId, serverUrl);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleCancel = async () => {
-    if (!serverUrl) return;
-    if (!confirm("Are you sure you want to cancel this job?")) return;
-
-    setActionLoading(true);
-    try {
-      await cancelJob(jobId, serverUrl);
-      router.push("/jobs");
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const handleRefresh = async () => {
     if (!serverUrl) return;
@@ -158,20 +122,22 @@ export default function JobDetailPage() {
     });
   };
 
-  const handleStep = () => {
-    if (serverUrl) {
-      loadJobState(jobId, serverUrl);
-    }
-  };
-
-  if (!connected) {
-    return null;
+  // Show loading while hydrating or if not connected
+  if (!hydrated || !connected) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   if (loading || !job) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }
@@ -184,11 +150,6 @@ export default function JobDetailPage() {
         job={job}
         serverUrl={serverUrl}
         onRefresh={handleRefresh}
-        onPause={handlePause}
-        onResume={handleResume}
-        onCancel={handleCancel}
-        onToggleDebug={() => setDebugSidebarOpen(!debugSidebarOpen)}
-        debugSidebarOpen={debugSidebarOpen}
         actionLoading={actionLoading}
         wsConnected={wsConnected}
       />
@@ -197,7 +158,7 @@ export default function JobDetailPage() {
       <div
         className="flex-1 min-h-0 overflow-hidden flex"
         style={{
-          paddingRight: (debugSidebarOpen ? 400 : 0) + (selectedNodeId || selectedEdgeId ? 320 : 0),
+          paddingRight: (selectedNodeId || selectedEdgeId ? 320 : 0),
         }}
       >
         <div className="flex-1 min-h-0">
@@ -277,7 +238,7 @@ export default function JobDetailPage() {
 
       {/* Job Details Sidebar */}
       {serverUrl && (selectedNodeId || selectedEdgeId) && (
-        <div className="fixed right-0 top-14 bottom-0" style={{ right: debugSidebarOpen ? "400px" : "0" }}>
+        <div className="fixed right-0 top-14 bottom-0">
           <JobDetailsSidebar
             jobId={jobId}
             serverUrl={serverUrl}
@@ -285,19 +246,6 @@ export default function JobDetailPage() {
             selectedEdgeId={selectedEdgeId}
           />
         </div>
-      )}
-
-      {/* Debug Sidebar */}
-      {serverUrl && debugSidebarOpen && (
-        <DebugSidebar
-          jobId={jobId}
-          serverUrl={serverUrl}
-          jobStatus={job.status}
-          availableRoutines={availableRoutines}
-          isOpen={debugSidebarOpen}
-          onToggle={() => setDebugSidebarOpen(!debugSidebarOpen)}
-          onStep={handleStep}
-        />
       )}
 
       {/* Mini Event Log */}

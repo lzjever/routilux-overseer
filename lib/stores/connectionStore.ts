@@ -8,6 +8,7 @@ export interface ConnectionState {
   connecting: boolean;
   error: string | null;
   lastConnected: string | null;
+  hydrated: boolean; // Track if state has been hydrated from localStorage
 
   // Actions
   setServerUrl: (url: string) => void;
@@ -17,6 +18,7 @@ export interface ConnectionState {
   setLastConnected: (timestamp: string) => void;
   reset: () => void;
   disconnect: () => void;
+  setHydrated: (hydrated: boolean) => void;
 }
 
 export const useConnectionStore = create<ConnectionState>()(
@@ -28,6 +30,7 @@ export const useConnectionStore = create<ConnectionState>()(
       connecting: false,
       error: null,
       lastConnected: null,
+      hydrated: false,
 
       // Actions
       setServerUrl: (url) => set({ serverUrl: url }),
@@ -54,6 +57,8 @@ export const useConnectionStore = create<ConnectionState>()(
           connecting: false,
           error: null,
         }),
+
+      setHydrated: (hydrated) => set({ hydrated }),
     }),
     {
       name: "overseer-connection-storage",
@@ -62,6 +67,12 @@ export const useConnectionStore = create<ConnectionState>()(
         lastConnected: state.lastConnected,
         connected: state.connected,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Called when state is rehydrated from localStorage
+        if (state) {
+          state.setHydrated(true);
+        }
+      },
     }
   )
 );

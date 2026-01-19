@@ -19,18 +19,17 @@ export class DefaultService {
         });
     }
     /**
-     * Health
-     * Health check endpoint.
+     * Legacy Health
+     * Legacy health check endpoint.
      *
-     * Returns detailed health information including:
-     * - Overall status
-     * - Monitoring status
-     * - Store accessibility
-     * - Version information
+     * For the new health endpoints, use:
+     * - GET /api/v1/health/live (liveness)
+     * - GET /api/v1/health/ready (readiness)
+     * - GET /api/v1/health/stats (detailed stats)
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static healthApiHealthGet(): CancelablePromise<any> {
+    public static legacyHealthApiHealthGet(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/health',

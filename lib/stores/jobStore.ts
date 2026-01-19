@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { JobResponse, JobStartRequest } from "@/lib/types/api";
+import type { JobResponse, JobSubmitRequest } from "@/lib/api/generated";
 import type { JobMonitoringData, ExecutionMetricsResponse } from "@/lib/api/generated";
 import { createAPI } from "@/lib/api";
 import { getWebSocketManager, disposeWebSocketManager, WebSocketMessage } from "@/lib/websocket/websocket-manager";
@@ -14,12 +14,9 @@ interface JobState {
   wsConnected: boolean;
 
   // Actions
-  loadJobs: (serverUrl: string) => Promise<void>;
+  loadJobs: (serverUrl: string, workerId?: string | null) => Promise<void>;
   loadJob: (jobId: string, serverUrl: string) => Promise<void>;
-  startJob: (request: JobStartRequest, serverUrl: string) => Promise<JobResponse>;
-  pauseJob: (jobId: string, serverUrl: string) => Promise<void>;
-  resumeJob: (jobId: string, serverUrl: string) => Promise<void>;
-  cancelJob: (jobId: string, serverUrl: string) => Promise<void>;
+  submitJob: (request: JobSubmitRequest, serverUrl: string) => Promise<JobResponse>;
   loadJobMonitoringData: (jobId: string, serverUrl: string) => Promise<void>;
   loadJobMetrics: (jobId: string, serverUrl: string) => Promise<void>;
 
@@ -38,11 +35,11 @@ export const useJobStore = create<JobState>((set, get) => ({
   serverUrl: null,
   wsConnected: false,
 
-  loadJobs: async (serverUrl: string) => {
+  loadJobs: async (serverUrl: string, workerId?: string | null) => {
     set({ loading: true, error: null, serverUrl });
     try {
       const api = createAPI(serverUrl);
-      const response = await api.jobs.list(null, null, 100);
+      const response = await api.jobs.list(workerId || null, null, null, 100);
       const jobMap = new Map(response.jobs.map((j) => [j.job_id, j]));
       set({ jobs: jobMap, loading: false, serverUrl });
     } catch (error) {
@@ -70,11 +67,11 @@ export const useJobStore = create<JobState>((set, get) => ({
     }
   },
 
-  startJob: async (request: JobStartRequest, serverUrl: string) => {
+  submitJob: async (request: JobSubmitRequest, serverUrl: string) => {
     set({ loading: true, error: null });
     try {
       const api = createAPI(serverUrl);
-      const job = await api.jobs.start(request);
+      const job = await api.jobs.submit(request);
       set((state) => ({
         jobs: new Map(state.jobs).set(job.job_id, job),
         loading: false,
@@ -82,65 +79,17 @@ export const useJobStore = create<JobState>((set, get) => ({
       return job;
     } catch (error) {
       set({
-        error: error instanceof Error ? error.message : "Failed to start job",
+        error: error instanceof Error ? error.message : "Failed to submit job",
         loading: false,
       });
       throw error;
     }
   },
 
-  pauseJob: async (jobId: string, serverUrl: string) => {
-    try {
-      const api = createAPI(serverUrl);
-      await api.jobs.pause(jobId);
-      // Refresh job state via API
-      const job = await api.jobs.get(jobId);
-      set((state) => ({
-        jobs: new Map(state.jobs).set(jobId, job),
-      }));
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : "Failed to pause job",
-      });
-    }
-  },
-
-  resumeJob: async (jobId: string, serverUrl: string) => {
-    try {
-      const api = createAPI(serverUrl);
-      await api.jobs.resume(jobId);
-      // Refresh job state via API
-      const job = await api.jobs.get(jobId);
-      set((state) => ({
-        jobs: new Map(state.jobs).set(jobId, job),
-      }));
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : "Failed to resume job",
-      });
-    }
-  },
-
-  cancelJob: async (jobId: string, serverUrl: string) => {
-    try {
-      const api = createAPI(serverUrl);
-      await api.jobs.cancel(jobId);
-      // Refresh job state via API
-      const job = await api.jobs.get(jobId);
-      set((state) => ({
-        jobs: new Map(state.jobs).set(jobId, job),
-      }));
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : "Failed to cancel job",
-      });
-    }
-  },
-
   loadJobMonitoringData: async (jobId: string, serverUrl: string) => {
     try {
       const api = createAPI(serverUrl);
-      const monitoringData = await api.monitor.getJobMonitoringData(jobId);
+      const monitoringData = await api.jobs.getMonitoringData(jobId);
       set((state) => ({
         monitoringData: new Map(state.monitoringData).set(jobId, monitoringData),
       }));
@@ -152,7 +101,7 @@ export const useJobStore = create<JobState>((set, get) => ({
   loadJobMetrics: async (jobId: string, serverUrl: string) => {
     try {
       const api = createAPI(serverUrl);
-      const metrics = await api.monitor.getJobMetrics(jobId);
+      const metrics = await api.jobs.getMetrics(jobId);
       set((state) => ({
         metricsData: new Map(state.metricsData).set(jobId, metrics),
       }));

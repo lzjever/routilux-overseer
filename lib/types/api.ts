@@ -2,37 +2,6 @@
 export type * from "../api/generated";
 
 /**
- * Call stack response from debug endpoint (not in generated)
- */
-export interface CallStackResponse {
-  job_id: string;
-  call_stack: Array<{
-    routine_id: string;
-    slot_name?: string;
-    event_name?: string;
-  }>;
-}
-
-/**
- * Debug session information from GET /api/jobs/{job_id}/debug/session
- */
-export interface DebugSessionInfo {
-  session_id: string;
-  job_id: string;
-  status: "running" | "paused" | "stepping";
-  paused_at?: { routine_id: string };
-  call_stack_depth: number;
-  paused_timestamp?: string;
-}
-
-/**
- * Variables response from GET /api/jobs/{job_id}/debug/variables
- */
-export interface VariablesResponse {
-  variables: Record<string, unknown>;
-}
-
-/**
  * Execution record for timeline/history views
  */
 export interface ExecutionRecord {

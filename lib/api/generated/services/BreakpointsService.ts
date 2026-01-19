@@ -5,7 +5,6 @@
 import type { BreakpointCreateRequest } from '../models/BreakpointCreateRequest';
 import type { BreakpointListResponse } from '../models/BreakpointListResponse';
 import type { BreakpointResponse } from '../models/BreakpointResponse';
-import type { BreakpointUpdateRequest } from '../models/BreakpointUpdateRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -75,34 +74,6 @@ export class BreakpointsService {
                 'job_id': jobId,
                 'breakpoint_id': breakpointId,
             },
-            errors: {
-                422: `Validation Error`,
-            },
-        });
-    }
-    /**
-     * Update Breakpoint
-     * Update breakpoint (enable/disable).
-     * @param jobId
-     * @param breakpointId
-     * @param requestBody
-     * @returns BreakpointResponse Successful Response
-     * @throws ApiError
-     */
-    public static updateBreakpointApiJobsJobIdBreakpointsBreakpointIdPut(
-        jobId: string,
-        breakpointId: string,
-        requestBody: BreakpointUpdateRequest,
-    ): CancelablePromise<BreakpointResponse> {
-        return __request(OpenAPI, {
-            method: 'PUT',
-            url: '/api/jobs/{job_id}/breakpoints/{breakpoint_id}',
-            path: {
-                'job_id': jobId,
-                'breakpoint_id': breakpointId,
-            },
-            body: requestBody,
-            mediaType: 'application/json',
             errors: {
                 422: `Validation Error`,
             },

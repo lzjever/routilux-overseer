@@ -154,7 +154,7 @@ export function FlowDetailHeader({
         
         <Button onClick={onStartJob} size="sm" className="h-8">
           <Play className="mr-2 h-3 w-3" />
-          Start Job
+          Create Worker
         </Button>
       </div>
     </div>

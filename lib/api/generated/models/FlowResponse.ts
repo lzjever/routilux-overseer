@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ConnectionInfo } from './ConnectionInfo';
-import type { RoutineInfo } from './RoutineInfo';
+import type { routilux__server__models__flow__RoutineInfo } from './routilux__server__models__flow__RoutineInfo';
 /**
  * Response model for flow details.
  *
@@ -51,7 +51,7 @@ import type { RoutineInfo } from './RoutineInfo';
                             /**
                              * Dictionary mapping routine IDs to routine information. Keys are routine IDs, values are RoutineInfo objects containing slots, events, and config.
                              */
-                            routines: Record<string, RoutineInfo>;
+                            routines: Record<string, routilux__server__models__flow__RoutineInfo>;
                             /**
                              * List of all connections in the flow. Each connection represents a data flow path from a source routine's event to a target routine's slot.
                              */

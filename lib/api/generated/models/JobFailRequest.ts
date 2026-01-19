@@ -3,9 +3,12 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Request to set a variable.
+ * Request to mark a Job as failed.
  */
-export type VariableSetRequest = {
-    value: any;
+export type JobFailRequest = {
+    /**
+     * Error message
+     */
+    error: string;
 };
 

@@ -4,23 +4,24 @@ import { OpenAPI } from "./generated";
 export { OpenAPI };
 import type { 
   FlowCreateRequest, 
-  JobStartRequest, 
-  BreakpointCreateRequest, 
-  ExpressionEvalRequest, 
-  VariableSetRequest,
+  JobSubmitRequest,
+  WorkerCreateRequest,
+  ExecuteRequest,
+  BreakpointCreateRequest,
+  BreakpointUpdateRequest,
   AddRoutineRequest,
   AddConnectionRequest,
-  PostToJobRequest,
 } from "./generated";
 import { FlowsService } from "./generated/services/FlowsService";
 import { JobsService } from "./generated/services/JobsService";
-import { MonitorService } from "./generated/services/MonitorService";
-import { DebugService } from "./generated/services/DebugService";
 import { BreakpointsService } from "./generated/services/BreakpointsService";
 import { DiscoveryService } from "./generated/services/DiscoveryService";
 import { DefaultService } from "./generated/services/DefaultService";
+import { HealthService } from "./generated/services/HealthService";
 import { FactoryService } from "./generated/services/FactoryService";
 import { RuntimesService } from "./generated/services/RuntimesService";
+import { WorkersService } from "./generated/services/WorkersService";
+import { ExecuteService } from "./generated/services/ExecuteService";
 
 /**
  * Create and configure a Routilux API client
@@ -80,97 +81,110 @@ export function createAPI(baseURL: string, apiKey?: string) {
 
     // Jobs API
     jobs: {
-      list: async (flowId?: string | null, status?: string | null, limit: number = 100, offset?: number) => {
-        return await JobsService.listJobsApiJobsGet(flowId || null, status || null, limit, offset);
+      // Core operations
+      list: async (workerId?: string | null, flowId?: string | null, status?: string | null, limit: number = 100, offset?: number) => {
+        return await JobsService.listJobsApiV1JobsGet(workerId || null, flowId || null, status || null, limit, offset);
       },
       get: async (jobId: string) => {
-        return await JobsService.getJobApiJobsJobIdGet(jobId);
+        return await JobsService.getJobApiV1JobsJobIdGet(jobId);
       },
-      start: async (request: JobStartRequest) => {
-        return await JobsService.startJobApiJobsPost(request);
+      submit: async (request: JobSubmitRequest) => {
+        return await JobsService.submitJobApiV1JobsPost(request);
       },
-      pause: async (jobId: string) => {
-        return await JobsService.pauseJobApiJobsJobIdPausePost(jobId);
+      complete: async (jobId: string) => {
+        return await JobsService.completeJobApiV1JobsJobIdCompletePost(jobId);
       },
-      resume: async (jobId: string) => {
-        return await JobsService.resumeJobApiJobsJobIdResumePost(jobId);
+      fail: async (jobId: string, error: string) => {
+        return await JobsService.failJobApiV1JobsJobIdFailPost(jobId, { error });
       },
-      cancel: async (jobId: string) => {
-        return await JobsService.cancelJobApiJobsJobIdCancelPost(jobId);
+      wait: async (jobId: string, timeout: number = 60) => {
+        return await JobsService.waitForJobApiV1JobsJobIdWaitPost(jobId, timeout);
+      },
+      getOutput: async (jobId: string, incremental: boolean = false) => {
+        return await JobsService.getJobOutputApiV1JobsJobIdOutputGet(jobId, incremental);
       },
       getStatus: async (jobId: string) => {
-        return await JobsService.getJobStatusApiJobsJobIdStatusGet(jobId);
+        return await JobsService.getJobStatusApiV1JobsJobIdStatusGet(jobId);
       },
-      getState: async (jobId: string) => {
-        return await JobsService.getJobStateApiJobsJobIdStateGet(jobId);
+      getTrace: async (jobId: string) => {
+        return await JobsService.getJobTraceApiV1JobsJobIdTraceGet(jobId);
       },
-      post: async (jobId: string, request: PostToJobRequest) => {
-        return await JobsService.postToJobApiJobsJobIdPostPost(jobId, request);
+      
+      // Monitoring functions (migrated from MonitorService)
+      getMetrics: async (jobId: string) => {
+        return await JobsService.getJobMetricsApiV1JobsJobIdMetricsGet(jobId);
       },
-      cleanup: async (maxAgeHours: number = 24, statuses?: string[]) => {
-        return await JobsService.cleanupJobsApiJobsCleanupPost(maxAgeHours, statuses || null);
+      getExecutionTrace: async (jobId: string, limit?: number) => {
+        return await JobsService.getJobExecutionTraceApiV1JobsJobIdExecutionTraceGet(jobId, limit || null);
       },
-    },
-
-    // Monitor API
-    monitor: {
-      getJobMetrics: async (jobId: string) => {
-        return await MonitorService.getJobMetricsApiJobsJobIdMetricsGet(jobId);
+      getLogs: async (jobId: string) => {
+        return await JobsService.getJobLogsApiV1JobsJobIdLogsGet(jobId);
       },
-      getJobTrace: async (jobId: string, limit?: number | null) => {
-        return await MonitorService.getJobTraceApiJobsJobIdTraceGet(jobId, limit || null);
+      getData: async (jobId: string) => {
+        return await JobsService.getJobDataApiV1JobsJobIdDataGet(jobId);
       },
-      getJobLogs: async (jobId: string) => {
-        return await MonitorService.getJobLogsApiJobsJobIdLogsGet(jobId);
-      },
-      getFlowMetrics: async (flowId: string) => {
-        return await MonitorService.getFlowMetricsApiFlowsFlowIdMetricsGet(flowId);
-      },
-      getRoutineQueueStatus: async (jobId: string, routineId: string) => {
-        return await MonitorService.getRoutineQueueStatusApiJobsJobIdRoutinesRoutineIdQueueStatusGet(jobId, routineId);
-      },
-      getJobQueuesStatus: async (jobId: string) => {
-        return await MonitorService.getJobQueuesStatusApiJobsJobIdQueuesStatusGet(jobId);
-      },
-      getRoutineInfo: async (flowId: string, routineId: string) => {
-        return await MonitorService.getRoutineInfoApiFlowsFlowIdRoutinesRoutineIdInfoGet(flowId, routineId);
+      getMonitoringData: async (jobId: string) => {
+        return await JobsService.getJobMonitoringDataApiV1JobsJobIdMonitoringGet(jobId);
       },
       getRoutinesStatus: async (jobId: string) => {
-        return await MonitorService.getRoutinesStatusApiJobsJobIdRoutinesStatusGet(jobId);
+        return await JobsService.getRoutinesStatusApiV1JobsJobIdRoutinesStatusGet(jobId);
       },
-      getJobMonitoringData: async (jobId: string) => {
-        return await MonitorService.getJobMonitoringDataApiJobsJobIdMonitoringGet(jobId);
+      getRoutineQueueStatus: async (jobId: string, routineId: string) => {
+        return await JobsService.getRoutineQueueStatusApiV1JobsJobIdRoutinesRoutineIdQueueStatusGet(jobId, routineId);
+      },
+      getQueuesStatus: async (jobId: string) => {
+        return await JobsService.getJobQueuesStatusApiV1JobsJobIdQueuesStatusGet(jobId);
       },
     },
 
-    // Debug API
-    debug: {
-      getSession: async (jobId: string) => {
-        return await DebugService.getDebugSessionApiJobsJobIdDebugSessionGet(jobId);
+    // Workers API
+    workers: {
+      // Core operations
+      create: async (request: WorkerCreateRequest) => {
+        return await WorkersService.createWorkerApiV1WorkersPost(request);
       },
-      resume: async (jobId: string) => {
-        return await DebugService.resumeDebugApiJobsJobIdDebugResumePost(jobId);
+      list: async (flowId?: string | null, status?: string | null, limit: number = 100, offset?: number) => {
+        return await WorkersService.listWorkersApiV1WorkersGet(flowId || null, status || null, limit, offset);
       },
-      stepOver: async (jobId: string) => {
-        return await DebugService.stepOverApiJobsJobIdDebugStepOverPost(jobId);
+      get: async (workerId: string) => {
+        return await WorkersService.getWorkerApiV1WorkersWorkerIdGet(workerId);
       },
-      stepInto: async (jobId: string) => {
-        return await DebugService.stepIntoApiJobsJobIdDebugStepIntoPost(jobId);
+      stop: async (workerId: string) => {
+        await WorkersService.stopWorkerApiV1WorkersWorkerIdDelete(workerId);
       },
-      getVariables: async (jobId: string, routineId?: string) => {
-        return await DebugService.getVariablesApiJobsJobIdDebugVariablesGet(jobId, routineId);
+      pause: async (workerId: string) => {
+        return await WorkersService.pauseWorkerApiV1WorkersWorkerIdPausePost(workerId);
       },
-      setVariable: async (jobId: string, name: string, value: any) => {
-        const request: VariableSetRequest = { value };
-        return await DebugService.setVariableApiJobsJobIdDebugVariablesNamePut(jobId, name, request);
+      resume: async (workerId: string) => {
+        return await WorkersService.resumeWorkerApiV1WorkersWorkerIdResumePost(workerId);
       },
-      getCallStack: async (jobId: string) => {
-        return await DebugService.getCallStackApiJobsJobIdDebugCallStackGet(jobId);
+      listJobs: async (workerId: string, status?: string | null, limit: number = 100, offset?: number) => {
+        return await WorkersService.listWorkerJobsApiV1WorkersWorkerIdJobsGet(workerId, status || null, limit, offset);
       },
-      evaluateExpression: async (jobId: string, request: ExpressionEvalRequest) => {
-        return await DebugService.evaluateExpressionApiJobsJobIdDebugEvaluatePost(jobId, request);
+      
+      // Enhanced features
+      getStatistics: async (workerId: string) => {
+        return await WorkersService.getWorkerStatisticsApiV1WorkersWorkerIdStatisticsGet(workerId);
+      },
+      getHistory: async (workerId: string, routineId?: string, limit: number = 100, offset?: number) => {
+        return await WorkersService.getWorkerHistoryApiV1WorkersWorkerIdHistoryGet(workerId, routineId || null, limit, offset);
+      },
+      getRoutineStates: async (workerId: string) => {
+        return await WorkersService.getWorkerRoutineStatesApiV1WorkersWorkerIdRoutinesStatesGet(workerId);
+      },
+      updateBreakpoint: async (workerId: string, breakpointId: string, enabled: boolean) => {
+        const request: BreakpointUpdateRequest = { enabled };
+        return await WorkersService.updateBreakpointEnabledApiV1WorkersWorkerIdBreakpointsBreakpointIdPut(workerId, breakpointId, request);
       },
     },
+
+    // Execute API
+    execute: {
+      flow: async (request: ExecuteRequest) => {
+        return await ExecuteService.executeFlowApiV1ExecutePost(request);
+      },
+    },
+
 
     // Breakpoints API
     breakpoints: {
@@ -180,12 +194,10 @@ export function createAPI(baseURL: string, apiKey?: string) {
       create: async (jobId: string, request: BreakpointCreateRequest) => {
         return await BreakpointsService.createBreakpointApiJobsJobIdBreakpointsPost(jobId, request);
       },
-      update: async (jobId: string, breakpointId: string, enabled: boolean) => {
-        return await BreakpointsService.updateBreakpointApiJobsJobIdBreakpointsBreakpointIdPut(jobId, breakpointId, { enabled });
-      },
       delete: async (jobId: string, breakpointId: string) => {
         await BreakpointsService.deleteBreakpointApiJobsJobIdBreakpointsBreakpointIdDelete(jobId, breakpointId);
       },
+      // Note: update (enable/disable) is now in workers.updateBreakpoint
     },
 
     // Discovery API
@@ -220,28 +232,36 @@ export function createAPI(baseURL: string, apiKey?: string) {
     // Runtimes API
     runtimes: {
       list: async () => {
-        return await RuntimesService.listRuntimesApiRuntimesGet();
+        return await RuntimesService.listRuntimesApiV1RuntimesGet();
       },
       get: async (runtimeId: string) => {
-        return await RuntimesService.getRuntimeApiRuntimesRuntimeIdGet(runtimeId);
+        return await RuntimesService.getRuntimeApiV1RuntimesRuntimeIdGet(runtimeId);
       },
       create: async (request: { runtime_id: string; thread_pool_size?: number; is_default?: boolean }) => {
-        return await RuntimesService.createRuntimeApiRuntimesPost(request);
+        return await RuntimesService.createRuntimeApiV1RuntimesPost(request);
       },
     },
 
     // Health check
     health: async () => {
-      return await DefaultService.healthApiHealthGet();
+      // Use legacy health endpoint for backward compatibility
+      return await DefaultService.legacyHealthApiHealthGet();
     },
 
     // Client methods
     testConnection: async (): Promise<boolean> => {
       try {
-        const response = await DefaultService.healthApiHealthGet();
+        // Try the new readiness endpoint first, fallback to legacy health
+        const response = await HealthService.readinessApiV1HealthReadyGet();
         return response !== undefined && response !== null;
       } catch {
-        return false;
+        try {
+          // Fallback to legacy health endpoint
+          const response = await DefaultService.legacyHealthApiHealthGet();
+          return response !== undefined && response !== null;
+        } catch {
+          return false;
+        }
       }
     },
 

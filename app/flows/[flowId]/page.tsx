@@ -8,10 +8,10 @@ import { FlowCanvas } from "@/components/flow/FlowCanvas";
 import { FlowDetailHeader } from "@/components/flow/FlowDetailHeader";
 import { FlowInfoSidebar } from "@/components/flow/FlowInfoSidebar";
 import { FlowDetailsSidebar } from "@/components/flow/FlowDetailsSidebar";
+import { Navbar } from "@/components/layout/Navbar";
 import { Loader2 } from "lucide-react";
-import { useJobStore } from "@/lib/stores/jobStore";
 import { createAPI } from "@/lib/api";
-import { StartJobDialog } from "@/components/job/StartJobDialog";
+import { StartWorkerDialog } from "@/components/worker/StartWorkerDialog";
 import { Edge, Node } from "reactflow";
 import { toast } from "sonner";
 
@@ -19,9 +19,8 @@ export default function FlowDetailPage() {
   const router = useRouter();
   const params = useParams();
   const flowId = params.flowId as string;
-  const { connected, serverUrl } = useConnectionStore();
+  const { connected, serverUrl, hydrated } = useConnectionStore();
   const { selectedFlowId, nodes, selectFlow, loading, flows, loadFlows, isFlowLocked } = useFlowStore();
-  const { startJob } = useJobStore();
   const [routines, setRoutines] = useState<Record<string, any>>({});
   const [validationStatus, setValidationStatus] = useState<{
     valid: boolean;
@@ -30,11 +29,14 @@ export default function FlowDetailPage() {
   const [jobCount, setJobCount] = useState<number | null>(null);
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
-  const [startJobDialogOpen, setStartJobDialogOpen] = useState(false);
+  const [startWorkerDialogOpen, setStartWorkerDialogOpen] = useState(false);
 
   const flow = flows.get(flowId);
 
   useEffect(() => {
+    // Wait for hydration before checking connection
+    if (!hydrated) return;
+    
     if (!connected) {
       router.push("/connect");
       return;
@@ -47,7 +49,7 @@ export default function FlowDetailPage() {
         selectFlow(flowId, serverUrl);
       }
     }
-  }, [connected, flowId, selectedFlowId, selectFlow, serverUrl, flow]);
+  }, [hydrated, connected, flowId, selectedFlowId, selectFlow, serverUrl, flow]);
 
   useEffect(() => {
     const loadRoutines = async () => {
@@ -79,7 +81,7 @@ export default function FlowDetailPage() {
           });
         }
         // Load job count
-        const jobsResponse = await api.jobs.list(flowId);
+        const jobsResponse = await api.jobs.list(null, flowId, null, 100);
         setJobCount(jobsResponse.total || 0);
       } catch (error) {
         console.error("Failed to load validation/jobs:", error);
@@ -114,12 +116,12 @@ export default function FlowDetailPage() {
     }
   };
 
-  const handleStartJob = () => {
-    setStartJobDialogOpen(true);
+  const handleStartWorker = () => {
+    setStartWorkerDialogOpen(true);
   };
 
-  const handleJobStarted = (jobId: string) => {
-    router.push(`/jobs/${jobId}`);
+  const handleWorkerCreated = (workerId: string) => {
+    router.push(`/workers/${workerId}`);
   };
 
   const handleExportDSL = async () => {
@@ -197,75 +199,88 @@ export default function FlowDetailPage() {
     }
   }, [nodes]);
 
-  if (!connected) {
-    return null;
-  }
-
-  if (loading || !flow) {
+  // Show loading while hydrating or if not connected
+  if (!hydrated || !connected) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
+  if (loading || !flow) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      {/* Compact Header */}
-      <FlowDetailHeader
-        flow={flow}
-        flowId={flowId}
-        serverUrl={serverUrl}
-        validationStatus={validationStatus}
-        jobCount={jobCount}
-        onStartJob={handleStartJob}
-        onExportDSL={handleExportDSL}
-        onRefresh={handleRefresh}
-        onValidate={handleValidate}
-      />
+    <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <Navbar />
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col w-full px-4 py-4">
+          {/* Compact Header */}
+          <FlowDetailHeader
+            flow={flow}
+            flowId={flowId}
+            serverUrl={serverUrl}
+            validationStatus={validationStatus}
+            jobCount={jobCount}
+            onStartJob={handleStartWorker}
+            onExportDSL={handleExportDSL}
+            onRefresh={handleRefresh}
+            onValidate={handleValidate}
+          />
 
-      {/* Three-Panel Layout */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar - Flow Information */}
-        <FlowInfoSidebar
-          flow={flow}
-          flowId={flowId}
-          serverUrl={serverUrl}
-          collapsed={leftSidebarCollapsed}
-          onToggleCollapse={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
-        />
+          {/* Three-Panel Layout */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Left Sidebar - Flow Information */}
+            <FlowInfoSidebar
+              flow={flow}
+              flowId={flowId}
+              serverUrl={serverUrl}
+              collapsed={leftSidebarCollapsed}
+              onToggleCollapse={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
+            />
 
-        {/* Center Panel - Flow Visualization (Primary Focus) */}
-        <div className="flex-1 flex flex-col min-w-0 bg-background">
-          <div className="flex-1 relative">
-            <FlowCanvas flowId={flowId} editable={!isFlowLocked(flowId)} />
+            {/* Center Panel - Flow Visualization (Primary Focus) */}
+            <div className="flex-1 flex flex-col min-w-0 bg-background">
+              <div className="flex-1 relative">
+                <FlowCanvas flowId={flowId} editable={!isFlowLocked(flowId)} />
+              </div>
+            </div>
+
+            {/* Right Sidebar - Routines & Connections */}
+            <FlowDetailsSidebar
+              flow={flow}
+              flowId={flowId}
+              serverUrl={serverUrl}
+              routines={routines}
+              collapsed={rightSidebarCollapsed}
+              onToggleCollapse={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
+              onRefresh={handleRefresh}
+              onRoutineClick={handleRoutineClick}
+              onConnectionClick={handleConnectionClick}
+            />
           </div>
         </div>
 
-        {/* Right Sidebar - Routines & Connections */}
-        <FlowDetailsSidebar
-          flow={flow}
-          flowId={flowId}
-          serverUrl={serverUrl}
-          routines={routines}
-          collapsed={rightSidebarCollapsed}
-          onToggleCollapse={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
-          onRefresh={handleRefresh}
-          onRoutineClick={handleRoutineClick}
-          onConnectionClick={handleConnectionClick}
-        />
+        {/* Start Worker Dialog */}
+        {serverUrl && (
+          <StartWorkerDialog
+            open={startWorkerDialogOpen}
+            onOpenChange={setStartWorkerDialogOpen}
+            flowId={flowId}
+            serverUrl={serverUrl}
+            onSuccess={handleWorkerCreated}
+          />
+        )}
       </div>
-
-      {/* Start Job Dialog */}
-      {serverUrl && (
-        <StartJobDialog
-          open={startJobDialogOpen}
-          onOpenChange={setStartJobDialogOpen}
-          flowId={flowId}
-          serverUrl={serverUrl}
-          onSuccess={handleJobStarted}
-        />
-      )}
     </div>
   );
 }

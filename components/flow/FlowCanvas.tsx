@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -76,10 +76,8 @@ export function FlowCanvas({
     { sourceRoutine: string; sourceEvent: string; targetRoutine: string; targetSlot: string }[]
   >([]);
 
-  // Memoize nodeTypes and edgeTypes to prevent React Flow warnings
-  const stableNodeTypes = useMemo(() => nodeTypes, []);
-  const stableEdgeTypes = useMemo(() => edgeTypes, []);
-  const stableDefaultEdgeOptions = useMemo(() => defaultEdgeOptions, []);
+  // Use stable references directly from flowTypes (already defined outside component)
+  // No need to memoize as they are already stable module-level constants
 
   // Determine if flow is actually editable (must be unlocked AND editable prop is true)
   const isEditable = editable && flowId ? !isFlowLocked(flowId) : false;
@@ -448,9 +446,9 @@ export function FlowCanvas({
           onConnect={handleConnect}
           onNodeClick={onNodeClick}
           onEdgeClick={onEdgeClick}
-          nodeTypes={stableNodeTypes}
-          edgeTypes={stableEdgeTypes}
-          defaultEdgeOptions={stableDefaultEdgeOptions}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          defaultEdgeOptions={defaultEdgeOptions}
           fitView
           nodesDraggable={true}
           nodesConnectable={isEditable}

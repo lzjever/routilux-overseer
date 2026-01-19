@@ -46,7 +46,7 @@ export default function HomePage() {
   // Show connection prompt if not connected
   if (!connected) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <Card className="max-w-md">
@@ -85,9 +85,9 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <Navbar />
-        <div className="container mx-auto px-4 py-8">
+        <div className="w-full px-4 py-8">
           <div className="grid gap-4 md:grid-cols-4 mb-8">
             {[...Array(4)].map((_, i) => (
               <SkeletonCard key={i} />
@@ -101,19 +101,19 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="mb-4 text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
             Routilux Overseer
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground mx-auto">
             Comprehensive observability, debugging, and control for Routilux workflows
           </p>
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid gap-4 md:grid-cols-4 mb-8 max-w-5xl mx-auto">
+        <div className="grid gap-4 md:grid-cols-4 mb-8 mx-auto">
           <Card
             className="cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
             onClick={() => router.push("/flows")}
@@ -183,7 +183,7 @@ export default function HomePage() {
           </Card>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2 max-w-5xl mx-auto">
+        <div className="grid gap-6 lg:grid-cols-2 mx-auto">
           {/* Recent Jobs */}
           <Card>
             <CardHeader>

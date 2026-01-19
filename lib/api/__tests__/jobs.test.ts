@@ -1,18 +1,26 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { mockJobState } from "@/test/test-utils";
 import { JobsService } from "../generated/services/JobsService";
 
 // Mock the generated services
 vi.mock("../generated/services/JobsService", () => ({
   JobsService: {
-    listJobsApiJobsGet: vi.fn(),
-    getJobApiJobsJobIdGet: vi.fn(),
-    startJobApiJobsPost: vi.fn(),
-    pauseJobApiJobsJobIdPausePost: vi.fn(),
-    resumeJobApiJobsJobIdResumePost: vi.fn(),
-    cancelJobApiJobsJobIdCancelPost: vi.fn(),
-    getJobStateApiJobsJobIdStateGet: vi.fn(),
-    cleanupJobsApiJobsCleanupPost: vi.fn(),
+    listJobsApiV1JobsGet: vi.fn(),
+    getJobApiV1JobsJobIdGet: vi.fn(),
+    submitJobApiV1JobsPost: vi.fn(),
+    completeJobApiV1JobsJobIdCompletePost: vi.fn(),
+    failJobApiV1JobsJobIdFailPost: vi.fn(),
+    waitForJobApiV1JobsJobIdWaitPost: vi.fn(),
+    getJobOutputApiV1JobsJobIdOutputGet: vi.fn(),
+    getJobStatusApiV1JobsJobIdStatusGet: vi.fn(),
+    getJobTraceApiV1JobsJobIdTraceGet: vi.fn(),
+    getJobMetricsApiV1JobsJobIdMetricsGet: vi.fn(),
+    getJobExecutionTraceApiV1JobsJobIdExecutionTraceGet: vi.fn(),
+    getJobLogsApiV1JobsJobIdLogsGet: vi.fn(),
+    getJobDataApiV1JobsJobIdDataGet: vi.fn(),
+    getJobMonitoringDataApiV1JobsJobIdMonitoringGet: vi.fn(),
+    getRoutinesStatusApiV1JobsJobIdRoutinesStatusGet: vi.fn(),
+    getRoutineQueueStatusApiV1JobsJobIdRoutinesRoutineIdQueueStatusGet: vi.fn(),
+    getJobQueuesStatusApiV1JobsJobIdQueuesStatusGet: vi.fn(),
   },
 }));
 
@@ -36,18 +44,22 @@ describe("Jobs API", () => {
   describe("list", () => {
     it("should list all jobs", async () => {
       const mockJobs = [
-        { job_id: "job-1", flow_id: "flow-1", status: "running" },
-        { job_id: "job-2", flow_id: "flow-1", status: "completed" },
+        { job_id: "job-1", flow_id: "flow-1", status: "running", worker_id: "worker-1" },
+        { job_id: "job-2", flow_id: "flow-1", status: "completed", worker_id: "worker-1" },
       ];
 
-      vi.mocked(JobsService.listJobsApiJobsGet).mockResolvedValue({
+      vi.mocked(JobsService.listJobsApiV1JobsGet).mockResolvedValue({
         jobs: mockJobs,
+        total: 2,
+        limit: 100,
+        offset: 0,
       } as any);
 
       const result = await api.jobs.list();
 
       expect(result.jobs).toEqual(mockJobs);
-      expect(JobsService.listJobsApiJobsGet).toHaveBeenCalledWith(
+      expect(JobsService.listJobsApiV1JobsGet).toHaveBeenCalledWith(
+        null,
         null,
         null,
         100,
@@ -56,15 +68,19 @@ describe("Jobs API", () => {
     });
 
     it("should list jobs with query parameters", async () => {
-      const mockJobs = [{ job_id: "job-1", flow_id: "flow-1", status: "running" }];
+      const mockJobs = [{ job_id: "job-1", flow_id: "flow-1", status: "running", worker_id: "worker-1" }];
 
-      vi.mocked(JobsService.listJobsApiJobsGet).mockResolvedValue({
+      vi.mocked(JobsService.listJobsApiV1JobsGet).mockResolvedValue({
         jobs: mockJobs,
+        total: 1,
+        limit: 100,
+        offset: 0,
       } as any);
 
-      await api.jobs.list("flow-1", "running");
+      await api.jobs.list(null, "flow-1", "running");
 
-      expect(JobsService.listJobsApiJobsGet).toHaveBeenCalledWith(
+      expect(JobsService.listJobsApiV1JobsGet).toHaveBeenCalledWith(
+        null,
         "flow-1",
         "running",
         100,
@@ -75,91 +91,70 @@ describe("Jobs API", () => {
 
   describe("get", () => {
     it("should get a specific job", async () => {
-      const mockJob = { job_id: "job-1", flow_id: "flow-1", status: "running" };
+      const mockJob = { job_id: "job-1", flow_id: "flow-1", status: "running", worker_id: "worker-1" };
 
-      vi.mocked(JobsService.getJobApiJobsJobIdGet).mockResolvedValue(mockJob as any);
+      vi.mocked(JobsService.getJobApiV1JobsJobIdGet).mockResolvedValue(mockJob as any);
 
       const result = await api.jobs.get("job-1");
 
       expect(result).toEqual(mockJob);
-      expect(JobsService.getJobApiJobsJobIdGet).toHaveBeenCalledWith("job-1");
+      expect(JobsService.getJobApiV1JobsJobIdGet).toHaveBeenCalledWith("job-1");
     });
   });
 
-  describe("start", () => {
-    it("should start a job", async () => {
-      const mockJob = { job_id: "job-1", flow_id: "flow-1", status: "running" };
-      const request = { flow_id: "flow-1" };
+  describe("submit", () => {
+    it("should submit a job", async () => {
+      const mockJob = { job_id: "job-1", flow_id: "flow-1", status: "pending", worker_id: "worker-1" };
+      const request = {
+        flow_id: "flow-1",
+        routine_id: "source",
+        slot_name: "trigger",
+        data: {},
+      };
 
-      vi.mocked(JobsService.startJobApiJobsPost).mockResolvedValue(mockJob as any);
+      vi.mocked(JobsService.submitJobApiV1JobsPost).mockResolvedValue(mockJob as any);
 
-      const result = await api.jobs.start(request);
+      const result = await api.jobs.submit(request);
 
       expect(result).toEqual(mockJob);
-      expect(JobsService.startJobApiJobsPost).toHaveBeenCalledWith(request);
+      expect(JobsService.submitJobApiV1JobsPost).toHaveBeenCalledWith(request);
     });
   });
 
-  describe("pause", () => {
-    it("should pause a job", async () => {
-      const mockResponse = { status: "paused" };
+  describe("getMetrics", () => {
+    it("should get job metrics", async () => {
+      const mockMetrics = {
+        total_events: 10,
+        total_slot_calls: 5,
+        total_event_emits: 5,
+        duration: 1.5,
+      };
 
-      vi.mocked(JobsService.pauseJobApiJobsJobIdPausePost).mockResolvedValue(mockResponse as any);
+      vi.mocked(JobsService.getJobMetricsApiV1JobsJobIdMetricsGet).mockResolvedValue(mockMetrics as any);
 
-      const result = await api.jobs.pause("job-1");
+      const result = await api.jobs.getMetrics("job-1");
 
-      expect(result).toEqual(mockResponse);
-      expect(JobsService.pauseJobApiJobsJobIdPausePost).toHaveBeenCalledWith("job-1");
+      expect(result).toEqual(mockMetrics);
+      expect(JobsService.getJobMetricsApiV1JobsJobIdMetricsGet).toHaveBeenCalledWith("job-1");
     });
   });
 
-  describe("resume", () => {
-    it("should resume a paused job", async () => {
-      const mockResponse = { status: "running" };
+  describe("getMonitoringData", () => {
+    it("should get job monitoring data", async () => {
+      const mockData = {
+        job_id: "job-1",
+        flow_id: "flow-1",
+        job_status: "running",
+        routines: {},
+        updated_at: new Date().toISOString(),
+      };
 
-      vi.mocked(JobsService.resumeJobApiJobsJobIdResumePost).mockResolvedValue(mockResponse as any);
+      vi.mocked(JobsService.getJobMonitoringDataApiV1JobsJobIdMonitoringGet).mockResolvedValue(mockData as any);
 
-      const result = await api.jobs.resume("job-1");
+      const result = await api.jobs.getMonitoringData("job-1");
 
-      expect(result).toEqual(mockResponse);
-      expect(JobsService.resumeJobApiJobsJobIdResumePost).toHaveBeenCalledWith("job-1");
-    });
-  });
-
-  describe("cancel", () => {
-    it("should cancel a job", async () => {
-      const mockResponse = { status: "cancelled" };
-
-      vi.mocked(JobsService.cancelJobApiJobsJobIdCancelPost).mockResolvedValue(mockResponse as any);
-
-      const result = await api.jobs.cancel("job-1");
-
-      expect(result).toEqual(mockResponse);
-      expect(JobsService.cancelJobApiJobsJobIdCancelPost).toHaveBeenCalledWith("job-1");
-    });
-  });
-
-  describe("getState", () => {
-    it("should get job state", async () => {
-      vi.mocked(JobsService.getJobStateApiJobsJobIdStateGet).mockResolvedValue(mockJobState as any);
-
-      const result = await api.jobs.getState("job-1");
-
-      expect(result).toEqual(mockJobState);
-      expect(JobsService.getJobStateApiJobsJobIdStateGet).toHaveBeenCalledWith("job-1");
-    });
-  });
-
-  describe("cleanup", () => {
-    it("should cleanup jobs", async () => {
-      const mockResponse = { removed: 5 };
-
-      vi.mocked(JobsService.cleanupJobsApiJobsCleanupPost).mockResolvedValue(mockResponse as any);
-
-      const result = await api.jobs.cleanup(24, ["completed"]);
-
-      expect(result).toEqual(mockResponse);
-      expect(JobsService.cleanupJobsApiJobsCleanupPost).toHaveBeenCalledWith(24, ["completed"]);
+      expect(result).toEqual(mockData);
+      expect(JobsService.getJobMonitoringDataApiV1JobsJobIdMonitoringGet).toHaveBeenCalledWith("job-1");
     });
   });
 });

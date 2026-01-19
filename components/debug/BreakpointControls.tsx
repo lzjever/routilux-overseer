@@ -17,6 +17,7 @@ import { BreakpointCreateRequest } from "@/lib/api/generated";
 
 interface BreakpointControlsProps {
   jobId: string;
+  workerId: string;
   serverUrl: string;
   availableRoutines: string[];
   embedded?: boolean;
@@ -24,6 +25,7 @@ interface BreakpointControlsProps {
 
 export function BreakpointControls({
   jobId,
+  workerId,
   serverUrl,
   availableRoutines,
   embedded = false,
@@ -64,7 +66,7 @@ export function BreakpointControls({
 
   const handleToggleBreakpoint = async (breakpointId: string) => {
     try {
-      await toggleBreakpoint(jobId, breakpointId, serverUrl);
+      await toggleBreakpoint(jobId, breakpointId, workerId, serverUrl);
     } catch (error) {
       console.error("Failed to toggle breakpoint:", error);
     }
