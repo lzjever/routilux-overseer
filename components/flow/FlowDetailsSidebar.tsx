@@ -90,7 +90,7 @@ export function FlowDetailsSidebar({
 
   if (collapsed) {
     return (
-      <div className="w-12 border-l bg-muted/30 flex flex-col items-center py-2 gap-2">
+      <div className="w-12 surface-panel rounded-none flex flex-col items-center py-2 gap-2">
         <Button
           variant="ghost"
           size="icon"
@@ -112,7 +112,7 @@ export function FlowDetailsSidebar({
   }
 
   return (
-    <div className="w-72 border-l bg-muted/30 flex flex-col h-full">
+    <div className="w-72 surface-panel rounded-none flex flex-col h-full">
       {/* Header */}
       <div className="h-10 border-b flex items-center justify-between px-3">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { PluginSystemProvider } from "@/components/providers/PluginSystemProvider";
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
 import { Toaster } from "sonner";
 
-const inter = Inter({ subsets: ["latin"] });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-body" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
 
 export const metadata: Metadata = {
   title: "Routilux Overseer",
@@ -19,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${manrope.variable} ${spaceGrotesk.variable} font-sans`}>
         <PluginSystemProvider>
           {children}
           <GlobalSearchModal />

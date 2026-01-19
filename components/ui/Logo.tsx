@@ -95,7 +95,7 @@ export function Logo({ className, size = "md", showText = true }: LogoProps) {
       </svg>
       
       {showText && (
-        <span className={cn("font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400", text)}>
+        <span className={cn("font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-blue-600 dark:from-sky-300 dark:to-blue-400", text)}>
           Routilux Overseer
         </span>
       )}

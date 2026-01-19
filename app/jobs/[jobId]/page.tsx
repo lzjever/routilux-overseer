@@ -29,7 +29,7 @@ export default function JobDetailPage() {
   const params = useParams();
   const jobId = params.jobId as string;
   const { connected, serverUrl, hydrated } = useConnectionStore();
-  const { jobs, loadJob, loadJobMonitoringData, loadJobMetrics, wsConnected } = useJobStore();
+  const { jobs, loadJob, loadJobMonitoringData, loadJobMetrics, metricsData, wsConnected } = useJobStore();
   const { selectFlow } = useFlowStore();
   const { getEvents } = useJobEventsStore();
   const { loadJobState, getSharedData, getExecutionHistory, jobStates } = useJobStateStore();
@@ -41,6 +41,7 @@ export default function JobDetailPage() {
   const job = jobs.get(jobId);
   const jobState = jobStates.get(jobId);
   const events = getEvents(jobId);
+  const metrics = metricsData.get(jobId) || null;
 
   // Start job monitoring
   useJobMonitor(jobId, serverUrl);
@@ -114,7 +115,7 @@ export default function JobDetailPage() {
   // Show loading while hydrating or if not connected
   if (!hydrated || !connected) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen flex items-center justify-center bg-app">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -122,7 +123,7 @@ export default function JobDetailPage() {
 
   if (loading || !job) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen flex flex-col bg-app">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -133,7 +134,7 @@ export default function JobDetailPage() {
 
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen flex flex-col bg-app">
       <Navbar />
       <JobDetailHeader
         job={job}
@@ -161,7 +162,7 @@ export default function JobDetailPage() {
               </Card>
             </div>
 
-            <div className="flex flex-col min-h-0 gap-4 overflow-hidden border-l bg-muted/30 p-4 rounded-lg">
+            <div className="flex flex-col min-h-0 gap-4 overflow-hidden surface-panel p-4 rounded-lg">
               <div className="text-sm font-semibold">Job Details</div>
               <Card>
                 <CardHeader>
@@ -222,7 +223,7 @@ export default function JobDetailPage() {
                 </TabsContent>
 
                 <TabsContent value="metrics" className="mt-3 flex-1 min-h-0">
-                  <MetricsPanel job={job} eventsCount={events.length} loading={loading} />
+                  <MetricsPanel job={job} metrics={metrics} eventsCount={events.length} loading={loading} />
                 </TabsContent>
 
                 <TabsContent value="history" className="mt-3 flex-1 min-h-0">

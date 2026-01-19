@@ -202,7 +202,7 @@ export default function FlowDetailPage() {
   // Show loading while hydrating or if not connected
   if (!hydrated || !connected) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen flex items-center justify-center bg-app">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -210,7 +210,7 @@ export default function FlowDetailPage() {
 
   if (loading || !flow) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen flex flex-col bg-app">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -220,7 +220,7 @@ export default function FlowDetailPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="h-screen flex flex-col overflow-hidden bg-app">
       <Navbar />
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-hidden flex flex-col w-full px-4 py-4">

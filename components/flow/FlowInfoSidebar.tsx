@@ -112,7 +112,7 @@ export function FlowInfoSidebar({
 
   if (collapsed) {
     return (
-      <div className="w-12 border-r bg-muted/30 flex flex-col items-center py-2 gap-2">
+      <div className="w-12 surface-panel rounded-none flex flex-col items-center py-2 gap-2">
         <Button
           variant="ghost"
           size="icon"
@@ -134,7 +134,7 @@ export function FlowInfoSidebar({
   }
 
   return (
-    <div className="w-60 border-r bg-muted/30 flex flex-col h-full">
+    <div className="w-60 surface-panel rounded-none flex flex-col h-full">
       {/* Header */}
       <div className="h-10 border-b flex items-center justify-between px-3">
         <span className="text-sm font-semibold">Flow Information</span>

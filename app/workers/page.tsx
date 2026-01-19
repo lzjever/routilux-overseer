@@ -176,7 +176,7 @@ export default function WorkersPage() {
 
   if (!connected) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen flex flex-col bg-app">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <Card className="max-w-md">
@@ -206,7 +206,7 @@ export default function WorkersPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen flex flex-col bg-app">
       <Navbar />
       <div className="w-full px-4 py-6 flex-1">
       {/* Header */}
