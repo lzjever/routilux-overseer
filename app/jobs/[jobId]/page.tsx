@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useJobStore } from "@/lib/stores/jobStore";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
-import { useJobEventsStore } from "@/lib/stores/jobEventsStore";
-import { useBreakpointStore } from "@/lib/stores/breakpointStore";
 import { useJobStateStore } from "@/lib/stores/jobStateStore";
-import { useUIStore } from "@/lib/stores/uiStore";
+import { useJobEventsStore } from "@/lib/stores/jobEventsStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FlowCanvas } from "@/components/flow/FlowCanvas";
@@ -18,12 +16,13 @@ import { JobStateSummary } from "@/components/job/JobStateSummary";
 import { RoutineStatesPanel } from "@/components/job/RoutineStatesPanel";
 import { SharedDataViewer } from "@/components/job/SharedDataViewer";
 import { ExecutionHistoryTimeline } from "@/components/job/ExecutionHistoryTimeline";
-import { MiniEventLog } from "@/components/monitoring/MiniEventLog";
 import { JobDetailHeader } from "@/components/job/JobDetailHeader";
-import { JobDetailsSidebar } from "@/components/job/JobDetailsSidebar";
+import { QueueStatusPanel } from "@/components/job/QueueStatusPanel";
 import { Navbar } from "@/components/layout/Navbar";
 import { useJobMonitor } from "@/lib/websocket/job-monitor";
+import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 export default function JobDetailPage() {
   const router = useRouter();
@@ -31,26 +30,17 @@ export default function JobDetailPage() {
   const jobId = params.jobId as string;
   const { connected, serverUrl, hydrated } = useConnectionStore();
   const { jobs, loadJob, loadJobMonitoringData, loadJobMetrics, wsConnected } = useJobStore();
-  const { selectFlow, nodes, flows } = useFlowStore();
+  const { selectFlow } = useFlowStore();
   const { getEvents } = useJobEventsStore();
-  const { loadBreakpoints } = useBreakpointStore();
   const { loadJobState, getSharedData, getExecutionHistory, jobStates } = useJobStateStore();
-  const { selectRoutine } = useUIStore();
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"main" | "history">("main");
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"activity" | "metrics" | "history" | "queues">("activity");
+  const historyPollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const job = jobs.get(jobId);
-  const events = getEvents(jobId);
   const jobState = jobStates.get(jobId);
-
-  // Get available routines from flow
-  const availableRoutines = nodes.map((n) => n.id);
-
-  // Get flow routines for RoutineStatesPanel
-  const currentFlow = job ? flows.get(job.flow_id) : null;
+  const events = getEvents(jobId);
 
   // Start job monitoring
   useJobMonitor(jobId, serverUrl);
@@ -63,6 +53,20 @@ export default function JobDetailPage() {
       loadJobMetrics(jobId, serverUrl);
     }
   }, [job, serverUrl, jobId, loadJobState, loadJobMonitoringData, loadJobMetrics]);
+
+  useEffect(() => {
+    if (!serverUrl || !job) return;
+    if (historyPollingRef.current) {
+      clearInterval(historyPollingRef.current);
+    }
+    const interval = setInterval(() => {
+      loadJobState(jobId, serverUrl);
+    }, 5000);
+    historyPollingRef.current = interval;
+    return () => {
+      clearInterval(interval);
+    };
+  }, [serverUrl, job, jobId, loadJobState]);
 
 
   useEffect(() => {
@@ -78,16 +82,10 @@ export default function JobDetailPage() {
       setLoading(true);
       try {
         // Load job details
-        await loadJob(jobId, serverUrl);
-
-        // Load flow visualization
-        const loadedJob = jobs.get(jobId);
+        const loadedJob = await loadJob(jobId, serverUrl);
         if (loadedJob) {
           await selectFlow(loadedJob.flow_id, serverUrl);
         }
-
-        // Load breakpoints
-        await loadBreakpoints(jobId, serverUrl);
 
         // Load monitoring data for heatmap visualization
         await loadJobMonitoringData(jobId, serverUrl);
@@ -100,7 +98,7 @@ export default function JobDetailPage() {
     };
 
     loadData();
-  }, [hydrated, connected, serverUrl, jobId, loadJob, selectFlow, loadBreakpoints, loadJobMonitoringData, loadJobMetrics]);
+  }, [hydrated, connected, serverUrl, jobId, loadJob, selectFlow, loadJobMonitoringData, loadJobMetrics]);
 
 
   const handleRefresh = async () => {
@@ -111,15 +109,6 @@ export default function JobDetailPage() {
     } finally {
       setActionLoading(false);
     }
-  };
-
-  const handleFocusRoutine = (routineId: string) => {
-    if (!job) return;
-    selectRoutine({
-      routineId,
-      jobId,
-      flowId: job.flow_id,
-    });
   };
 
   // Show loading while hydrating or if not connected
@@ -144,8 +133,8 @@ export default function JobDetailPage() {
 
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      {/* Header */}
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <Navbar />
       <JobDetailHeader
         job={job}
         serverUrl={serverUrl}
@@ -154,102 +143,118 @@ export default function JobDetailPage() {
         wsConnected={wsConnected}
       />
 
-      {/* Main Content - With right padding for sidebars */}
-      <div
-        className="flex-1 min-h-0 overflow-hidden flex"
-        style={{
-          paddingRight: (selectedNodeId || selectedEdgeId ? 320 : 0),
-        }}
-      >
-        <div className="flex-1 min-h-0">
-          <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="main">Main</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
-            </TabsList>
-
-            {/* Main Tab */}
-            <TabsContent value="main" className="flex-1 min-h-0 overflow-auto">
-              <div className="flex flex-col gap-6 h-full">
-                {/* Flow Canvas - Full width */}
-                <div className="flex-1 min-h-0">
-                  <Card className="h-full flex flex-col">
-                    <CardHeader className="pb-4">
-                      <CardTitle>Flow Visualization</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex-1 p-0 min-h-[500px]">
-                      <FlowCanvas
-                        flowId={job.flow_id}
-                        jobId={jobId}
-                        editable={false}
-                        onNodeClick={(nodeId) => {
-                          setSelectedNodeId(nodeId);
-                          setSelectedEdgeId(null);
-                        }}
-                        onEdgeClick={(edgeId) => {
-                          setSelectedEdgeId(edgeId);
-                          setSelectedNodeId(null);
-                        }}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-
-              {/* Job State Summary */}
-              {jobState && (
-                <JobStateSummary jobState={jobState} />
-              )}
-
-              {/* Routine States Panel */}
-              {jobState && (
-                <RoutineStatesPanel jobState={jobState} />
-              )}
-
-              {/* Shared Data Viewer */}
-              {jobState && (
-                <SharedDataViewer sharedData={getSharedData(jobId)} />
-              )}
-
-              {/* Metrics and Event Log */}
-              <div className="space-y-6">
-                <MetricsPanel job={job} eventsCount={events.length} loading={loading} />
-                <EventLog events={events} loading={loading && events.length === 0} />
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* History Tab */}
-          <TabsContent value="history" className="flex-1 min-h-0 overflow-auto">
-            {jobState ? (
-              <ExecutionHistoryTimeline
-                history={getExecutionHistory(jobId)}
-              />
-            ) : (
-              <Card>
-                <CardContent className="flex items-center justify-center min-h-[200px]">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="h-full w-full px-4 py-4">
+          <div className="grid h-full gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="flex flex-col min-h-0 gap-4">
+              <Card className="flex-1 min-h-[420px]">
+                <CardHeader className="pb-4">
+                  <CardTitle>Flow Execution</CardTitle>
+                </CardHeader>
+                <CardContent className="relative flex-1 p-0 min-h-[500px] overflow-hidden">
+                  <FlowCanvas
+                    flowId={job.flow_id}
+                    jobId={jobId}
+                    editable={false}
+                  />
                 </CardContent>
               </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+            </div>
+
+            <div className="flex flex-col min-h-0 gap-4 overflow-hidden border-l bg-muted/30 p-4 rounded-lg">
+              <div className="text-sm font-semibold">Job Details</div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Job Overview</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Job ID</span>
+                    <span className="font-mono text-xs">{job.job_id}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Flow</span>
+                    <span className="font-mono text-xs">{job.flow_id}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Worker</span>
+                    <span className="font-mono text-xs">{job.worker_id}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Status</span>
+                    <Badge variant={job.status === "running" ? "default" : job.status === "failed" ? "destructive" : "secondary"}>
+                      {job.status}
+                    </Badge>
+                  </div>
+                  <div className="grid gap-2 pt-2 border-t text-xs text-muted-foreground">
+                    {job.created_at && (
+                      <div className="flex items-center justify-between">
+                        <span>Created</span>
+                        <span>{formatDistanceToNow(new Date(job.created_at * 1000), { addSuffix: true })}</span>
+                      </div>
+                    )}
+                    {job.started_at && (
+                      <div className="flex items-center justify-between">
+                        <span>Started</span>
+                        <span>{formatDistanceToNow(new Date(job.started_at * 1000), { addSuffix: true })}</span>
+                      </div>
+                    )}
+                    {job.completed_at && (
+                      <div className="flex items-center justify-between">
+                        <span>Completed</span>
+                        <span>{formatDistanceToNow(new Date(job.completed_at * 1000), { addSuffix: true })}</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="flex flex-col min-h-0">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
+                  <TabsTrigger value="metrics" className="text-xs">Metrics</TabsTrigger>
+                  <TabsTrigger value="history" className="text-xs">History</TabsTrigger>
+                  <TabsTrigger value="queues" className="text-xs">Queues</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="activity" className="mt-3 flex-1 min-h-0">
+                  <EventLog events={events} loading={loading && events.length === 0} />
+                </TabsContent>
+
+                <TabsContent value="metrics" className="mt-3 flex-1 min-h-0">
+                  <MetricsPanel job={job} eventsCount={events.length} loading={loading} />
+                </TabsContent>
+
+                <TabsContent value="history" className="mt-3 flex-1 min-h-0">
+                  {jobState ? (
+                    <ExecutionHistoryTimeline history={getExecutionHistory(jobId)} />
+                  ) : (
+                    <Card>
+                      <CardContent className="flex items-center justify-center min-h-[200px]">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="queues" className="mt-3 flex-1 min-h-0">
+                  <Card>
+                    <CardContent className="pt-6">
+                      {serverUrl && (
+                        <QueueStatusPanel jobId={jobId} serverUrl={serverUrl} embedded />
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+
+              {jobState && <JobStateSummary jobState={jobState} />}
+              {jobState && <RoutineStatesPanel jobState={jobState} />}
+              {jobState && <SharedDataViewer sharedData={getSharedData(jobId)} />}
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Job Details Sidebar */}
-      {serverUrl && (selectedNodeId || selectedEdgeId) && (
-        <div className="fixed right-0 top-14 bottom-0">
-          <JobDetailsSidebar
-            jobId={jobId}
-            serverUrl={serverUrl}
-            selectedNodeId={selectedNodeId}
-            selectedEdgeId={selectedEdgeId}
-          />
-        </div>
-      )}
-
-      {/* Mini Event Log */}
-      <MiniEventLog jobId={jobId} onFocusRoutine={handleFocusRoutine} />
     </div>
   );
 }

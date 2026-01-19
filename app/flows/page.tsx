@@ -37,6 +37,8 @@ export default function FlowsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFlows, setSelectedFlows] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [healthSummary, setHealthSummary] = useState<{ status: string; activeWorkers?: number } | null>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
 
   useEffect(() => {
     if (serverUrl && connected) {
@@ -45,6 +47,28 @@ export default function FlowsPage() {
       discoverFlowsAction(serverUrl);
     }
   }, [serverUrl, connected, loadFlows, discoverFlowsAction]);
+
+  const loadHealthSummary = async () => {
+    if (!serverUrl) return;
+    setHealthLoading(true);
+    try {
+      const api = createAPI(serverUrl);
+      const readiness = await api.health.readiness();
+      const activeWorkers = readiness?.runtime?.active_workers;
+      const status = readiness?.status || "unknown";
+      setHealthSummary({ status, activeWorkers });
+    } catch (error) {
+      setHealthSummary(null);
+    } finally {
+      setHealthLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (serverUrl && connected) {
+      loadHealthSummary();
+    }
+  }, [serverUrl, connected]);
 
   const handleSync = async () => {
     if (!serverUrl || syncing) return;
@@ -147,6 +171,22 @@ export default function FlowsPage() {
             </p>
             <div className="text-sm text-muted-foreground mt-2">
               Connected to: {serverUrl}
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+              {healthLoading ? (
+                <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+              ) : healthSummary ? (
+                <>
+                  <Badge variant={healthSummary.status === "ready" ? "secondary" : "destructive"}>
+                    {healthSummary.status}
+                  </Badge>
+                  {typeof healthSummary.activeWorkers === "number" && (
+                    <span>{healthSummary.activeWorkers} active workers</span>
+                  )}
+                </>
+              ) : (
+                <Badge variant="outline">unknown</Badge>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">

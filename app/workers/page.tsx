@@ -18,6 +18,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { createAPI } from "@/lib/api";
 
 export default function WorkersPage() {
   const router = useRouter();
@@ -32,12 +33,36 @@ export default function WorkersPage() {
   const [selectedWorkers, setSelectedWorkers] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [syncingWorkers, setSyncingWorkers] = useState(false);
+  const [healthSummary, setHealthSummary] = useState<{ status: string; activeWorkers?: number } | null>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
 
   useEffect(() => {
     if (serverUrl) {
       loadWorkersWithFilters();
     }
   }, [serverUrl, filterFlowId, filterStatus]);
+
+  const loadHealthSummary = async () => {
+    if (!serverUrl) return;
+    setHealthLoading(true);
+    try {
+      const api = createAPI(serverUrl);
+      const readiness = await api.health.readiness();
+      const activeWorkers = readiness?.runtime?.active_workers;
+      const status = readiness?.status || "unknown";
+      setHealthSummary({ status, activeWorkers });
+    } catch (error) {
+      setHealthSummary(null);
+    } finally {
+      setHealthLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (serverUrl && connected) {
+      loadHealthSummary();
+    }
+  }, [serverUrl, connected]);
 
   const loadWorkersWithFilters = async () => {
     if (!serverUrl) return;
@@ -192,6 +217,25 @@ export default function WorkersPage() {
             <p className="text-muted-foreground">
               {workers.size} worker{workers.size !== 1 ? "s" : ""}
             </p>
+            <span className="text-muted-foreground">•</span>
+            <div className="flex items-center gap-2 text-xs">
+              {healthLoading ? (
+                <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+              ) : healthSummary ? (
+                <>
+                  <Badge variant={healthSummary.status === "ready" ? "secondary" : "destructive"}>
+                    {healthSummary.status}
+                  </Badge>
+                  {typeof healthSummary.activeWorkers === "number" && (
+                    <span className="text-muted-foreground">
+                      {healthSummary.activeWorkers} active workers
+                    </span>
+                  )}
+                </>
+              ) : (
+                <Badge variant="outline">unknown</Badge>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">

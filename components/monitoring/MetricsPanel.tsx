@@ -33,12 +33,12 @@ export function MetricsPanel({ job, eventsCount, loading }: MetricsPanelProps) {
   // Calculate duration
   const calculateDuration = () => {
     if (job.started_at && job.completed_at) {
-      const start = new Date(job.started_at);
-      const end = new Date(job.completed_at);
+      const start = new Date(job.started_at * 1000);
+      const end = new Date(job.completed_at * 1000);
       return `${((end.getTime() - start.getTime()) / 1000).toFixed(2)}s`;
     }
     if (job.started_at) {
-      const start = new Date(job.started_at);
+      const start = new Date(job.started_at * 1000);
       const now = new Date();
       return `${((now.getTime() - start.getTime()) / 1000).toFixed(2)}s`;
     }
@@ -88,7 +88,7 @@ export function MetricsPanel({ job, eventsCount, loading }: MetricsPanelProps) {
             <div>
               <p className="text-sm text-muted-foreground">Created</p>
               <p className="text-sm font-semibold">
-                {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
+                {formatDistanceToNow(new Date(job.created_at * 1000), { addSuffix: true })}
               </p>
             </div>
           </div>
@@ -101,7 +101,7 @@ export function MetricsPanel({ job, eventsCount, loading }: MetricsPanelProps) {
             <div>
               <p className="text-sm text-muted-foreground">Started</p>
               <p className="text-sm font-semibold">
-                {formatDistanceToNow(new Date(job.started_at), { addSuffix: true })}
+                {formatDistanceToNow(new Date(job.started_at * 1000), { addSuffix: true })}
               </p>
             </div>
           </div>

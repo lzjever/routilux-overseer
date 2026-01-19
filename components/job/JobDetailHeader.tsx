@@ -28,6 +28,7 @@ export function JobDetailHeader({
   wsConnected = false,
 }: JobDetailHeaderProps) {
   const isRunning = job.status === "running";
+  const isPaused = job.status === "paused";
 
   return (
     <div className="h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between px-4 gap-4">

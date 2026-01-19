@@ -15,7 +15,7 @@ interface JobState {
 
   // Actions
   loadJobs: (serverUrl: string, workerId?: string | null) => Promise<void>;
-  loadJob: (jobId: string, serverUrl: string) => Promise<void>;
+  loadJob: (jobId: string, serverUrl: string) => Promise<JobResponse>;
   submitJob: (request: JobSubmitRequest, serverUrl: string) => Promise<JobResponse>;
   loadJobMonitoringData: (jobId: string, serverUrl: string) => Promise<void>;
   loadJobMetrics: (jobId: string, serverUrl: string) => Promise<void>;
@@ -59,11 +59,13 @@ export const useJobStore = create<JobState>((set, get) => ({
         jobs: new Map(state.jobs).set(jobId, job),
         loading: false,
       }));
+      return job;
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : "Failed to load job",
         loading: false,
       });
+      throw error;
     }
   },
 
