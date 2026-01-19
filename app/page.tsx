@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useJobStore } from "@/lib/stores/jobStore";
+import { useDiscoveryStore } from "@/lib/stores/discoveryStore";
+import { createAPI } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,14 +15,19 @@ import { Navbar } from "@/components/layout/Navbar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
-import { Activity, Zap, ArrowRight, Play, TrendingUp, Clock, Plug, Settings } from "lucide-react";
+import { Activity, Zap, ArrowRight, Play, Plug, Settings, RefreshCw } from "lucide-react";
 
 export default function HomePage() {
   const router = useRouter();
   const { connected, serverUrl } = useConnectionStore();
   const { flows } = useFlowStore();
   const { jobs } = useJobStore();
+  const { lastFlowSync, lastJobSync, lastWorkerSync } = useDiscoveryStore();
   const [loading, setLoading] = useState(true);
+  const [healthStats, setHealthStats] = useState<Record<string, any> | null>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
+  const [healthError, setHealthError] = useState<string | null>(null);
+  const [healthUpdatedAt, setHealthUpdatedAt] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -42,6 +49,29 @@ export default function HomePage() {
 
     loadData();
   }, [serverUrl]);
+
+  const loadHealthStats = async () => {
+    if (!serverUrl) return;
+    setHealthLoading(true);
+    setHealthError(null);
+    try {
+      const api = createAPI(serverUrl);
+      const stats = await api.health.stats();
+      setHealthStats(stats || {});
+      setHealthUpdatedAt(new Date().toISOString());
+    } catch (error) {
+      setHealthError(error instanceof Error ? error.message : "Failed to load health stats");
+      setHealthStats(null);
+    } finally {
+      setHealthLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (serverUrl && connected) {
+      loadHealthStats();
+    }
+  }, [serverUrl, connected]);
 
   // Show connection prompt if not connected
   if (!connected) {
@@ -183,6 +213,99 @@ export default function HomePage() {
           </Card>
         </div>
 
+        <Card className="mb-8">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>System Health</CardTitle>
+              <CardDescription>
+                Live health stats from the connected runtime.
+              </CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={loadHealthStats} disabled={healthLoading}>
+              {healthLoading ? (
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              Refresh
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {healthLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Loading health stats...
+              </div>
+            ) : healthError ? (
+              <div className="text-sm text-destructive">{healthError}</div>
+            ) : healthStats ? (
+              <div className="space-y-3">
+                {Object.keys(healthStats).length === 0 ? (
+                  <div className="text-sm text-muted-foreground">No health stats available.</div>
+                ) : (
+                  <div className="grid gap-3 md:grid-cols-3">
+                    {Object.entries(healthStats)
+                      .slice(0, 9)
+                      .map(([key, value]) => (
+                        <div key={key} className="rounded border bg-background p-3">
+                          <div className="text-xs text-muted-foreground">{key}</div>
+                          <div className="text-sm font-mono">{formatHealthValue(value)}</div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+                {healthUpdatedAt && (
+                  <div className="text-xs text-muted-foreground">
+                    Updated {new Date(healthUpdatedAt).toLocaleTimeString()}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">No health stats loaded.</div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Discovery Status</CardTitle>
+            <CardDescription>
+              Last time items were synced from registry/runtime.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded border bg-background p-3">
+                <div className="text-xs text-muted-foreground">Flows</div>
+                <div className="text-sm">
+                  {lastFlowSync ? lastFlowSync.toLocaleString() : "Not synced"}
+                </div>
+                <Button asChild variant="ghost" size="sm" className="mt-2 px-0">
+                  <Link href="/flows">Open Flows</Link>
+                </Button>
+              </div>
+              <div className="rounded border bg-background p-3">
+                <div className="text-xs text-muted-foreground">Jobs</div>
+                <div className="text-sm">
+                  {lastJobSync ? lastJobSync.toLocaleString() : "Not synced"}
+                </div>
+                <Button asChild variant="ghost" size="sm" className="mt-2 px-0">
+                  <Link href="/jobs">Open Jobs</Link>
+                </Button>
+              </div>
+              <div className="rounded border bg-background p-3">
+                <div className="text-xs text-muted-foreground">Workers</div>
+                <div className="text-sm">
+                  {lastWorkerSync ? lastWorkerSync.toLocaleString() : "Not synced"}
+                </div>
+                <Button asChild variant="ghost" size="sm" className="mt-2 px-0">
+                  <Link href="/workers">Open Workers</Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid gap-6 lg:grid-cols-2 mx-auto">
           {/* Recent Jobs */}
           <Card>
@@ -289,4 +412,16 @@ export default function HomePage() {
       </div>
     </div>
   );
+}
+
+function formatHealthValue(value: unknown) {
+  if (value === null || value === undefined) return "—";
+  if (typeof value === "number") {
+    return Number.isInteger(value) ? value.toString() : value.toFixed(2);
+  }
+  if (typeof value === "string") return value;
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (Array.isArray(value)) return `Array(${value.length})`;
+  if (typeof value === "object") return `Object(${Object.keys(value).length})`;
+  return String(value);
 }

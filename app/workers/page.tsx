@@ -5,13 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useWorkersStore } from "@/lib/stores/workersStore";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
+import { useDiscoveryStore } from "@/lib/stores/discoveryStore";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Play, RefreshCw, Plug, CheckSquare, Pause, PlayCircle, XCircle } from "lucide-react";
+import { Loader2, Play, RefreshCw, Plug, CheckSquare, Pause, PlayCircle, XCircle, Download } from "lucide-react";
 import { ActiveFiltersBar } from "@/components/job/ActiveFiltersBar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -23,12 +24,14 @@ export default function WorkersPage() {
   const searchParams = useSearchParams();
   const { connected, serverUrl } = useConnectionStore();
   const { workers, loading, loadWorkers, stopWorker, pauseWorker, resumeWorker } = useWorkersStore();
+  const { lastWorkerSync, syncWorkers: syncWorkersAction } = useDiscoveryStore();
   const { flows } = useFlowStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filterFlowId, setFilterFlowId] = useState<string>(searchParams.get("flowId") || "all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [selectedWorkers, setSelectedWorkers] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [syncingWorkers, setSyncingWorkers] = useState(false);
 
   useEffect(() => {
     if (serverUrl) {
@@ -72,6 +75,20 @@ export default function WorkersPage() {
       alert(`Failed to stop worker: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleSyncWorkers = async () => {
+    if (!serverUrl || syncingWorkers) return;
+    setSyncingWorkers(true);
+    try {
+      await syncWorkersAction(serverUrl);
+      await loadWorkersWithFilters();
+      alert("Workers synced from runtime.");
+    } catch (error) {
+      alert(`Failed to sync workers: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setSyncingWorkers(false);
     }
   };
 
@@ -154,6 +171,11 @@ export default function WorkersPage() {
             </CardContent>
           </Card>
         </div>
+        {lastWorkerSync && (
+          <div className="text-xs text-muted-foreground mt-2">
+            Last synced: {lastWorkerSync.toLocaleString()}
+          </div>
+        )}
       </div>
     );
   }
@@ -173,6 +195,19 @@ export default function WorkersPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSyncWorkers}
+            disabled={syncingWorkers}
+          >
+            {syncingWorkers ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            Sync Workers
+          </Button>
           <Button
             variant="outline"
             size="sm"

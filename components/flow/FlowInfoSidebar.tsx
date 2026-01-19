@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
 import { CheckCircle2, XCircle, AlertCircle, Loader2, RefreshCw, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
 import { createAPI } from "@/lib/api";
-import { cn } from "@/lib/utils";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { UnlockFlowDialog } from "./UnlockFlowDialog";
 import type { FlowResponse } from "@/lib/types/api";
@@ -35,6 +34,9 @@ export function FlowInfoSidebar({
     errors?: string[];
     warnings?: string[];
   } | null>(null);
+  const [metrics, setMetrics] = useState<Record<string, any> | null>(null);
+  const [loadingMetrics, setLoadingMetrics] = useState(false);
+  const [metricsError, setMetricsError] = useState<string | null>(null);
 
   const locked = isFlowLocked(flowId);
 
@@ -72,12 +74,41 @@ export function FlowInfoSidebar({
     }
   };
 
+  const loadMetrics = async () => {
+    if (!serverUrl) return;
+    setLoadingMetrics(true);
+    setMetricsError(null);
+    try {
+      const api = createAPI(serverUrl);
+      const response = await api.flows.getMetrics(flowId);
+      setMetrics(response || null);
+    } catch (error) {
+      setMetricsError(error instanceof Error ? error.message : "Failed to load metrics");
+      setMetrics(null);
+    } finally {
+      setLoadingMetrics(false);
+    }
+  };
+
   useEffect(() => {
     if (flowId && serverUrl) {
       validate();
+      loadMetrics();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flowId, serverUrl]);
+
+  const formatMetricValue = (value: unknown) => {
+    if (value === null || value === undefined) return "—";
+    if (typeof value === "number") {
+      return Number.isInteger(value) ? value.toString() : value.toFixed(2);
+    }
+    if (typeof value === "string") return value;
+    if (typeof value === "boolean") return value ? "true" : "false";
+    if (Array.isArray(value)) return `Array(${value.length})`;
+    if (typeof value === "object") return `Object(${Object.keys(value).length})`;
+    return String(value);
+  };
 
   if (collapsed) {
     return (
@@ -237,6 +268,55 @@ export function FlowInfoSidebar({
             <p className="text-xs text-muted-foreground">Cross-Connections</p>
           </div>
         </div>
+
+        {/* Flow Metrics */}
+        {serverUrl && (
+          <div className="space-y-2 pt-2 border-t">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground">Metrics</Label>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5"
+                onClick={loadMetrics}
+                disabled={loadingMetrics}
+              >
+                {loadingMetrics ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3 w-3" />
+                )}
+              </Button>
+            </div>
+            {metricsError ? (
+              <div className="text-xs text-red-600">{metricsError}</div>
+            ) : loadingMetrics ? (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading metrics...
+              </div>
+            ) : metrics ? (
+              <div className="space-y-2">
+                {Object.entries(metrics).length === 0 ? (
+                  <div className="text-xs text-muted-foreground">No metrics yet</div>
+                ) : (
+                  <div className="space-y-1">
+                    {Object.entries(metrics)
+                      .slice(0, 6)
+                      .map(([key, value]) => (
+                        <div key={key} className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground truncate">{key}</span>
+                          <span className="font-mono">{formatMetricValue(value)}</span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-xs text-muted-foreground">No metrics loaded</div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Unlock Dialog */}

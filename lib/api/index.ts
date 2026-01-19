@@ -2,8 +2,8 @@ import { OpenAPI } from "./generated";
 
 // Re-export OpenAPI for testing
 export { OpenAPI };
-import type { 
-  FlowCreateRequest, 
+import type {
+  FlowCreateRequest,
   JobSubmitRequest,
   WorkerCreateRequest,
   ExecuteRequest,
@@ -16,7 +16,6 @@ import { FlowsService } from "./generated/services/FlowsService";
 import { JobsService } from "./generated/services/JobsService";
 import { BreakpointsService } from "./generated/services/BreakpointsService";
 import { DiscoveryService } from "./generated/services/DiscoveryService";
-import { DefaultService } from "./generated/services/DefaultService";
 import { HealthService } from "./generated/services/HealthService";
 import { FactoryService } from "./generated/services/FactoryService";
 import { RuntimesService } from "./generated/services/RuntimesService";
@@ -42,40 +41,46 @@ export function createAPI(baseURL: string, apiKey?: string) {
     // Flows API
     flows: {
       list: async () => {
-        return await FlowsService.listFlowsApiFlowsGet();
+        return await FlowsService.listFlowsApiV1FlowsGet();
       },
       get: async (flowId: string) => {
-        return await FlowsService.getFlowApiFlowsFlowIdGet(flowId);
+        return await FlowsService.getFlowApiV1FlowsFlowIdGet(flowId);
       },
       create: async (request: FlowCreateRequest) => {
-        return await FlowsService.createFlowApiFlowsPost(request);
+        return await FlowsService.createFlowApiV1FlowsPost(request);
       },
       delete: async (flowId: string) => {
-        await FlowsService.deleteFlowApiFlowsFlowIdDelete(flowId);
+        await FlowsService.deleteFlowApiV1FlowsFlowIdDelete(flowId);
+      },
+      getMetrics: async (flowId: string) => {
+        return await FlowsService.getFlowMetricsApiV1FlowsFlowIdMetricsGet(flowId);
       },
       exportDSL: async (flowId: string, format: string = "yaml") => {
-        return await FlowsService.exportFlowDslApiFlowsFlowIdDslGet(flowId, format);
+        return await FlowsService.exportFlowDslApiV1FlowsFlowIdDslGet(flowId, format);
       },
       validate: async (flowId: string) => {
-        return await FlowsService.validateFlowApiFlowsFlowIdValidatePost(flowId);
+        return await FlowsService.validateFlowApiV1FlowsFlowIdValidatePost(flowId);
+      },
+      getRoutineInfo: async (flowId: string, routineId: string) => {
+        return await FlowsService.getRoutineInfoApiV1FlowsFlowIdRoutinesRoutineIdInfoGet(flowId, routineId);
       },
       getRoutines: async (flowId: string) => {
-        return await FlowsService.listFlowRoutinesApiFlowsFlowIdRoutinesGet(flowId);
+        return await FlowsService.listFlowRoutinesApiV1FlowsFlowIdRoutinesGet(flowId);
       },
       getConnections: async (flowId: string) => {
-        return await FlowsService.listFlowConnectionsApiFlowsFlowIdConnectionsGet(flowId);
+        return await FlowsService.listFlowConnectionsApiV1FlowsFlowIdConnectionsGet(flowId);
       },
       addRoutine: async (flowId: string, request: AddRoutineRequest) => {
-        return await FlowsService.addRoutineToFlowApiFlowsFlowIdRoutinesPost(flowId, request);
+        return await FlowsService.addRoutineToFlowApiV1FlowsFlowIdRoutinesPost(flowId, request);
       },
       removeRoutine: async (flowId: string, routineId: string) => {
-        await FlowsService.removeRoutineFromFlowApiFlowsFlowIdRoutinesRoutineIdDelete(flowId, routineId);
+        await FlowsService.removeRoutineFromFlowApiV1FlowsFlowIdRoutinesRoutineIdDelete(flowId, routineId);
       },
       addConnection: async (flowId: string, request: AddConnectionRequest) => {
-        return await FlowsService.addConnectionToFlowApiFlowsFlowIdConnectionsPost(flowId, request);
+        return await FlowsService.addConnectionToFlowApiV1FlowsFlowIdConnectionsPost(flowId, request);
       },
       removeConnection: async (flowId: string, connectionIndex: number) => {
-        await FlowsService.removeConnectionFromFlowApiFlowsFlowIdConnectionsConnectionIndexDelete(flowId, connectionIndex);
+        await FlowsService.removeConnectionFromFlowApiV1FlowsFlowIdConnectionsConnectionIndexDelete(flowId, connectionIndex);
       },
     },
 
@@ -214,12 +219,18 @@ export function createAPI(baseURL: string, apiKey?: string) {
       discoverJobs: async () => {
         return await DiscoveryService.discoverJobsApiDiscoveryJobsGet();
       },
+      syncWorkers: async () => {
+        return await DiscoveryService.syncWorkersApiDiscoveryWorkersSyncPost();
+      },
     },
 
     // Factory/Objects API
     factory: {
-      listObjects: async (category?: string | null, objectType?: string | null) => {
-        return await FactoryService.listFactoryObjectsApiFactoryObjectsGet(category || null, objectType || null);
+      listObjects: async (filters?: { category?: string | null; objectType?: string | null }) => {
+        return await FactoryService.listFactoryObjectsApiFactoryObjectsGet(
+          filters?.category ?? null,
+          filters?.objectType ?? null
+        );
       },
       getObjectMetadata: async (name: string) => {
         return await FactoryService.getFactoryObjectMetadataApiFactoryObjectsNameGet(name);
@@ -243,25 +254,25 @@ export function createAPI(baseURL: string, apiKey?: string) {
     },
 
     // Health check
-    health: async () => {
-      // Use legacy health endpoint for backward compatibility
-      return await DefaultService.legacyHealthApiHealthGet();
+    health: {
+      liveness: async () => {
+        return await HealthService.livenessApiV1HealthLiveGet();
+      },
+      readiness: async () => {
+        return await HealthService.readinessApiV1HealthReadyGet();
+      },
+      stats: async () => {
+        return await HealthService.healthStatsApiV1HealthStatsGet();
+      },
     },
 
     // Client methods
     testConnection: async (): Promise<boolean> => {
       try {
-        // Try the new readiness endpoint first, fallback to legacy health
         const response = await HealthService.readinessApiV1HealthReadyGet();
         return response !== undefined && response !== null;
       } catch {
-        try {
-          // Fallback to legacy health endpoint
-          const response = await DefaultService.legacyHealthApiHealthGet();
-          return response !== undefined && response !== null;
-        } catch {
-          return false;
-        }
+        return false;
       }
     },
 

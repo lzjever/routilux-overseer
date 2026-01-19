@@ -24,44 +24,52 @@ export const useJobStateStore = create<JobStateStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const api = createAPI(serverUrl);
-      // Note: getState API is no longer available
-      // Use getJobMonitoringData or getJobTrace instead
-      // For now, we'll create a minimal state from monitoring data
-      const monitoringData = await api.jobs.getMonitoringData(jobId);
-      const trace = await api.jobs.getTrace(jobId);
-      
-      // Convert to JobStateResponse format for compatibility
-      // Extract routine states from monitoring data
-      const routineStates: Record<string, RoutineState> = {};
-      if (monitoringData.routines) {
-        for (const [routineId, routineData] of Object.entries(monitoringData.routines)) {
-          const execStatus = (routineData as any).execution_status;
-          if (execStatus) {
-            routineStates[routineId] = {
-              status: execStatus.status,
-              execution_count: execStatus.execution_count,
-              last_execution: execStatus.last_execution_time,
-              error: execStatus.error_count > 0 ? `${execStatus.error_count} errors` : undefined,
-            };
-          }
-        }
+      const results = await Promise.allSettled([
+        api.jobs.getMonitoringData(jobId),
+        api.jobs.getRoutinesStatus(jobId),
+        api.jobs.getExecutionTrace(jobId, 200),
+        api.jobs.getData(jobId),
+        api.jobs.get(jobId),
+      ]);
+
+      const monitoringData = results[0].status === "fulfilled" ? results[0].value : null;
+      const routinesStatus = results[1].status === "fulfilled" ? results[1].value : null;
+      const executionTrace = results[2].status === "fulfilled" ? results[2].value : null;
+      const jobData = results[3].status === "fulfilled" ? results[3].value : null;
+      const job = results[4].status === "fulfilled" ? results[4].value : null;
+
+      if (!monitoringData || !routinesStatus) {
+        throw new Error("Job monitoring data is unavailable");
       }
-      
+
+      const routineStates: Record<string, RoutineState> = {};
+      for (const [routineId, status] of Object.entries(routinesStatus)) {
+        routineStates[routineId] = {
+          status: status.status,
+          execution_count: status.execution_count,
+          last_execution: status.last_execution_time,
+          error: status.error_count > 0 ? `${status.error_count} errors` : undefined,
+        };
+      }
+
+      const createdAt = formatTimestamp(job?.created_at);
+      const updatedAt = monitoringData.updated_at || createdAt;
+
       const state: JobStateResponse = {
         status: monitoringData.job_status || "unknown",
-        current_routine_id: null, // Not available in new API
+        current_routine_id: null,
         routine_states: routineStates,
-        execution_history: (trace.trace_log || []).map((entry: any) => ({
-          routine_id: entry.routine_id || entry.routine || "",
-          timestamp: entry.timestamp || entry.time || new Date().toISOString(),
-          event_name: entry.event_type || entry.event || entry.type || "",
-          data: entry.data || entry || {},
+        execution_history: (executionTrace?.events || []).map((event) => ({
+          routine_id: event.routine_id,
+          timestamp: event.timestamp,
+          event_name: event.event_type,
+          data: event.data || {},
         })),
         pause_points: [],
         deferred_events: [],
-        created_at: new Date().toISOString(),
-        updated_at: monitoringData.updated_at || new Date().toISOString(),
-        shared_data: {},
+        created_at: createdAt,
+        updated_at: updatedAt,
+        shared_data: normalizeJobData(jobData),
       };
       
       set((prevState) => ({
@@ -102,3 +110,27 @@ export const useJobStateStore = create<JobStateStore>((set, get) => ({
     return jobState?.current_routine_id || null;
   },
 }));
+
+const normalizeJobData = (data: any): Record<string, any> => {
+  if (!data) return {};
+  if (typeof data === "object") {
+    if ("data" in data && typeof data.data === "object") {
+      return data.data as Record<string, any>;
+    }
+    if ("shared_data" in data && typeof data.shared_data === "object") {
+      return data.shared_data as Record<string, any>;
+    }
+  }
+  return typeof data === "object" ? (data as Record<string, any>) : {};
+};
+
+const formatTimestamp = (value: any): string => {
+  if (typeof value === "number") {
+    const millis = value < 1e12 ? value * 1000 : value;
+    return new Date(millis).toISOString();
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  return new Date().toISOString();
+};

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -8,11 +9,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, Play, MoreVertical, Download, Upload, CheckCircle2, XCircle, Lock, Unlock, Plus } from "lucide-react";
+import { ArrowLeft, Play, MoreVertical, Download, Upload, CheckCircle2, XCircle, Lock, Unlock, Plus, Zap } from "lucide-react";
 import Link from "next/link";
 import type { FlowResponse } from "@/lib/types/api";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { AddRoutineDialog } from "./AddRoutineDialog";
+import { RunOnceDialog } from "./RunOnceDialog";
 
 interface FlowDetailHeaderProps {
   flow: FlowResponse;
@@ -42,6 +44,7 @@ export function FlowDetailHeader({
 }: FlowDetailHeaderProps) {
   const { isFlowLocked, unlockFlow, lockFlow } = useFlowStore();
   const locked = isFlowLocked(flowId);
+  const [runOnceOpen, setRunOnceOpen] = useState(false);
 
   const handleToggleLock = () => {
     if (locked) {
@@ -152,6 +155,26 @@ export function FlowDetailHeader({
           </DropdownMenuContent>
         </DropdownMenu>
         
+        {serverUrl && (
+          <RunOnceDialog
+            open={runOnceOpen}
+            onOpenChange={setRunOnceOpen}
+            flowId={flowId}
+            serverUrl={serverUrl}
+          />
+        )}
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8"
+          onClick={() => setRunOnceOpen(true)}
+          disabled={!serverUrl}
+        >
+          <Zap className="mr-2 h-3 w-3" />
+          Run Once
+        </Button>
+
         <Button onClick={onStartJob} size="sm" className="h-8">
           <Play className="mr-2 h-3 w-3" />
           Create Worker
