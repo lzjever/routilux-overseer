@@ -133,26 +133,43 @@ export default function JobDetailPage() {
   }
 
 
-  return (
-    <div className="min-h-screen flex flex-col bg-app">
-      <Navbar />
-      <JobDetailHeader
-        job={job}
-        serverUrl={serverUrl}
-        onRefresh={handleRefresh}
-        actionLoading={actionLoading}
-        wsConnected={wsConnected}
-      />
+  const normalizedEvents = (events.length ? events : getExecutionHistory(jobId)).map((event) => {
+    const map: Record<string, string> = {
+      routine_started: "routine_start",
+      routine_completed: "routine_end",
+      routine_failed: "error",
+      event_emitted: "event_emit",
+      slot_called: "slot_call",
+      job_started: "job_start",
+      job_completed: "job_end",
+      job_failed: "error",
+    };
+    return {
+      ...event,
+      event_name: map[event.event_name] || event.event_name,
+    };
+  });
 
-      <div className="flex-1 min-h-0 overflow-hidden">
-        <div className="h-full w-full px-4 py-4">
+  return (
+    <div className="h-screen flex flex-col overflow-hidden bg-app">
+      <Navbar />
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+        <JobDetailHeader
+          job={job}
+          serverUrl={serverUrl}
+          onRefresh={handleRefresh}
+          actionLoading={actionLoading}
+          wsConnected={wsConnected}
+        />
+
+        <div className="flex-1 min-h-0 overflow-hidden px-4 py-4">
           <div className="grid h-full gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="flex flex-col min-h-0 gap-4">
-              <Card className="flex-1 min-h-[420px]">
+            <div className="flex flex-col min-h-0">
+              <Card className="flex flex-col flex-1 min-h-0 surface-panel">
                 <CardHeader className="pb-4">
                   <CardTitle>Flow Execution</CardTitle>
                 </CardHeader>
-                <CardContent className="relative flex-1 p-0 min-h-[500px] overflow-hidden">
+                <CardContent className="relative flex-1 min-h-0 p-0 overflow-hidden">
                   <FlowCanvas
                     flowId={job.flow_id}
                     jobId={jobId}
@@ -162,96 +179,104 @@ export default function JobDetailPage() {
               </Card>
             </div>
 
-            <div className="flex flex-col min-h-0 gap-4 overflow-hidden surface-panel p-4 rounded-lg">
-              <div className="text-sm font-semibold">Job Details</div>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Job Overview</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Job ID</span>
-                    <span className="font-mono text-xs">{job.job_id}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Flow</span>
-                    <span className="font-mono text-xs">{job.flow_id}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Worker</span>
-                    <span className="font-mono text-xs">{job.worker_id}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Status</span>
-                    <Badge variant={job.status === "running" ? "default" : job.status === "failed" ? "destructive" : "secondary"}>
-                      {job.status}
-                    </Badge>
-                  </div>
-                  <div className="grid gap-2 pt-2 border-t text-xs text-muted-foreground">
-                    {job.created_at && (
-                      <div className="flex items-center justify-between">
-                        <span>Created</span>
-                        <span>{formatDistanceToNow(new Date(job.created_at * 1000), { addSuffix: true })}</span>
-                      </div>
+            <div className="surface-panel flex flex-col h-full">
+              <div className="h-10 border-b flex items-center px-3">
+                <span className="text-sm font-semibold">Job Details</span>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-3 space-y-4">
+                <Card className="surface-panel">
+                  <CardHeader>
+                    <CardTitle>Job Overview</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Job ID</span>
+                      <span className="font-mono text-xs">{job.job_id}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Flow</span>
+                      <span className="font-mono text-xs">{job.flow_id}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Worker</span>
+                      <span className="font-mono text-xs">{job.worker_id}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Status</span>
+                      <Badge variant={job.status === "running" ? "default" : job.status === "failed" ? "destructive" : "secondary"}>
+                        {job.status}
+                      </Badge>
+                    </div>
+                    <div className="grid gap-2 pt-2 border-t text-xs text-muted-foreground">
+                      {job.created_at && (
+                        <div className="flex items-center justify-between">
+                          <span>Created</span>
+                          <span>{formatDistanceToNow(new Date(job.created_at * 1000), { addSuffix: true })}</span>
+                        </div>
+                      )}
+                      {job.started_at && (
+                        <div className="flex items-center justify-between">
+                          <span>Started</span>
+                          <span>{formatDistanceToNow(new Date(job.started_at * 1000), { addSuffix: true })}</span>
+                        </div>
+                      )}
+                      {job.completed_at && (
+                        <div className="flex items-center justify-between">
+                          <span>Completed</span>
+                          <span>{formatDistanceToNow(new Date(job.completed_at * 1000), { addSuffix: true })}</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="flex flex-col">
+                <TabsList className="grid w-full grid-cols-5 mb-3 h-auto bg-transparent p-0">
+                    <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
+                    <TabsTrigger value="metrics" className="text-xs">Metrics</TabsTrigger>
+                    <TabsTrigger value="history" className="text-xs">History</TabsTrigger>
+                    <TabsTrigger value="queues" className="text-xs">Queues</TabsTrigger>
+                    <TabsTrigger value="details" className="text-xs">Details</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="activity" className="pt-3 outline-none">
+                    <EventLog events={normalizedEvents} loading={loading && normalizedEvents.length === 0} />
+                  </TabsContent>
+
+                  <TabsContent value="metrics" className="pt-3 outline-none">
+                    <MetricsPanel job={job} metrics={metrics} eventsCount={events.length} loading={loading} />
+                  </TabsContent>
+
+                  <TabsContent value="history" className="pt-3 outline-none">
+                    {jobState ? (
+                      <ExecutionHistoryTimeline history={getExecutionHistory(jobId)} />
+                    ) : (
+                      <Card className="surface-panel">
+                        <CardContent className="flex items-center justify-center min-h-[200px]">
+                          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                        </CardContent>
+                      </Card>
                     )}
-                    {job.started_at && (
-                      <div className="flex items-center justify-between">
-                        <span>Started</span>
-                        <span>{formatDistanceToNow(new Date(job.started_at * 1000), { addSuffix: true })}</span>
-                      </div>
-                    )}
-                    {job.completed_at && (
-                      <div className="flex items-center justify-between">
-                        <span>Completed</span>
-                        <span>{formatDistanceToNow(new Date(job.completed_at * 1000), { addSuffix: true })}</span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                  </TabsContent>
 
-              <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="flex flex-col min-h-0">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
-                  <TabsTrigger value="metrics" className="text-xs">Metrics</TabsTrigger>
-                  <TabsTrigger value="history" className="text-xs">History</TabsTrigger>
-                  <TabsTrigger value="queues" className="text-xs">Queues</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="activity" className="mt-3 flex-1 min-h-0">
-                  <EventLog events={events} loading={loading && events.length === 0} />
-                </TabsContent>
-
-                <TabsContent value="metrics" className="mt-3 flex-1 min-h-0">
-                  <MetricsPanel job={job} metrics={metrics} eventsCount={events.length} loading={loading} />
-                </TabsContent>
-
-                <TabsContent value="history" className="mt-3 flex-1 min-h-0">
-                  {jobState ? (
-                    <ExecutionHistoryTimeline history={getExecutionHistory(jobId)} />
-                  ) : (
-                    <Card>
-                      <CardContent className="flex items-center justify-center min-h-[200px]">
-                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <TabsContent value="queues" className="pt-3 outline-none">
+                    <Card className="surface-panel">
+                      <CardContent>
+                        {serverUrl && (
+                          <QueueStatusPanel jobId={jobId} serverUrl={serverUrl} embedded />
+                        )}
                       </CardContent>
                     </Card>
-                  )}
-                </TabsContent>
+                  </TabsContent>
 
-                <TabsContent value="queues" className="mt-3 flex-1 min-h-0">
-                  <Card>
-                    <CardContent className="pt-6">
-                      {serverUrl && (
-                        <QueueStatusPanel jobId={jobId} serverUrl={serverUrl} embedded />
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-
-              {jobState && <JobStateSummary jobState={jobState} />}
-              {jobState && <RoutineStatesPanel jobState={jobState} />}
-              {jobState && <SharedDataViewer sharedData={getSharedData(jobId)} />}
+                  <TabsContent value="details" className="pt-3 outline-none space-y-3">
+                    {jobState && <JobStateSummary jobState={jobState} />}
+                    {jobState && <RoutineStatesPanel jobState={jobState} />}
+                    {jobState && <SharedDataViewer sharedData={getSharedData(jobId)} />}
+                  </TabsContent>
+                </Tabs>
+              </div>
             </div>
           </div>
         </div>

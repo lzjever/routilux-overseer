@@ -65,7 +65,7 @@ export function FlowDetailHeader({
         </Link>
         
         <div className="flex items-center gap-2 min-w-0">
-          <h1 className="text-xl font-bold truncate">{flow.flow_id}</h1>
+          <h1 className="text-lg font-semibold truncate font-mono">{flow.flow_id}</h1>
           
           {/* Validation Status Badge */}
           {validationStatus && (

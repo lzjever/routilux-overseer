@@ -198,7 +198,7 @@ export default function JobsPage() {
       <div className="min-h-screen flex flex-col bg-app">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <Card className="max-w-md">
+          <Card className="max-w-md surface-panel">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plug className="h-5 w-5" />
@@ -364,7 +364,7 @@ export default function JobsPage() {
       )}
 
       {/* Filters */}
-      <Card className="mb-6">
+      <Card className="mb-6 surface-panel">
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -411,7 +411,7 @@ export default function JobsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : filteredJobs.length === 0 ? (
-        <Card>
+        <Card className="surface-panel">
           <EmptyState
             icon={Play}
             title={jobs.size === 0 ? "No jobs yet" : "No jobs match filters"}
@@ -436,7 +436,7 @@ export default function JobsPage() {
             <Card
               key={job.job_id}
               className={cn(
-                "group hover:shadow-lg transition-all duration-200",
+                "surface-panel group hover:shadow-lg transition-all duration-200",
                 selectedJobs.has(job.job_id) && "ring-2 ring-primary"
               )}
             >
@@ -462,8 +462,10 @@ export default function JobsPage() {
                       className="flex-1 cursor-pointer"
                       onClick={() => router.push(`/jobs/${job.job_id}`)}
                     >
-                      <CardTitle className="text-lg">{job.job_id}</CardTitle>
-                      <CardDescription className="mt-1">
+                      <CardTitle className="text-base font-semibold font-mono">
+                        {job.job_id}
+                      </CardTitle>
+                      <CardDescription className="mt-1 text-xs">
                         Flow: {job.flow_id}
                       </CardDescription>
                     </div>
@@ -476,7 +478,7 @@ export default function JobsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   {job.created_at && (
                     <span>
                       Created {formatDistanceToNow(new Date(job.created_at), {
@@ -496,7 +498,7 @@ export default function JobsPage() {
                   )}
                 </div>
                 {job.error && (
-                  <div className="mt-2 text-sm text-destructive">
+                  <div className="mt-2 text-xs text-destructive">
                     Error: {job.error}
                   </div>
                 )}

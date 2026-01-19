@@ -40,11 +40,11 @@ export function JobDetailHeader({
         </Link>
 
         <div className="flex items-center gap-2 min-w-0">
-          <h1 className="text-xl font-bold truncate font-mono">{job.job_id}</h1>
+          <h1 className="text-lg font-semibold truncate font-mono">{job.job_id}</h1>
 
           <span className="text-muted-foreground">•</span>
 
-          <p className="text-sm text-muted-foreground truncate">
+          <p className="text-xs text-muted-foreground truncate">
             Flow: {job.flow_id}
           </p>
 

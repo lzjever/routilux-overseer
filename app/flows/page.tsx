@@ -138,7 +138,7 @@ export default function FlowsPage() {
       <div className="min-h-screen flex flex-col bg-app">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <Card className="max-w-md">
+          <Card className="max-w-md surface-panel">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plug className="h-5 w-5" />
@@ -292,7 +292,7 @@ export default function FlowsPage() {
           ))}
         </div>
       ) : filteredFlows.length === 0 ? (
-        <Card>
+        <Card className="surface-panel">
           <EmptyState
             icon={Network}
             title={searchQuery ? "No flows found" : "No flows found"}
@@ -324,7 +324,7 @@ export default function FlowsPage() {
             <Card
               key={flow.flow_id}
               className={cn(
-                "group hover:shadow-lg transition-all duration-200",
+                "surface-panel group hover:shadow-lg transition-all duration-200",
                 selectedFlows.has(flow.flow_id) && "ring-2 ring-primary"
               )}
             >
@@ -352,11 +352,13 @@ export default function FlowsPage() {
                       onClick={() => router.push(`/flows/${flow.flow_id}`)}
                     >
                       <Activity className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-lg">{flow.flow_id}</CardTitle>
+                      <CardTitle className="text-base font-semibold font-mono">
+                        {flow.flow_id}
+                      </CardTitle>
                     </div>
                   </div>
                 </div>
-                <CardDescription>
+                <CardDescription className="text-xs">
                   {Object.keys(flow.routines).length} routines •{" "}
                   {flow.connections.length} connections
                 </CardDescription>

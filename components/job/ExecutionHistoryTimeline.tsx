@@ -14,7 +14,7 @@ export function ExecutionHistoryTimeline({
   routineId
 }: ExecutionHistoryTimelineProps) {
   return (
-    <Card>
+    <Card className="surface-panel flex flex-col h-full">
       <CardHeader>
         <CardTitle>Execution History</CardTitle>
         {routineId && (
@@ -24,8 +24,8 @@ export function ExecutionHistoryTimeline({
           {history.length} events
         </p>
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-96">
+      <CardContent className="flex-1 min-h-0">
+        <ScrollArea className="h-full">
           <div className="space-y-0">
             {history.map((record, idx) => (
               <div key={idx} className="flex gap-3 p-3 border-b last:border-0 hover:bg-muted/30">

@@ -12,7 +12,7 @@ interface SkeletonCardProps {
 
 export function SkeletonCard({ className, showHeader = true, lines = 3 }: SkeletonCardProps) {
   return (
-    <Card className={cn(className)}>
+    <Card className={cn("surface-panel", className)}>
       {showHeader && (
         <CardHeader>
           <Skeleton className="h-5 w-2/3" />

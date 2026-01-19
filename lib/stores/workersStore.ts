@@ -10,7 +10,7 @@ interface WorkersState {
 
   // Actions
   loadWorkers: (serverUrl: string, flowId?: string | null, status?: string | null) => Promise<void>;
-  loadWorker: (workerId: string, serverUrl: string) => Promise<void>;
+  loadWorker: (workerId: string, serverUrl: string) => Promise<WorkerResponse>;
   createWorker: (request: WorkerCreateRequest, serverUrl: string) => Promise<WorkerResponse>;
   stopWorker: (workerId: string, serverUrl: string) => Promise<void>;
   pauseWorker: (workerId: string, serverUrl: string) => Promise<void>;
@@ -47,11 +47,13 @@ export const useWorkersStore = create<WorkersState>((set, get) => ({
         workers: new Map(state.workers).set(workerId, worker),
         loading: false,
       }));
+      return worker;
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : "Failed to load worker",
         loading: false,
       });
+      throw error;
     }
   },
 

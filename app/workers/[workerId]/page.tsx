@@ -111,8 +111,7 @@ export default function WorkerDetailPage() {
     const loadData = async () => {
       setLoading(true);
       try {
-        await loadWorker(workerId, serverUrl);
-        const loadedWorker = workers.get(workerId);
+        const loadedWorker = await loadWorker(workerId, serverUrl);
         if (loadedWorker) {
           await selectFlow(loadedWorker.flow_id, serverUrl);
           await Promise.all([
@@ -142,7 +141,6 @@ export default function WorkerDetailPage() {
     loadHistory,
     loadRoutineStates,
     router,
-    workers,
   ]);
 
   const handlePause = async () => {
@@ -228,7 +226,7 @@ export default function WorkerDetailPage() {
   return (
     <div className="min-h-screen flex flex-col bg-app">
       <Navbar />
-      <div className="w-full px-4 py-6 flex-1">
+      <div className="w-full px-4 py-6 flex-1 min-h-0 flex flex-col">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -239,9 +237,9 @@ export default function WorkerDetailPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold font-mono">{worker.worker_id}</h1>
+              <h1 className="text-2xl font-semibold font-mono">{worker.worker_id}</h1>
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Flow: {worker.flow_id}
                 </p>
                 <span className="text-muted-foreground">•</span>
@@ -322,7 +320,7 @@ export default function WorkerDetailPage() {
 
         {/* Worker Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card>
+          <Card className="surface-panel">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">Jobs Processed</CardTitle>
             </CardHeader>
@@ -330,7 +328,7 @@ export default function WorkerDetailPage() {
               <div className="text-2xl font-bold">{worker.jobs_processed || 0}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="surface-panel">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">Jobs Failed</CardTitle>
             </CardHeader>
@@ -338,7 +336,7 @@ export default function WorkerDetailPage() {
               <div className="text-2xl font-bold text-destructive">{worker.jobs_failed || 0}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="surface-panel">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">Status</CardTitle>
             </CardHeader>
@@ -349,7 +347,7 @@ export default function WorkerDetailPage() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
+        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full flex-1 min-h-0 flex flex-col">
           <TabsList className="grid w-full grid-cols-5 mb-4 h-auto bg-transparent p-0">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="jobs">Jobs ({workerJobs.length})</TabsTrigger>
@@ -359,22 +357,20 @@ export default function WorkerDetailPage() {
           </TabsList>
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6 mt-4 outline-none">
+          <TabsContent value="overview" className="flex-1 min-h-0 mt-4 outline-none flex flex-col">
             {/* Flow Visualization */}
             {currentFlow ? (
-              <Card>
+              <Card className="flex-1 min-h-[420px] surface-panel flex flex-col">
                 <CardHeader>
                   <CardTitle>Flow Visualization</CardTitle>
                   <CardDescription>Flow: {worker.flow_id}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="relative h-[500px]">
-                    <FlowCanvas flowId={worker.flow_id} editable={false} />
-                  </div>
+                <CardContent className="relative flex-1 min-h-[500px] p-0 overflow-hidden">
+                  <FlowCanvas flowId={worker.flow_id} editable={false} />
                 </CardContent>
               </Card>
             ) : (
-              <Card>
+              <Card className="flex-1 min-h-[420px] surface-panel">
                 <CardContent className="flex items-center justify-center min-h-[500px]">
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-2">Loading flow visualization...</p>
@@ -386,15 +382,15 @@ export default function WorkerDetailPage() {
           </TabsContent>
 
           {/* Jobs Tab */}
-          <TabsContent value="jobs" className="space-y-4 mt-4 outline-none">
+          <TabsContent value="jobs" className="flex-1 min-h-0 space-y-4 mt-4 outline-none">
             {loadingJobs ? (
-              <Card>
+              <Card className="surface-panel">
                 <CardContent className="flex items-center justify-center min-h-[200px]">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </CardContent>
               </Card>
             ) : workerJobs.length === 0 ? (
-              <Card>
+              <Card className="surface-panel">
                 <EmptyState
                   icon={Send}
                   title="No jobs yet"
@@ -410,7 +406,7 @@ export default function WorkerDetailPage() {
                 {workerJobs.map((job) => (
                   <Card
                     key={job.job_id}
-                    className="group hover:shadow-lg transition-all duration-200 cursor-pointer"
+                    className="surface-panel group hover:shadow-lg transition-all duration-200 cursor-pointer"
                     onClick={() => router.push(`/jobs/${job.job_id}`)}
                   >
                     <CardHeader>
@@ -465,15 +461,15 @@ export default function WorkerDetailPage() {
           </TabsContent>
 
           {/* Statistics Tab */}
-          <TabsContent value="statistics" className="space-y-4 mt-4 outline-none">
+          <TabsContent value="statistics" className="flex-1 min-h-0 space-y-4 mt-4 outline-none">
             {loadingStats ? (
-              <Card>
+              <Card className="surface-panel">
                 <CardContent className="flex items-center justify-center min-h-[200px]">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </CardContent>
               </Card>
             ) : statistics ? (
-              <Card>
+              <Card className="surface-panel">
                 <CardHeader>
                   <CardTitle>Worker Statistics</CardTitle>
                 </CardHeader>
@@ -506,7 +502,7 @@ export default function WorkerDetailPage() {
                         <CardTitle className="text-lg mb-4">Routine Statistics</CardTitle>
                         <div className="space-y-2">
                           {Object.entries(statistics.routine_statistics).map(([routineId, stats]: [string, any]) => (
-                            <Card key={routineId}>
+                            <Card key={routineId} className="surface-panel">
                               <CardHeader className="pb-2">
                                 <CardTitle className="text-sm font-mono">{routineId}</CardTitle>
                               </CardHeader>
@@ -535,7 +531,7 @@ export default function WorkerDetailPage() {
                 </CardContent>
               </Card>
             ) : (
-              <Card>
+              <Card className="surface-panel">
                 <EmptyState
                   icon={RefreshCw}
                   title="No statistics available"
@@ -546,9 +542,9 @@ export default function WorkerDetailPage() {
           </TabsContent>
 
           {/* History Tab */}
-          <TabsContent value="history" className="space-y-4 mt-4 outline-none">
+          <TabsContent value="history" className="flex-1 min-h-0 space-y-4 mt-4 outline-none">
             {loadingHistory ? (
-              <Card>
+              <Card className="surface-panel">
                 <CardContent className="flex items-center justify-center min-h-[200px]">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </CardContent>
@@ -556,7 +552,7 @@ export default function WorkerDetailPage() {
             ) : history.length > 0 ? (
               <div className="space-y-2">
                 {history.map((record: any, index: number) => (
-                  <Card key={index}>
+                  <Card key={index} className="surface-panel">
                     <CardContent className="pt-4">
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center justify-between">
@@ -581,7 +577,7 @@ export default function WorkerDetailPage() {
                 ))}
               </div>
             ) : (
-              <Card>
+              <Card className="surface-panel">
                 <EmptyState
                   icon={RefreshCw}
                   title="No history available"
@@ -592,9 +588,9 @@ export default function WorkerDetailPage() {
           </TabsContent>
 
           {/* Routines Tab */}
-          <TabsContent value="routines" className="space-y-4 mt-4 outline-none">
+          <TabsContent value="routines" className="flex-1 min-h-0 space-y-4 mt-4 outline-none">
             {loadingRoutines ? (
-              <Card>
+              <Card className="surface-panel">
                 <CardContent className="flex items-center justify-center min-h-[200px]">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </CardContent>
@@ -602,7 +598,7 @@ export default function WorkerDetailPage() {
             ) : Object.keys(routineStates).length > 0 ? (
               <div className="grid gap-4">
                 {Object.entries(routineStates).map(([routineId, state]: [string, any]) => (
-                  <Card key={routineId}>
+                  <Card key={routineId} className="surface-panel">
                     <CardHeader>
                       <CardTitle className="text-base font-mono">{routineId}</CardTitle>
                     </CardHeader>
@@ -640,7 +636,7 @@ export default function WorkerDetailPage() {
                 ))}
               </div>
             ) : (
-              <Card>
+              <Card className="surface-panel">
                 <EmptyState
                   icon={RefreshCw}
                   title="No routine states available"

@@ -80,7 +80,7 @@ export default function HomePage() {
       <div className="min-h-screen flex flex-col bg-app">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <Card className="max-w-md">
+          <Card className="max-w-md surface-panel">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plug className="h-5 w-5" />
@@ -132,21 +132,58 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-app">
       <Navbar />
-      <div className="w-full px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="mb-4 text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
-            Routilux Overseer
-          </h1>
-          <p className="text-xl text-muted-foreground mx-auto">
-            Comprehensive observability, debugging, and control for Routilux workflows
-          </p>
-        </div>
+      <div className="w-full px-4 py-6">
+        <div className="flex flex-col gap-6">
+          {/* Header */}
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold font-mono">Routilux Overseer</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Observability, debugging, and control for Routilux workflows
+              </p>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-3">
+                <Badge variant="secondary" className="h-5">Connected</Badge>
+                {serverUrl && (
+                  <Badge variant="outline" className="h-5 font-mono">{serverUrl}</Badge>
+                )}
+                {(lastFlowSync || lastJobSync || lastWorkerSync) && (
+                  <span>
+                    Last sync{" "}
+                    {lastJobSync
+                      ? lastJobSync.toLocaleString()
+                      : lastFlowSync
+                      ? lastFlowSync.toLocaleString()
+                      : lastWorkerSync?.toLocaleString()}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild size="sm">
+                <Link href="/flows">
+                  <Play className="h-4 w-4 mr-2" />
+                  Start Job
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/flows">
+                  <Activity className="h-4 w-4 mr-2" />
+                  Create Flow
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/connect">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Link>
+              </Button>
+            </div>
+          </div>
 
-        {/* Statistics Cards */}
-        <div className="grid gap-4 md:grid-cols-4 mb-8 mx-auto">
+          {/* Statistics Cards */}
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
+            className="surface-panel cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
             onClick={() => router.push("/flows")}
           >
             <CardHeader className="pb-3">
@@ -162,7 +199,7 @@ export default function HomePage() {
           </Card>
 
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
+            className="surface-panel cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
             onClick={() => router.push("/jobs")}
           >
             <CardHeader className="pb-3">
@@ -178,7 +215,7 @@ export default function HomePage() {
           </Card>
 
           <Card
-            className="cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
+            className="surface-panel cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
             onClick={() => router.push("/jobs?status=running")}
           >
             <CardHeader className="pb-3">
@@ -193,7 +230,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="surface-panel">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
             </CardHeader>
@@ -212,203 +249,207 @@ export default function HomePage() {
               </Button>
             </CardContent>
           </Card>
-        </div>
+          </div>
 
-        <Card className="mb-8">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>System Health</CardTitle>
-              <CardDescription>
-                Live health stats from the connected runtime.
-              </CardDescription>
-            </div>
-            <Button variant="outline" size="sm" onClick={loadHealthStats} disabled={healthLoading}>
-              {healthLoading ? (
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="mr-2 h-4 w-4" />
-              )}
-              Refresh
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {healthLoading ? (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <RefreshCw className="h-4 w-4 animate-spin" />
-                Loading health stats...
-              </div>
-            ) : healthError ? (
-              <div className="text-sm text-destructive">{healthError}</div>
-            ) : healthStats ? (
-              <div className="space-y-3">
-                {Object.keys(healthStats).length === 0 ? (
-                  <div className="text-sm text-muted-foreground">No health stats available.</div>
-                ) : (
-                  <div className="grid gap-3 md:grid-cols-3">
-                    {Object.entries(healthStats)
-                      .slice(0, 9)
-                      .map(([key, value]) => (
-                        <div key={key} className="rounded border bg-background p-3">
-                          <div className="text-xs text-muted-foreground">{key}</div>
-                          <div className="text-sm font-mono">{formatHealthValue(value)}</div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-                {healthUpdatedAt && (
-                  <div className="text-xs text-muted-foreground">
-                    Updated {new Date(healthUpdatedAt).toLocaleTimeString()}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-sm text-muted-foreground">No health stats loaded.</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Discovery Status</CardTitle>
-            <CardDescription>
-              Last time items were synced from registry/runtime.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded border bg-background p-3">
-                <div className="text-xs text-muted-foreground">Flows</div>
-                <div className="text-sm">
-                  {lastFlowSync ? lastFlowSync.toLocaleString() : "Not synced"}
-                </div>
-                <Button asChild variant="ghost" size="sm" className="mt-2 px-0">
-                  <Link href="/flows">Open Flows</Link>
-                </Button>
-              </div>
-              <div className="rounded border bg-background p-3">
-                <div className="text-xs text-muted-foreground">Jobs</div>
-                <div className="text-sm">
-                  {lastJobSync ? lastJobSync.toLocaleString() : "Not synced"}
-                </div>
-                <Button asChild variant="ghost" size="sm" className="mt-2 px-0">
-                  <Link href="/jobs">Open Jobs</Link>
-                </Button>
-              </div>
-              <div className="rounded border bg-background p-3">
-                <div className="text-xs text-muted-foreground">Workers</div>
-                <div className="text-sm">
-                  {lastWorkerSync ? lastWorkerSync.toLocaleString() : "Not synced"}
-                </div>
-                <Button asChild variant="ghost" size="sm" className="mt-2 px-0">
-                  <Link href="/workers">Open Workers</Link>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-6 lg:grid-cols-2 mx-auto">
-          {/* Recent Jobs */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Recent Jobs</CardTitle>
-                <Link href="/jobs">
-                  <Button variant="ghost" size="sm">
-                    View All
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </Link>
-              </div>
-              <CardDescription>Latest workflow executions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {recentJobs.length === 0 ? (
-                <EmptyState
-                  icon={Play}
-                  title="No jobs yet"
-                  description="Start a job from the Flows page to see it here."
-                  action={{
-                    label: "Go to Flows",
-                    href: "/flows",
-                  }}
-                />
-              ) : (
-                <div className="space-y-3">
-                  {recentJobs.map((job) => (
-                    <Link key={job.job_id} href={`/jobs/${job.job_id}`}>
-                      <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-sm font-medium truncate">
-                              {job.job_id}
-                            </span>
-                            <StatusBadge
-                              status={job.status}
-                              showSpinner={job.status === "running"}
-                              className="text-xs"
-                            />
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {job.flow_id}
-                          </p>
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="space-y-6">
+              {/* Recent Jobs */}
+              <Card className="surface-panel">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Recent Jobs</CardTitle>
+                    <Link href="/jobs">
+                      <Button variant="ghost" size="sm">
+                        View All
+                        <ArrowRight className="h-4 w-4 ml-1" />
+                      </Button>
                     </Link>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  </div>
+                  <CardDescription>Latest workflow executions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {recentJobs.length === 0 ? (
+                    <EmptyState
+                      icon={Play}
+                      title="No jobs yet"
+                      description="Start a job from the Flows page to see it here."
+                      action={{
+                        label: "Go to Flows",
+                        href: "/flows",
+                      }}
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      {recentJobs.map((job) => (
+                        <Link key={job.job_id} href={`/jobs/${job.job_id}`}>
+                          <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-sm font-medium truncate">
+                                  {job.job_id}
+                                </span>
+                                <StatusBadge
+                                  status={job.status}
+                                  showSpinner={job.status === "running"}
+                                  className="text-xs"
+                                />
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {job.flow_id}
+                              </p>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-          {/* Quick Links */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Links</CardTitle>
-              <CardDescription>Navigate to different sections</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link href="/flows" className="block">
-                <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer">
-                  <Activity className="h-5 w-5 text-blue-500" />
-                  <div className="flex-1">
-                    <div className="font-semibold">Flows</div>
-                    <div className="text-xs text-muted-foreground">
-                      View and manage workflow definitions
+              <Card className="surface-panel">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>System Health</CardTitle>
+                    <CardDescription>
+                      Live health stats from the connected runtime.
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={loadHealthStats} disabled={healthLoading}>
+                    {healthLoading ? (
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                    )}
+                    Refresh
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {healthLoading ? (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      Loading health stats...
+                    </div>
+                  ) : healthError ? (
+                    <div className="text-sm text-destructive">{healthError}</div>
+                  ) : healthStats ? (
+                    <div className="space-y-3">
+                      {Object.keys(healthStats).length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No health stats available.</div>
+                      ) : (
+                        <div className="grid gap-3 md:grid-cols-3">
+                          {Object.entries(healthStats)
+                            .slice(0, 9)
+                            .map(([key, value]) => (
+                              <div key={key} className="rounded border bg-background p-3">
+                                <div className="text-xs text-muted-foreground">{key}</div>
+                                <div className="text-sm font-mono">{formatHealthValue(value)}</div>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                      {healthUpdatedAt && (
+                        <div className="text-xs text-muted-foreground">
+                          Updated {new Date(healthUpdatedAt).toLocaleTimeString()}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No health stats loaded.</div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-6">
+              <Card className="surface-panel">
+                <CardHeader>
+                  <CardTitle>Discovery Status</CardTitle>
+                  <CardDescription>
+                    Last time items were synced from registry/runtime.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-1">
+                    <div className="rounded border bg-background p-3">
+                      <div className="text-xs text-muted-foreground">Flows</div>
+                      <div className="text-sm">
+                        {lastFlowSync ? lastFlowSync.toLocaleString() : "Not synced"}
+                      </div>
+                      <Button asChild variant="ghost" size="sm" className="mt-2 px-0">
+                        <Link href="/flows">Open Flows</Link>
+                      </Button>
+                    </div>
+                    <div className="rounded border bg-background p-3">
+                      <div className="text-xs text-muted-foreground">Jobs</div>
+                      <div className="text-sm">
+                        {lastJobSync ? lastJobSync.toLocaleString() : "Not synced"}
+                      </div>
+                      <Button asChild variant="ghost" size="sm" className="mt-2 px-0">
+                        <Link href="/jobs">Open Jobs</Link>
+                      </Button>
+                    </div>
+                    <div className="rounded border bg-background p-3">
+                      <div className="text-xs text-muted-foreground">Workers</div>
+                      <div className="text-sm">
+                        {lastWorkerSync ? lastWorkerSync.toLocaleString() : "Not synced"}
+                      </div>
+                      <Button asChild variant="ghost" size="sm" className="mt-2 px-0">
+                        <Link href="/workers">Open Workers</Link>
+                      </Button>
                     </div>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </Link>
+                </CardContent>
+              </Card>
 
-              <Link href="/jobs" className="block">
-                <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer">
-                  <Zap className="h-5 w-5 text-green-500" />
-                  <div className="flex-1">
-                    <div className="font-semibold">Jobs</div>
-                    <div className="text-xs text-muted-foreground">
-                      Monitor and control executions
+              <Card className="surface-panel">
+                <CardHeader>
+                  <CardTitle>Quick Links</CardTitle>
+                  <CardDescription>Navigate to different sections</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Link href="/flows" className="block">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer">
+                      <Activity className="h-5 w-5 text-blue-500" />
+                      <div className="flex-1">
+                        <div className="font-semibold">Flows</div>
+                        <div className="text-xs text-muted-foreground">
+                          View and manage workflow definitions
+                        </div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     </div>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </Link>
+                  </Link>
 
-              <Link href="/connect" className="block">
-                <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer">
-                  <Settings className="h-5 w-5 text-purple-500" />
-                  <div className="flex-1">
-                    <div className="font-semibold">Settings</div>
-                    <div className="text-xs text-muted-foreground">
-                      Configure connection settings
+                  <Link href="/jobs" className="block">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer">
+                      <Zap className="h-5 w-5 text-green-500" />
+                      <div className="flex-1">
+                        <div className="font-semibold">Jobs</div>
+                        <div className="text-xs text-muted-foreground">
+                          Monitor and control executions
+                        </div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     </div>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </Link>
-            </CardContent>
-          </Card>
+                  </Link>
+
+                  <Link href="/connect" className="block">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer">
+                      <Settings className="h-5 w-5 text-purple-500" />
+                      <div className="flex-1">
+                        <div className="font-semibold">Settings</div>
+                        <div className="text-xs text-muted-foreground">
+                          Configure connection settings
+                        </div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

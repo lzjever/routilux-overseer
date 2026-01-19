@@ -180,7 +180,7 @@ export default function WorkersPage() {
       <div className="min-h-screen flex flex-col bg-app">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <Card className="max-w-md">
+          <Card className="max-w-md surface-panel">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plug className="h-5 w-5" />
@@ -289,7 +289,7 @@ export default function WorkersPage() {
       )}
 
       {/* Filters */}
-      <Card className="mb-6">
+      <Card className="mb-6 surface-panel">
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -336,7 +336,7 @@ export default function WorkersPage() {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : filteredWorkers.length === 0 ? (
-        <Card>
+        <Card className="surface-panel">
           <EmptyState
             icon={Play}
             title={workers.size === 0 ? "No workers yet" : "No workers match filters"}
@@ -361,7 +361,7 @@ export default function WorkersPage() {
             <Card
               key={worker.worker_id}
               className={cn(
-                "group hover:shadow-lg transition-all duration-200",
+                "surface-panel group hover:shadow-lg transition-all duration-200",
                 selectedWorkers.has(worker.worker_id) && "ring-2 ring-primary"
               )}
             >
@@ -387,8 +387,10 @@ export default function WorkersPage() {
                       className="flex-1 cursor-pointer"
                       onClick={() => router.push(`/workers/${worker.worker_id}`)}
                     >
-                      <CardTitle className="text-lg">{worker.worker_id}</CardTitle>
-                      <CardDescription className="mt-1">
+                      <CardTitle className="text-base font-semibold font-mono">
+                        {worker.worker_id}
+                      </CardTitle>
+                      <CardDescription className="mt-1 text-xs">
                         Flow: {worker.flow_id}
                       </CardDescription>
                     </div>
@@ -400,7 +402,7 @@ export default function WorkersPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
                   {worker.created_at && (
                     <span>
                       Created {formatDistanceToNow(new Date(worker.created_at * 1000), {
@@ -414,7 +416,7 @@ export default function WorkersPage() {
                     })}</span>
                   )}
                 </div>
-                <div className="flex items-center gap-4 text-sm mb-3">
+                <div className="flex items-center gap-4 text-xs mb-3">
                   {worker.jobs_processed !== undefined && (
                     <span>
                       <span className="text-muted-foreground">Jobs Processed:</span>{" "}

@@ -51,11 +51,11 @@ function getEventBadgeVariant(eventType: string): "default" | "secondary" | "des
 export function EventLog({ events, loading }: EventLogProps) {
   if (loading) {
     return (
-      <Card>
+      <Card className="surface-panel flex flex-col h-full">
         <CardHeader>
           <CardTitle>Event Log</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 min-h-0">
           <div className="animate-pulse space-y-2">
             <div className="h-12 bg-muted rounded" />
             <div className="h-12 bg-muted rounded" />
@@ -68,11 +68,11 @@ export function EventLog({ events, loading }: EventLogProps) {
 
   if (events.length === 0) {
     return (
-      <Card>
+      <Card className="surface-panel flex flex-col h-full">
         <CardHeader>
           <CardTitle>Event Log</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 min-h-0">
           <p className="text-sm text-muted-foreground">No events yet</p>
         </CardContent>
       </Card>
@@ -80,12 +80,12 @@ export function EventLog({ events, loading }: EventLogProps) {
   }
 
   return (
-    <Card>
+    <Card className="surface-panel flex flex-col h-full">
       <CardHeader>
         <CardTitle>Event Log</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[400px] pr-4">
+      <CardContent className="flex-1 min-h-0">
+        <ScrollArea className="h-full pr-4">
           <div className="space-y-2">
             {events.map((event, index) => (
               <div

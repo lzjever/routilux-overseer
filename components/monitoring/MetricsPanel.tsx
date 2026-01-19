@@ -16,11 +16,11 @@ interface MetricsPanelProps {
 export function MetricsPanel({ job, metrics, eventsCount, loading }: MetricsPanelProps) {
   if (loading) {
     return (
-      <Card>
+      <Card className="surface-panel flex flex-col h-full">
         <CardHeader>
           <CardTitle>Job Metrics</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 min-h-0">
           <div className="animate-pulse space-y-3">
             <div className="h-4 bg-muted rounded" />
             <div className="h-4 bg-muted rounded w-3/4" />
@@ -56,11 +56,11 @@ export function MetricsPanel({ job, metrics, eventsCount, loading }: MetricsPane
   const errorCount = metrics?.errors?.length;
 
   return (
-    <Card>
+    <Card className="surface-panel flex flex-col h-full">
       <CardHeader>
         <CardTitle>Job Metrics</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 flex-1 min-h-0">
         {/* Status */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Status</span>
