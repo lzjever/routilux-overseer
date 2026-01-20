@@ -18,6 +18,7 @@ import { SharedDataViewer } from "@/components/job/SharedDataViewer";
 import { ExecutionHistoryTimeline } from "@/components/job/ExecutionHistoryTimeline";
 import { JobDetailHeader } from "@/components/job/JobDetailHeader";
 import { QueueStatusPanel } from "@/components/job/QueueStatusPanel";
+import { FloatingBreakpointPanel } from "@/components/job/FloatingBreakpointPanel";
 import { Navbar } from "@/components/layout/Navbar";
 import { useJobMonitor } from "@/lib/websocket/job-monitor";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,8 @@ export default function JobDetailPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"activity" | "metrics" | "history" | "queues">("activity");
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeAnchor, setSelectedNodeAnchor] = useState<{ x: number; y: number } | null>(null);
   const historyPollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const job = jobs.get(jobId);
@@ -174,17 +177,21 @@ export default function JobDetailPage() {
                     flowId={job.flow_id}
                     jobId={jobId}
                     editable={false}
+                    onNodeClick={(nodeId, anchor) => {
+                      setSelectedNodeId(nodeId || null);
+                      setSelectedNodeAnchor(nodeId ? anchor || null : null);
+                    }}
                   />
                 </CardContent>
               </Card>
             </div>
 
-            <div className="surface-panel flex flex-col h-full">
-              <div className="h-10 border-b flex items-center px-3">
+            <div className="surface-panel flex flex-col h-full min-h-0">
+              <div className="h-10 border-b flex items-center px-3 flex-shrink-0">
                 <span className="text-sm font-semibold">Job Details</span>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-3 space-y-4">
+              <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-4">
                 <Card className="surface-panel">
                   <CardHeader>
                     <CardTitle>Job Overview</CardTitle>
@@ -281,6 +288,20 @@ export default function JobDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Floating Breakpoint Panel */}
+      {selectedNodeId && serverUrl && (
+        <FloatingBreakpointPanel
+          routineId={selectedNodeId}
+          jobId={jobId}
+          serverUrl={serverUrl}
+          anchor={selectedNodeAnchor}
+          onClose={() => {
+            setSelectedNodeId(null);
+            setSelectedNodeAnchor(null);
+          }}
+        />
+      )}
     </div>
   );
 }

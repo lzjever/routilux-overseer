@@ -38,7 +38,7 @@ interface FlowCanvasProps {
   flowId?: string;
   jobId?: string;
   editable?: boolean;
-  onNodeClick?: (nodeId: string) => void;
+  onNodeClick?: (nodeId: string, anchor?: { x: number; y: number }) => void;
   onEdgeClick?: (edgeId: string) => void;
 }
 
@@ -191,7 +191,7 @@ export function FlowCanvas({
 
       // If onNodeClickProp is provided, use it (for job page selection)
       if (onNodeClickProp) {
-        onNodeClickProp(node.id);
+        onNodeClickProp(node.id, { x: event.clientX, y: event.clientY });
         return;
       }
 
@@ -445,6 +445,13 @@ export function FlowCanvas({
           onConnect={handleConnect}
           onNodeClick={onNodeClick}
           onEdgeClick={onEdgeClick}
+          onPaneClick={(e) => {
+            // Clear selection when clicking on empty pane
+            if (onNodeClickProp) {
+              // For job page, clear node selection
+              onNodeClickProp("");
+            }
+          }}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           defaultEdgeOptions={defaultEdgeOptions}
