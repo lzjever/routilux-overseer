@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import type { JobResponse, JobSubmitRequest } from "@/lib/api/generated";
 import type { JobMonitoringData, ExecutionMetricsResponse } from "@/lib/api/generated";
-import { createAPI } from "@/lib/api";
+import { queryService } from "@/lib/services";
+import { handleError } from "@/lib/errors";
 import { getWebSocketManager, disposeWebSocketManager, WebSocketMessage } from "@/lib/websocket/websocket-manager";
 
 interface JobState {
@@ -39,13 +40,12 @@ export const useJobStore = create<JobState>((set, get) => ({
   loadJobs: async (serverUrl: string, workerId?: string | null) => {
     set({ loading: true, error: null, serverUrl });
     try {
-      const api = createAPI(serverUrl);
-      const response = await api.jobs.list(workerId || null, null, null, 100);
-      const jobMap = new Map(response.jobs.map((j) => [j.job_id, j]));
+      const jobs = await queryService.jobs.list({ workerId: workerId || undefined });
+      const jobMap = new Map(jobs.map((j) => [j.job_id, j]));
       set({ jobs: jobMap, loading: false, serverUrl });
     } catch (error) {
+      handleError(error, "Failed to load jobs");
       set({
-        error: error instanceof Error ? error.message : "Failed to load jobs",
         loading: false,
       });
     }
@@ -54,14 +54,14 @@ export const useJobStore = create<JobState>((set, get) => ({
   loadJob: async (jobId: string, serverUrl: string) => {
     set({ loading: true, error: null });
     try {
-      const api = createAPI(serverUrl);
-      const job = await api.jobs.get(jobId);
+      const job = await queryService.jobs.get(jobId);
       set((state) => ({
         jobs: new Map(state.jobs).set(jobId, job),
         loading: false,
       }));
       return job;
     } catch (error) {
+      handleError(error, `Failed to load job ${jobId}`);
       set({
         error: error instanceof Error ? error.message : "Failed to load job",
         loading: false,
@@ -73,14 +73,14 @@ export const useJobStore = create<JobState>((set, get) => ({
   submitJob: async (request: JobSubmitRequest, serverUrl: string) => {
     set({ loading: true, error: null });
     try {
-      const api = createAPI(serverUrl);
-      const job = await api.jobs.submit(request);
+      const job = await queryService.jobs.submit(request);
       set((state) => ({
         jobs: new Map(state.jobs).set(job.job_id, job),
         loading: false,
       }));
       return job;
     } catch (error) {
+      handleError(error, "Failed to submit job");
       set({
         error: error instanceof Error ? error.message : "Failed to submit job",
         loading: false,
@@ -91,25 +91,23 @@ export const useJobStore = create<JobState>((set, get) => ({
 
   loadJobMonitoringData: async (jobId: string, serverUrl: string) => {
     try {
-      const api = createAPI(serverUrl);
-      const monitoringData = await api.jobs.getMonitoringData(jobId);
+      const monitoringData = await queryService.jobs.getMonitoringData(jobId);
       set((state) => ({
         monitoringData: new Map(state.monitoringData).set(jobId, monitoringData),
       }));
     } catch (error) {
-      console.error("Failed to load job monitoring data:", error);
+      handleError(error, "Failed to load job monitoring data");
     }
   },
 
   loadJobMetrics: async (jobId: string, serverUrl: string) => {
     try {
-      const api = createAPI(serverUrl);
-      const metrics = await api.jobs.getMetrics(jobId);
+      const metrics = await queryService.jobs.getMetrics(jobId);
       set((state) => ({
         metricsData: new Map(state.metricsData).set(jobId, metrics),
       }));
     } catch (error) {
-      console.error("Failed to load job metrics:", error);
+      handleError(error, "Failed to load job metrics");
     }
   },
 
@@ -161,16 +159,13 @@ export const useJobStore = create<JobState>((set, get) => ({
     // Handle job-level events
     if (message.type.startsWith("job_")) {
       // Reload the job from API to get full state
-      if (serverUrl) {
-        const api = createAPI(serverUrl);
-        api.jobs.get(message.job_id).then((job) => {
-          set((state) => ({
-            jobs: new Map(state.jobs).set(message.job_id, job),
-          }));
-        }).catch((error) => {
-          console.error("Failed to refresh job after WS event:", error);
-        });
-      }
+      queryService.jobs.get(message.job_id).then((job) => {
+        set((state) => ({
+          jobs: new Map(state.jobs).set(message.job_id, job),
+        }));
+      }).catch((error) => {
+        handleError(error, "Failed to refresh job after WS event");
+      });
     }
   },
 }));

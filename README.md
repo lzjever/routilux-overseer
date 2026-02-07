@@ -33,7 +33,10 @@
 | **🔄 Discovery 同步** | 从全局注册表同步 Flows 和 Jobs | ✅ 已实现 |
 | **📊 批量操作** | Flows 和 Jobs 的批量选择和操作 | ✅ 已实现 |
 | **📈 数据可视化** | 图表组件 (Line, Bar, Pie, Sparkline) | ✅ 已实现 |
-| **🔌 插件系统** | 灵活的扩展机制 | 🚧 开发中 |
+| **🔌 插件系统** | 灵活的扩展机制 + 管理界面 | ✅ 已实现 |
+| **🛡️ 错误处理** | 统一错误处理 + Toast 通知 | ✅ 已实现 |
+| **⚡ 服务层** | API 缓存 + 去重 | ✅ 已实现 |
+| **🔌 WebSocket 增强** | 心跳 + 指数退避重连 | ✅ 已实现 |
 
 ### 🔌 可选插件
 
@@ -70,7 +73,17 @@ State Management:
 - Zustand (全局状态 + 持久化)
 
 Real-time Communication:
-- WebSocket (实时事件流)
+- WebSocket (实时事件流 + 心跳 + 指数退避重连)
+
+Service Layer:
+- QueryService (API 缓存 + 去重)
+- APIClientManager (单例模式)
+- ErrorHandler (统一错误处理 + Toast)
+
+Plugin System:
+- 插件管理界面
+- 启用/禁用插件
+- 插件元数据展示
 ```
 
 ### 后端集成

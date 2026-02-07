@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { createAPI } from "@/lib/api";
+import { queryService } from "@/lib/services";
+import { handleError } from "@/lib/errors";
 import type { RuntimeInfo, RuntimeListResponse } from "@/lib/api/generated";
 
 interface RuntimeStore {
@@ -24,8 +25,7 @@ export const useRuntimeStore = create<RuntimeStore>((set, get) => ({
   loadRuntimes: async (serverUrl: string) => {
     set({ loading: true, error: null });
     try {
-      const api = createAPI(serverUrl);
-      const response: RuntimeListResponse = await api.runtimes.list();
+      const response: RuntimeListResponse = await queryService.runtimes.list();
 
       const runtimesMap = new Map<string, RuntimeInfo>();
       response.runtimes.forEach((runtime) => {
@@ -38,6 +38,7 @@ export const useRuntimeStore = create<RuntimeStore>((set, get) => ({
         loading: false,
       });
     } catch (error) {
+      handleError(error, "Failed to load runtimes");
       set({
         error: error instanceof Error ? error : new Error("Failed to load runtimes"),
         loading: false,

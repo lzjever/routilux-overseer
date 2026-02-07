@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Breakpoint, BreakpointCreateRequest } from "@/lib/types/api";
-import { createAPI } from "@/lib/api";
+import { queryService } from "@/lib/services";
+import { handleError } from "@/lib/errors";
 
 interface BreakpointState {
   breakpoints: Map<string, Breakpoint[]>;
@@ -23,16 +24,15 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
   loadBreakpoints: async (jobId: string, serverUrl: string) => {
     set({ loading: true, error: null });
     try {
-      const api = createAPI(serverUrl);
-      const response = await api.breakpoints.list(jobId);
+      const response = await queryService.breakpoints.list(jobId);
 
       set((state) => ({
         breakpoints: new Map(state.breakpoints).set(jobId, response.breakpoints),
         loading: false,
       }));
     } catch (error) {
+      handleError(error, "Failed to load breakpoints");
       set({
-        error: error instanceof Error ? error.message : "Failed to load breakpoints",
         loading: false,
       });
     }
@@ -41,8 +41,7 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
   addBreakpoint: async (jobId: string, request: BreakpointCreateRequest, serverUrl: string) => {
     set({ loading: true, error: null });
     try {
-      const api = createAPI(serverUrl);
-      const response = await api.breakpoints.create(jobId, request);
+      const response = await queryService.breakpoints.create(jobId, request);
 
       const currentBreakpoints = get().breakpoints.get(jobId) || [];
       set((state) => ({
@@ -53,6 +52,7 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
         loading: false,
       }));
     } catch (error) {
+      handleError(error, "Failed to add breakpoint");
       set({
         error: error instanceof Error ? error.message : "Failed to add breakpoint",
         loading: false,
@@ -64,8 +64,7 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
   removeBreakpoint: async (jobId: string, breakpointId: string, serverUrl: string) => {
     set({ loading: true, error: null });
     try {
-      const api = createAPI(serverUrl);
-      await api.breakpoints.delete(jobId, breakpointId);
+      await queryService.breakpoints.delete(jobId, breakpointId);
 
       const currentBreakpoints = get().breakpoints.get(jobId) || [];
       set((state) => ({
@@ -76,6 +75,7 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
         loading: false,
       }));
     } catch (error) {
+      handleError(error, "Failed to remove breakpoint");
       set({
         error: error instanceof Error ? error.message : "Failed to remove breakpoint",
         loading: false,
@@ -90,9 +90,8 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
     if (!breakpoint) return;
 
     try {
-      const api = createAPI(serverUrl);
       // Use workers API for breakpoint enable/disable
-      await api.workers.updateBreakpoint(workerId, breakpointId, !breakpoint.enabled);
+      await queryService.workers.updateBreakpoint(workerId, breakpointId, !breakpoint.enabled);
 
       set((state) => {
         const updatedBreakpoints = currentBreakpoints.map((bp) =>
@@ -103,6 +102,7 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
         };
       });
     } catch (error) {
+      handleError(error, "Failed to toggle breakpoint");
       set({
         error: error instanceof Error ? error.message : "Failed to toggle breakpoint",
       });

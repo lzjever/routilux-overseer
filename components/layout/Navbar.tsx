@@ -6,7 +6,7 @@ import { useSearchStore } from "@/lib/stores/searchStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/ui/Logo";
-import { Settings, Wifi, WifiOff, Search, Activity, Users, Zap, Cpu } from "lucide-react";
+import { Settings, Wifi, WifiOff, Search, Activity, Users, Zap, Cpu, Puzzle } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ export function Navbar() {
       { href: "/workers", label: "Workers", icon: Users },
       { href: "/jobs", label: "Jobs", icon: Zap },
       { href: "/runtimes", label: "Runtimes", icon: Cpu },
+      { href: "/plugins", label: "Plugins", icon: Puzzle },
     ],
     []
   );

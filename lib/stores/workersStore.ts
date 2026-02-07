@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { WorkerResponse, WorkerCreateRequest } from "@/lib/api/generated";
-import { createAPI } from "@/lib/api";
+import { queryService } from "@/lib/services";
+import { handleError } from "@/lib/errors";
 
 interface WorkersState {
   workers: Map<string, WorkerResponse>;
@@ -26,13 +27,12 @@ export const useWorkersStore = create<WorkersState>((set, get) => ({
   loadWorkers: async (serverUrl: string, flowId?: string | null, status?: string | null) => {
     set({ loading: true, error: null, serverUrl });
     try {
-      const api = createAPI(serverUrl);
-      const response = await api.workers.list(flowId || null, status || null, 100);
-      const workerMap = new Map(response.workers.map((w) => [w.worker_id, w]));
+      const workers = await queryService.workers.list({ flowId: flowId || undefined, status: status || undefined });
+      const workerMap = new Map(workers.map((w) => [w.worker_id, w]));
       set({ workers: workerMap, loading: false, serverUrl });
     } catch (error) {
+      handleError(error, "Failed to load workers");
       set({
-        error: error instanceof Error ? error.message : "Failed to load workers",
         loading: false,
       });
     }
@@ -41,14 +41,14 @@ export const useWorkersStore = create<WorkersState>((set, get) => ({
   loadWorker: async (workerId: string, serverUrl: string) => {
     set({ loading: true, error: null });
     try {
-      const api = createAPI(serverUrl);
-      const worker = await api.workers.get(workerId);
+      const worker = await queryService.workers.get(workerId);
       set((state) => ({
         workers: new Map(state.workers).set(workerId, worker),
         loading: false,
       }));
       return worker;
     } catch (error) {
+      handleError(error, `Failed to load worker ${workerId}`);
       set({
         error: error instanceof Error ? error.message : "Failed to load worker",
         loading: false,
@@ -60,14 +60,14 @@ export const useWorkersStore = create<WorkersState>((set, get) => ({
   createWorker: async (request: WorkerCreateRequest, serverUrl: string) => {
     set({ loading: true, error: null });
     try {
-      const api = createAPI(serverUrl);
-      const worker = await api.workers.create(request);
+      const worker = await queryService.workers.create(request);
       set((state) => ({
         workers: new Map(state.workers).set(worker.worker_id, worker),
         loading: false,
       }));
       return worker;
     } catch (error) {
+      handleError(error, "Failed to create worker");
       set({
         error: error instanceof Error ? error.message : "Failed to create worker",
         loading: false,
@@ -78,14 +78,14 @@ export const useWorkersStore = create<WorkersState>((set, get) => ({
 
   stopWorker: async (workerId: string, serverUrl: string) => {
     try {
-      const api = createAPI(serverUrl);
-      await api.workers.stop(workerId);
+      await queryService.workers.stop(workerId);
       set((state) => {
         const newWorkers = new Map(state.workers);
         newWorkers.delete(workerId);
         return { workers: newWorkers };
       });
     } catch (error) {
+      handleError(error, "Failed to stop worker");
       set({
         error: error instanceof Error ? error.message : "Failed to stop worker",
       });
@@ -94,12 +94,12 @@ export const useWorkersStore = create<WorkersState>((set, get) => ({
 
   pauseWorker: async (workerId: string, serverUrl: string) => {
     try {
-      const api = createAPI(serverUrl);
-      const worker = await api.workers.pause(workerId);
+      const worker = await queryService.workers.pause(workerId);
       set((state) => ({
         workers: new Map(state.workers).set(workerId, worker),
       }));
     } catch (error) {
+      handleError(error, "Failed to pause worker");
       set({
         error: error instanceof Error ? error.message : "Failed to pause worker",
       });
@@ -108,12 +108,12 @@ export const useWorkersStore = create<WorkersState>((set, get) => ({
 
   resumeWorker: async (workerId: string, serverUrl: string) => {
     try {
-      const api = createAPI(serverUrl);
-      const worker = await api.workers.resume(workerId);
+      const worker = await queryService.workers.resume(workerId);
       set((state) => ({
         workers: new Map(state.workers).set(workerId, worker),
       }));
     } catch (error) {
+      handleError(error, "Failed to resume worker");
       set({
         error: error instanceof Error ? error.message : "Failed to resume worker",
       });

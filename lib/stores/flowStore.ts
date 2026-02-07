@@ -2,7 +2,8 @@ import { create } from "zustand";
 import { Edge, Node, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange, MarkerType } from "reactflow";
 import type { Slot, Event, FlowResponse, ConnectionInfo } from "@/lib/types/flow";
 import type { RoutineInfo } from "@/lib/types/api";
-import { createAPI } from "@/lib/api";
+import { queryService } from "@/lib/services";
+import { handleError } from "@/lib/errors";
 import { layoutNodes } from "@/lib/utils/flow-layout";
 
 interface FlowState {
@@ -56,24 +57,18 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   loadFlows: async (serverUrl) => {
     set({ loading: true, error: null, serverUrl });
     try {
-      const api = createAPI(serverUrl);
-      const response = await api.flows.list();
-      if (!response) {
-        throw new Error("No response from API");
-      }
-      if (!response.flows) {
-        console.warn("API response missing flows array:", response);
+      const flows = await queryService.flows.list();
+      if (!flows) {
+        console.warn("API returned empty flows array");
         set({ flows: new Map(), loading: false, serverUrl });
         return;
       }
-      const flowMap = new Map(response.flows.map((f) => [f.flow_id, f]));
+      const flowMap = new Map(flows.map((f) => [f.flow_id, f]));
       console.log(`Loaded ${flowMap.size} flows from server`);
       set({ flows: flowMap, loading: false, serverUrl });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to load flows";
-      console.error("Failed to load flows:", error);
+      handleError(error, "Failed to load flows");
       set({
-        error: errorMessage,
         loading: false,
       });
     }
@@ -83,8 +78,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   selectFlow: async (flowId, serverUrl) => {
     set({ loading: true, error: null, selectedFlowId: flowId, serverUrl });
     try {
-      const api = createAPI(serverUrl);
-      const flow = await api.flows.get(flowId);
+      const flow = await queryService.flows.get(flowId);
 
       if (!flow) {
         throw new Error("Flow not found");
@@ -130,19 +124,16 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       });
 
       // Update flows map with the loaded flow
-      const { flows } = get();
-      flows.set(flowId, flow);
-
-      set({
-        flows,
+      set((state) => ({
+        flows: new Map(state.flows).set(flowId, flow),
         selectedFlowId: flowId,
         nodes: layoutedNodes,  // Set already-layouted nodes
         edges: layoutedEdges,
         loading: false,
         serverUrl,
-      });
+      }));
     } catch (error) {
-      console.error(`Failed to load flow ${flowId}:`, error);
+      handleError(error, `Failed to load flow ${flowId}`);
       set({
         error: error instanceof Error ? error.message : "Failed to load flow",
         loading: false,

@@ -3,7 +3,8 @@ import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { PluginSystemProvider } from "@/components/providers/PluginSystemProvider";
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
+import { NetworkDetection } from "@/components/NetworkDetection";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-body" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${manrope.variable} ${spaceGrotesk.variable} font-sans`}>
         <PluginSystemProvider>
+          <NetworkDetection />
           {children}
           <GlobalSearchModal />
           <Toaster position="bottom-right" richColors />

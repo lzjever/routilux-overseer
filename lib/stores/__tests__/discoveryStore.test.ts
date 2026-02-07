@@ -9,6 +9,7 @@ vi.mock("@/lib/api", () => ({
       syncFlows: vi.fn(() => Promise.resolve({ flows: [] })),
       discoverJobs: vi.fn(() => Promise.resolve({ jobs: [] })),
       syncJobs: vi.fn(() => Promise.resolve({ jobs: [] })),
+      syncWorkers: vi.fn(() => Promise.resolve({ workers: [] })),
     },
   })),
 }));
@@ -18,11 +19,14 @@ describe("discoveryStore", () => {
     useDiscoveryStore.setState({
       discoveredFlows: [],
       discoveredJobs: [],
-      loadingFlows: false,
-      loadingJobs: false,
+      discoveredWorkers: [],
+      syncingFlows: false,
+      syncingJobs: false,
+      syncingWorkers: false,
       lastFlowSync: null,
       lastJobSync: null,
-      error: null,
+      lastWorkerSync: null,
+      autoSync: false,
     });
     vi.clearAllMocks();
   });
@@ -31,8 +35,8 @@ describe("discoveryStore", () => {
     const state = useDiscoveryStore.getState();
     expect(state.discoveredFlows).toEqual([]);
     expect(state.discoveredJobs).toEqual([]);
-    expect(state.loadingFlows).toBe(false);
-    expect(state.loadingJobs).toBe(false);
+    expect(state.syncingFlows).toBe(false);
+    expect(state.syncingJobs).toBe(false);
   });
 
   it("should sync flows", async () => {
@@ -67,21 +71,7 @@ describe("discoveryStore", () => {
     expect(state.syncingJobs).toBe(false);
   });
 
-  it("should handle sync errors", async () => {
-    vi.mocked(createAPI).mockReturnValue({
-      discovery: {
-        syncFlows: vi.fn(() => Promise.reject(new Error("Sync failed"))),
-      },
-    } as any);
-
-    await useDiscoveryStore.getState().syncFlows("http://localhost:20555");
-
-    const state = useDiscoveryStore.getState();
-    expect(state.error).toBe("Sync failed");
-    expect(state.loadingFlows).toBe(false);
-  });
-
-  it("should handle errors", async () => {
+  it("should handle sync errors by throwing", async () => {
     const mockAPI = {
       discovery: {
         syncFlows: vi.fn(() => Promise.reject(new Error("Sync failed"))),
@@ -95,5 +85,32 @@ describe("discoveryStore", () => {
 
     const state = useDiscoveryStore.getState();
     expect(state.syncingFlows).toBe(false);
+  });
+
+  it("should discover workers", async () => {
+    const mockWorkers = [{ worker_id: "worker-1" }];
+    const mockAPI = {
+      discovery: {
+        syncWorkers: vi.fn(() => Promise.resolve({ workers: mockWorkers })),
+      },
+    };
+    vi.mocked(createAPI).mockReturnValue(mockAPI as any);
+
+    await useDiscoveryStore.getState().syncWorkers("http://localhost:20555");
+
+    const state = useDiscoveryStore.getState();
+    expect(state.lastWorkerSync).toBeInstanceOf(Date);
+    expect(state.syncingWorkers).toBe(false);
+  });
+
+  it("should clear all discovery state", () => {
+    const state = useDiscoveryStore.getState();
+    state.clear();
+
+    const clearedState = useDiscoveryStore.getState();
+    expect(clearedState.discoveredFlows).toEqual([]);
+    expect(clearedState.discoveredJobs).toEqual([]);
+    expect(clearedState.lastFlowSync).toBeNull();
+    expect(clearedState.lastJobSync).toBeNull();
   });
 });
