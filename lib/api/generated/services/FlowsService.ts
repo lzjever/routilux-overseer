@@ -112,6 +112,12 @@ export class FlowsService {
                                          * ```
                                          * Note: `class` field must be a factory name (e.g., "data_source"), not a class path.
                                          *
+                                         * **Note on flow_id Priority**:
+                                         * - If both `request.flow_id` and DSL contain `flow_id`, `request.flow_id` takes precedence
+                                         * - This allows creating new flows from templates by overriding the template's flow_id
+                                         * - Example: `{"flow_id": "new_flow", "dsl": "flow_id: template_flow
+                                         * ..."}` will create a flow with ID "new_flow"
+                                         *
                                          * **3. From JSON DSL**:
                                          * ```json
                                          * {
@@ -128,6 +134,7 @@ export class FlowsService {
                                                          * }
                                                          * }
                                                          * ```
+                                                         * **Note on flow_id Priority**: Same as YAML DSL - `request.flow_id` overrides DSL `flow_id`.
                                                          *
                                                          * **Response Example**:
                                                          * ```json
@@ -141,7 +148,8 @@ export class FlowsService {
                                                              * ```
                                                              *
                                                              * **Error Responses**:
-                                                             * - `400 Bad Request`: Invalid DSL format, flow_id already exists, or creation failed
+                                                             * - `400 Bad Request`: Invalid DSL format or creation failed
+                                                             * - `409 Conflict`: Flow with this flow_id already exists (returns `FLOW_ALREADY_EXISTS` error code)
                                                              * - `422 Validation Error`: Invalid request parameters
                                                              *
                                                              * **Best Practices**:

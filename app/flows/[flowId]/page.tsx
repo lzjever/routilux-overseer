@@ -128,8 +128,9 @@ export default function FlowDetailPage() {
     if (!serverUrl) return;
     try {
       const api = createAPI(serverUrl);
-      const dsl = await api.flows.exportDSL(flowId, "yaml");
-      const dslString = typeof dsl === "string" ? dsl : JSON.stringify(dsl, null, 2);
+      const exportResponse = await api.flows.exportDSL(flowId, "yaml");
+      // Extract the DSL string from the response object
+      const dslString = typeof exportResponse === "string" ? exportResponse : exportResponse.dsl || "";
       const blob = new Blob([dslString], { type: "text/yaml" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

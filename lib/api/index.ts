@@ -21,6 +21,7 @@ import { FactoryService } from "./generated/services/FactoryService";
 import { RuntimesService } from "./generated/services/RuntimesService";
 import { WorkersService } from "./generated/services/WorkersService";
 import { ExecuteService } from "./generated/services/ExecuteService";
+import { ApiClientError, normalizeApiError } from "@/lib/api/error";
 
 /**
  * Create and configure a Routilux API client
@@ -50,8 +51,35 @@ export function createAPI(baseURL: string, apiKey?: string) {
     OpenAPI.HEADERS = undefined;
   }
 
+  const wrapApi = <T extends Record<string, unknown>>(api: T): T => {
+    const wrapped: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(api)) {
+      if (typeof value === "function") {
+        wrapped[key] = async (...args: unknown[]) => {
+          try {
+            return await (value as (...args: unknown[]) => Promise<unknown>)(...args);
+          } catch (error) {
+            const fallback = error instanceof Error ? error.message : String(error);
+            const normalized = normalizeApiError(error, fallback);
+            throw new ApiClientError(normalized.message, {
+              status: normalized.status,
+              code: normalized.code,
+              details: normalized.details,
+              raw: normalized.raw,
+            });
+          }
+        };
+      } else if (value && typeof value === "object") {
+        wrapped[key] = wrapApi(value as Record<string, unknown>);
+      } else {
+        wrapped[key] = value;
+      }
+    }
+    return wrapped as T;
+  };
+
   // Create a wrapper interface that directly uses static service methods
-  return {
+  const api = {
     // Flows API
     flows: {
       list: async () => {
@@ -279,7 +307,12 @@ export function createAPI(baseURL: string, apiKey?: string) {
         return await HealthService.healthStatsApiV1HealthStatsGet();
       },
     },
+  };
 
+  const wrapped = wrapApi(api);
+
+  return {
+    ...wrapped,
     // Client methods
     testConnection: async (): Promise<boolean> => {
       try {

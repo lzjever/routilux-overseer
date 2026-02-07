@@ -13,16 +13,29 @@ export interface KeyboardShortcut {
   allowInInput?: boolean;
 }
 
+const normalizeKey = (key?: string | null) => {
+  if (!key) return null;
+  const lowered = key.toLowerCase();
+  return lowered === " " ? "space" : lowered;
+};
+
+const shouldIgnoreKeyEvent = (e: KeyboardEvent) =>
+  e.isComposing || e.key === "Process" || e.key === "Unidentified";
+
 /**
  * Hook to register keyboard shortcuts
  */
 export function useKeyboardShortcut(shortcut: KeyboardShortcut) {
   useEffect(() => {
     const enabled = shortcut.enabled !== false;
-    if (!enabled) return;
+    const shortcutKey = normalizeKey(shortcut.key);
+    if (!enabled || !shortcutKey) return;
 
     const handler = (e: KeyboardEvent) => {
-      const keyMatch = e.key.toLowerCase() === shortcut.key.toLowerCase();
+      if (shouldIgnoreKeyEvent(e)) return;
+      const eventKey = normalizeKey(e.key);
+      if (!eventKey) return;
+      const keyMatch = eventKey === shortcutKey;
       const ctrlMatch = shortcut.ctrl ? e.ctrlKey : !e.ctrlKey;
       const metaMatch = shortcut.meta ? e.metaKey : !e.metaKey;
       const shiftMatch = shortcut.shift ? e.shiftKey : !e.shiftKey;
@@ -61,10 +74,14 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
 
     shortcuts.forEach((shortcut) => {
       const enabled = shortcut.enabled !== false;
-      if (!enabled) return;
+      const shortcutKey = normalizeKey(shortcut.key);
+      if (!enabled || !shortcutKey) return;
 
       const handler = (e: KeyboardEvent) => {
-        const keyMatch = e.key.toLowerCase() === shortcut.key.toLowerCase();
+        if (shouldIgnoreKeyEvent(e)) return;
+        const eventKey = normalizeKey(e.key);
+        if (!eventKey) return;
+        const keyMatch = eventKey === shortcutKey;
         const ctrlMatch = shortcut.ctrl ? e.ctrlKey : !e.ctrlKey;
         const metaMatch = shortcut.meta ? e.metaKey : !e.metaKey;
         const shiftMatch = shortcut.shift ? e.shiftKey : !e.shiftKey;

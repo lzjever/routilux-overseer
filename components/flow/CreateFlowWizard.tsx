@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,9 +15,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createAPI } from "@/lib/api";
-import { Loader2, FileText, Upload, Copy, Sparkles } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Loader2, FileText, Upload, Copy, Sparkles, FileUp } from "lucide-react";
+import type { FlowCreateRequest, FlowResponse, ObjectInfo } from "@/lib/api/generated";
+import { ApiClientError } from "@/lib/api/error";
 
 interface CreateFlowWizardProps {
   serverUrl: string;
@@ -33,70 +41,143 @@ export function CreateFlowWizard({
   trigger,
 }: CreateFlowWizardProps) {
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState(1);
   const [method, setMethod] = useState<CreationMethod>("scratch");
   const [flowId, setFlowId] = useState("");
   const [dslContent, setDslContent] = useState("");
+  const [dslFileName, setDslFileName] = useState<string | null>(null);
   const [cloneFlowId, setCloneFlowId] = useState("");
+  const [templateFlowId, setTemplateFlowId] = useState("");
+  const [availableFlows, setAvailableFlows] = useState<FlowResponse[]>([]);
+  const [availableTemplates, setAvailableTemplates] = useState<ObjectInfo[]>([]);
+  const [loadingSources, setLoadingSources] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const resetForm = () => {
+    setMethod("scratch");
+    setFlowId("");
+    setDslContent("");
+    setDslFileName(null);
+    setCloneFlowId("");
+    setTemplateFlowId("");
+    setError(null);
+  };
+
+  useEffect(() => {
+    if (!open || !serverUrl) return;
+    const api = createAPI(serverUrl);
+    const loadSources = async () => {
+      setLoadingSources(true);
+      try {
+        const [flowsResponse, templatesResponse] = await Promise.all([
+          api.flows.list(),
+          api.factory.listObjects({ objectType: "flow" }),
+        ]);
+        setAvailableFlows(flowsResponse.flows || []);
+        setAvailableTemplates(
+          (templatesResponse.objects || []).filter((item) => item.object_type === "flow")
+        );
+      } catch (err) {
+        console.error("Failed to load flow sources:", err);
+      } finally {
+        setLoadingSources(false);
+      }
+    };
+
+    loadSources();
+  }, [open, serverUrl]);
+
+  const methodLabel = useMemo(() => {
+    return {
+      scratch: "Create from Scratch",
+      import: "Import DSL",
+      clone: "Clone Existing Flow",
+      template: "From Template",
+    }[method];
+  }, [method]);
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    setDslContent(text);
+    setDslFileName(file.name);
+  };
+
+  const parseDslInput = (input: string): Pick<FlowCreateRequest, "dsl" | "dsl_dict"> => {
+    try {
+      const parsed = JSON.parse(input);
+      return { dsl_dict: parsed };
+    } catch {
+      return { dsl: input };
+    }
+  };
+
+  const requestFromExport = (exported: unknown): Pick<FlowCreateRequest, "dsl" | "dsl_dict"> => {
+    if (!exported) return {};
+    if (typeof exported === "string") {
+      return parseDslInput(exported);
+    }
+    if (typeof exported === "object" && exported && "dsl" in (exported as any)) {
+      const raw = (exported as { dsl?: string }).dsl ?? "";
+      return parseDslInput(raw);
+    }
+    return { dsl_dict: exported as Record<string, unknown> };
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!flowId || !serverUrl) return;
 
     setLoading(true);
     setError(null);
+
     try {
       const api = createAPI(serverUrl);
-      let request: any = { flow_id: flowId };
+      const request: FlowCreateRequest = { flow_id: flowId };
 
-      if (method === "import" && dslContent.trim()) {
-        try {
-          const parsed = JSON.parse(dslContent);
-          request.dsl = parsed;
-        } catch {
-          // Try YAML-like structure or use as-is
-          request.dsl = dslContent;
-        }
-      } else if (method === "clone" && cloneFlowId) {
-        // For clone, we'd need to fetch the flow first and then create with its DSL
-        const existingFlow = await api.flows.get(cloneFlowId);
-        const dsl = await api.flows.exportDSL(cloneFlowId, "json");
-        request.dsl = dsl;
-        request.flow_id = flowId; // New ID
+      if (method === "import") {
+        Object.assign(request, parseDslInput(dslContent.trim()));
+      }
+
+      if (method === "clone") {
+        const exported = await api.flows.exportDSL(cloneFlowId, "json");
+        Object.assign(request, requestFromExport(exported));
+      }
+
+      if (method === "template") {
+        const exported = await api.flows.exportDSL(templateFlowId, "json");
+        Object.assign(request, requestFromExport(exported));
       }
 
       await api.flows.create(request);
       setOpen(false);
-      setStep(1);
-      setMethod("scratch");
-      setFlowId("");
-      setDslContent("");
-      setCloneFlowId("");
+      resetForm();
       onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create flow");
+      if (err instanceof ApiClientError && err.code === "FLOW_ALREADY_EXISTS") {
+        setError(`Flow ID "${flowId}" already exists. Please choose a different name.`);
+      } else {
+        setError(err instanceof Error ? err.message : "Failed to create flow");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleReset = () => {
-    setStep(1);
-    setMethod("scratch");
-    setFlowId("");
-    setDslContent("");
-    setCloneFlowId("");
-    setError(null);
-  };
+  const isSubmitDisabled =
+    !flowId ||
+    (method === "import" && !dslContent.trim()) ||
+    (method === "clone" && !cloneFlowId) ||
+    (method === "template" && !templateFlowId);
 
   return (
     <Dialog
       open={open}
       onOpenChange={(isOpen) => {
         setOpen(isOpen);
-        if (!isOpen) handleReset();
+        if (!isOpen) resetForm();
       }}
     >
       <DialogTrigger asChild>
@@ -105,164 +186,181 @@ export function CreateFlowWizard({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Flow</DialogTitle>
-          <DialogDescription>
-            {step === 1 && "Choose how you want to create the flow"}
-            {step === 2 && "Provide the details for your flow"}
-            {step === 3 && "Review and create"}
-          </DialogDescription>
+          <DialogDescription>Choose a method and configure the flow details.</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
-          {/* Step 1: Choose Method */}
-          {step === 1 && (
-            <div className="space-y-4 py-4">
-              <RadioGroup value={method} onValueChange={(v) => setMethod(v as CreationMethod)}>
-                <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-accent cursor-pointer">
-                  <RadioGroupItem value="scratch" id="scratch" />
-                  <Label htmlFor="scratch" className="flex-1 cursor-pointer">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      <span className="font-medium">Create from Scratch</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Start with an empty flow and build it step by step
-                    </p>
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-accent cursor-pointer">
-                  <RadioGroupItem value="import" id="import" />
-                  <Label htmlFor="import" className="flex-1 cursor-pointer">
-                    <div className="flex items-center gap-2">
-                      <Upload className="h-4 w-4" />
-                      <span className="font-medium">Import DSL</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Import from YAML or JSON DSL definition
-                    </p>
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-accent cursor-pointer">
-                  <RadioGroupItem value="clone" id="clone" />
-                  <Label htmlFor="clone" className="flex-1 cursor-pointer">
-                    <div className="flex items-center gap-2">
-                      <Copy className="h-4 w-4" />
-                      <span className="font-medium">Clone Existing Flow</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Copy an existing flow and modify it
-                    </p>
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-accent cursor-pointer opacity-50">
-                  <RadioGroupItem value="template" id="template" disabled />
-                  <Label htmlFor="template" className="flex-1 cursor-pointer">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4" />
-                      <span className="font-medium">From Template</span>
-                      <span className="text-xs text-muted-foreground">(Coming soon)</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Start from a pre-built template
-                    </p>
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-3">
+            <Label>Creation Method</Label>
+            <RadioGroup value={method} onValueChange={(v) => setMethod(v as CreationMethod)}>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  {
+                    value: "scratch",
+                    icon: FileText,
+                    title: "Create from Scratch",
+                    description: "Start with an empty flow and build it step by step.",
+                  },
+                  {
+                    value: "import",
+                    icon: Upload,
+                    title: "Import DSL",
+                    description: "Upload or paste YAML/JSON flow DSL.",
+                  },
+                  {
+                    value: "clone",
+                    icon: Copy,
+                    title: "Clone Existing Flow",
+                    description: "Copy a flow and modify it.",
+                  },
+                  {
+                    value: "template",
+                    icon: Sparkles,
+                    title: "From Template",
+                    description: "Use a factory-registered flow template.",
+                  },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <label
+                      key={item.value}
+                      className="flex items-start gap-3 rounded-lg border p-3 hover:bg-accent cursor-pointer"
+                    >
+                      <RadioGroupItem value={item.value} id={item.value} />
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" />
+                          <span className="font-medium">{item.title}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{item.description}</p>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </RadioGroup>
+          </div>
 
-          {/* Step 2: Provide Details */}
-          {step === 2 && (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="flowId">Flow ID *</Label>
+          <div className="space-y-2">
+            <Label htmlFor="flowId">Flow ID *</Label>
+            <Input
+              id="flowId"
+              value={flowId}
+              onChange={(event) => setFlowId(event.target.value)}
+              placeholder="e.g., my_workflow"
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              Creation method: {methodLabel}
+            </p>
+          </div>
+
+          {method === "import" && (
+            <div className="space-y-3">
+              <div className="space-y-2 rounded-lg border border-dashed border-slate-200 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-900/40">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <FileUp className="h-4 w-4" />
+                    <span>{dslFileName || "Upload a local DSL file"}</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Choose file
+                  </Button>
+                </div>
                 <Input
-                  id="flowId"
-                  value={flowId}
-                  onChange={(e) => setFlowId(e.target.value)}
-                  placeholder="e.g., my_workflow"
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json,.yaml,.yml"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <div className="text-xs text-muted-foreground">
+                  Accepted: .json, .yaml, .yml. File content will populate the editor below.
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dslContent">DSL Content *</Label>
+                <Textarea
+                  id="dslContent"
+                  value={dslContent}
+                  onChange={(event) => setDslContent(event.target.value)}
+                  placeholder="Paste your flow DSL here..."
+                  rows={10}
                   required
+                  className="font-mono text-xs"
                 />
               </div>
+            </div>
+          )}
 
-              {method === "import" && (
-                <div className="space-y-2">
-                  <Label htmlFor="dslContent">DSL Content (YAML or JSON) *</Label>
-                  <Textarea
-                    id="dslContent"
-                    value={dslContent}
-                    onChange={(e) => setDslContent(e.target.value)}
-                    placeholder="Paste your flow DSL here..."
-                    rows={10}
-                    required
-                    className="font-mono text-xs"
+          {method === "clone" && (
+            <div className="space-y-2">
+              <Label htmlFor="cloneFlowId">Flow to Clone *</Label>
+              <Select value={cloneFlowId} onValueChange={setCloneFlowId}>
+                <SelectTrigger id="cloneFlowId">
+                  <SelectValue
+                    placeholder={loadingSources ? "Loading flows..." : "Select a flow"}
                   />
-                </div>
-              )}
+                </SelectTrigger>
+                <SelectContent>
+                  {availableFlows.map((flow) => (
+                    <SelectItem key={flow.flow_id} value={flow.flow_id}>
+                      {flow.flow_id}
+                    </SelectItem>
+                  ))}
+                  {!loadingSources && availableFlows.length === 0 && (
+                    <SelectItem value="__none__" disabled>
+                      No flows available
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
-              {method === "clone" && (
-                <div className="space-y-2">
-                  <Label htmlFor="cloneFlowId">Flow to Clone *</Label>
-                  <Input
-                    id="cloneFlowId"
-                    value={cloneFlowId}
-                    onChange={(e) => setCloneFlowId(e.target.value)}
-                    placeholder="Enter flow ID to clone"
-                    required
+          {method === "template" && (
+            <div className="space-y-2">
+              <Label htmlFor="templateFlowId">Template *</Label>
+              <Select value={templateFlowId} onValueChange={setTemplateFlowId}>
+                <SelectTrigger id="templateFlowId">
+                  <SelectValue
+                    placeholder={loadingSources ? "Loading templates..." : "Select a template"}
                   />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTemplates.map((template) => (
+                    <SelectItem key={template.name} value={template.name}>
+                      {template.name}
+                    </SelectItem>
+                  ))}
+                  {!loadingSources && availableTemplates.length === 0 && (
+                    <SelectItem value="__none__" disabled>
+                      No templates available
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              {templateFlowId && (
+                <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+                  {availableTemplates.find((item) => item.name === templateFlowId)?.description ||
+                    "Factory template"}
                 </div>
               )}
             </div>
           )}
 
-          {/* Step 3: Preview (simplified) */}
-          {step === 3 && (
-            <div className="space-y-4 py-4">
-              <div className="p-4 bg-muted rounded-lg">
-                <div className="text-sm font-medium mb-2">Flow Summary</div>
-                <div className="text-sm space-y-1">
-                  <div>Flow ID: {flowId}</div>
-                  <div>Method: {method}</div>
-                  {method === "clone" && <div>Cloning from: {cloneFlowId}</div>}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {error && <div className="text-sm text-destructive py-2">{error}</div>}
+          {error && <div className="text-sm text-destructive">{error}</div>}
 
           <DialogFooter>
-            {step > 1 && (
-              <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
-                Back
-              </Button>
-            )}
-            {step < 3 ? (
-              <Button
-                type="button"
-                onClick={() => {
-                  if (step === 1 && method) {
-                    setStep(2);
-                  } else if (step === 2) {
-                    if (method === "scratch" || (method === "import" && dslContent) || (method === "clone" && cloneFlowId)) {
-                      setStep(3);
-                    }
-                  }
-                }}
-                disabled={
-                  (step === 1 && !method) ||
-                  (step === 2 && !flowId) ||
-                  (step === 2 && method === "import" && !dslContent) ||
-                  (step === 2 && method === "clone" && !cloneFlowId)
-                }
-              >
-                Next
-              </Button>
-            ) : (
-              <Button type="submit" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Flow
-              </Button>
-            )}
+            <Button type="submit" disabled={loading || isSubmitDisabled}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create Flow
+            </Button>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>

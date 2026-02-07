@@ -50,5 +50,9 @@
              * Version string for this object. Useful for tracking object versions.
              */
             version: string;
+            /**
+             * Full docstring from the class/object. Returned as-is for client parsing and display. Contains detailed documentation including purpose, configuration, input/output formats, etc.
+             */
+            docstring?: (string | null);
         };
 
