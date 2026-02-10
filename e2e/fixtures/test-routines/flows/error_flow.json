@@ -1,0 +1,27 @@
+{
+  "name": "e2e_error_flow",
+  "description": "E2E test flow that simulates errors for testing error handling",
+  "routines": [
+    {
+      "id": "source",
+      "factory_name": "e2e_data_generator",
+      "config": {
+        "count": 5,
+        "pattern": "sequential"
+      }
+    },
+    {
+      "id": "error_generator",
+      "factory_name": "e2e_error_simulator",
+      "config": {
+        "error_type": "value_error"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "source.output",
+      "to": "error_generator.input"
+    }
+  ]
+}

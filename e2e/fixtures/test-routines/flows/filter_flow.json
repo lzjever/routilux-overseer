@@ -1,0 +1,37 @@
+{
+  "name": "e2e_filter_flow",
+  "description": "E2E test flow for filtering data",
+  "routines": [
+    {
+      "id": "source",
+      "factory_name": "e2e_number_source",
+      "config": {
+        "start": 0,
+        "end": 20,
+        "step": 1
+      }
+    },
+    {
+      "id": "filter",
+      "factory_name": "e2e_data_filter",
+      "config": {
+        "filter_type": "even"
+      }
+    },
+    {
+      "id": "sink",
+      "factory_name": "e2e_counter_sink",
+      "config": {}
+    }
+  ],
+  "connections": [
+    {
+      "from": "source.numbers",
+      "to": "filter.input"
+    },
+    {
+      "from": "filter.output",
+      "to": "sink.input"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "e2e_simple_flow",
+  "description": "A simple E2E test flow with generator -> transformer -> collector",
+  "routines": [
+    {
+      "id": "source",
+      "factory_name": "e2e_data_generator",
+      "config": {
+        "count": 10,
+        "pattern": "sequential"
+      }
+    },
+    {
+      "id": "transformer",
+      "factory_name": "e2e_data_transformer",
+      "config": {
+        "transform_type": "uppercase"
+      }
+    },
+    {
+      "id": "sink",
+      "factory_name": "e2e_data_collector",
+      "config": {}
+    }
+  ],
+  "connections": [
+    {
+      "from": "source.output",
+      "to": "transformer.input"
+    },
+    {
+      "from": "transformer.output",
+      "to": "sink.input"
+    }
+  ]
+}
