@@ -46,13 +46,17 @@ describe("FlowMetadata", () => {
   });
 
   it("should show validation status when serverUrl is provided", () => {
-    render(<FlowMetadata flow={mockFlow} flowId="test-flow-1" serverUrl="http://localhost:20555" />);
+    render(
+      <FlowMetadata flow={mockFlow} flowId="test-flow-1" serverUrl="http://localhost:20555" />
+    );
 
     expect(screen.getByText("Validation Status")).toBeInTheDocument();
   });
 
   it("should show jobs section when serverUrl is provided", () => {
-    render(<FlowMetadata flow={mockFlow} flowId="test-flow-1" serverUrl="http://localhost:20555" />);
+    render(
+      <FlowMetadata flow={mockFlow} flowId="test-flow-1" serverUrl="http://localhost:20555" />
+    );
 
     expect(screen.getByText("Jobs")).toBeInTheDocument();
   });

@@ -25,12 +25,13 @@ export function calculateNodeHeat(routineData: RoutineMonitoringData): number {
  */
 export function calculateEdgeHeat(queueStatus: SlotQueueStatus): number {
   const usage = queueStatus.usage_percentage || 0;
-  const pressureValue = {
-    low: 0.25,
-    medium: 0.5,
-    high: 0.75,
-    critical: 1.0,
-  }[queueStatus.pressure_level] || 0.25;
+  const pressureValue =
+    {
+      low: 0.25,
+      medium: 0.5,
+      high: 0.75,
+      critical: 1.0,
+    }[queueStatus.pressure_level] || 0.25;
 
   // Heat = usage weight + pressure weight
   return usage * 0.6 + pressureValue * 0.4;

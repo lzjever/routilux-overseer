@@ -3,7 +3,11 @@ import type { JobResponse, JobSubmitRequest } from "@/lib/api/generated";
 import type { JobMonitoringData, ExecutionMetricsResponse } from "@/lib/api/generated";
 import { queryService } from "@/lib/services";
 import { handleError } from "@/lib/errors";
-import { getWebSocketManager, disposeWebSocketManager, WebSocketMessage } from "@/lib/websocket/websocket-manager";
+import {
+  getWebSocketManager,
+  disposeWebSocketManager,
+  WebSocketMessage,
+} from "@/lib/websocket/websocket-manager";
 
 interface JobState {
   jobs: Map<string, JobResponse>;
@@ -40,8 +44,8 @@ export const useJobStore = create<JobState>((set, get) => ({
   loadJobs: async (serverUrl: string, workerId?: string | null) => {
     set({ loading: true, error: null, serverUrl });
     try {
-      const jobs = await queryService.jobs.list({ workerId: workerId || undefined });
-      const jobMap = new Map(jobs.map((j) => [j.job_id, j]));
+      const response = await queryService.jobs.list({ workerId: workerId || undefined });
+      const jobMap = new Map(response.jobs.map((j) => [j.job_id, j]));
       set({ jobs: jobMap, loading: false, serverUrl });
     } catch (error) {
       handleError(error, "Failed to load jobs");
@@ -157,15 +161,19 @@ export const useJobStore = create<JobState>((set, get) => ({
     const { jobs, serverUrl } = get();
 
     // Handle job-level events
-    if (message.type.startsWith("job_")) {
+    if (message.type.startsWith("job_") && message.job_id) {
+      const jobId = message.job_id;
       // Reload the job from API to get full state
-      queryService.jobs.get(message.job_id).then((job) => {
-        set((state) => ({
-          jobs: new Map(state.jobs).set(message.job_id, job),
-        }));
-      }).catch((error) => {
-        handleError(error, "Failed to refresh job after WS event");
-      });
+      queryService.jobs
+        .get(jobId)
+        .then((job) => {
+          set((state) => ({
+            jobs: new Map(state.jobs).set(jobId, job),
+          }));
+        })
+        .catch((error) => {
+          handleError(error, "Failed to refresh job after WS event");
+        });
     }
   },
 }));

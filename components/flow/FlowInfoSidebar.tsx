@@ -6,7 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
 import Image from "next/image";
-import { CheckCircle2, XCircle, AlertCircle, Loader2, RefreshCw, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Loader2,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  AlertTriangle,
+} from "lucide-react";
 import { createAPI } from "@/lib/api";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { UnlockFlowDialog } from "./UnlockFlowDialog";
@@ -114,12 +123,7 @@ export function FlowInfoSidebar({
   if (collapsed) {
     return (
       <div className="w-12 surface-panel rounded-none flex flex-col items-center py-2 gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={onToggleCollapse}
-        >
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggleCollapse}>
           <ChevronRight className="h-4 w-4" />
         </Button>
         <div className="flex flex-col gap-2 mt-4">
@@ -139,12 +143,7 @@ export function FlowInfoSidebar({
       {/* Header */}
       <div className="h-10 border-b flex items-center justify-between px-3">
         <span className="text-sm font-semibold">Flow Information</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          onClick={onToggleCollapse}
-        >
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onToggleCollapse}>
           <ChevronLeft className="h-3 w-3" />
         </Button>
       </div>
@@ -175,12 +174,7 @@ export function FlowInfoSidebar({
                 Unlock
               </Button>
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLock}
-                className="h-6 text-xs"
-              >
+              <Button variant="outline" size="sm" onClick={handleLock} className="h-6 text-xs">
                 Lock
               </Button>
             )}
@@ -230,7 +224,9 @@ export function FlowInfoSidebar({
                   ) : (
                     <>
                       <XCircle className="h-3 w-3 text-red-600" />
-                      <Badge variant="destructive" className="text-xs h-4">Invalid</Badge>
+                      <Badge variant="destructive" className="text-xs h-4">
+                        Invalid
+                      </Badge>
                     </>
                   )}
                 </div>
@@ -266,7 +262,7 @@ export function FlowInfoSidebar({
           </div>
           <div className="text-center p-2 bg-background rounded border">
             <p className="text-lg font-bold">
-              {flow.connections.filter(c => c.source_routine !== c.target_routine).length}
+              {flow.connections.filter((c) => c.source_routine !== c.target_routine).length}
             </p>
             <p className="text-xs text-muted-foreground">Cross-Connections</p>
           </div>

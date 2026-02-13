@@ -5,23 +5,14 @@ import { Activity } from "lucide-react";
 
 describe("EmptyState", () => {
   it("should render with title and description", () => {
-    render(
-      <EmptyState
-        title="No items"
-        description="There are no items to display"
-      />
-    );
+    render(<EmptyState title="No items" description="There are no items to display" />);
     expect(screen.getByText("No items")).toBeInTheDocument();
     expect(screen.getByText("There are no items to display")).toBeInTheDocument();
   });
 
   it("should render with icon", () => {
     render(
-      <EmptyState
-        icon={Activity}
-        title="No items"
-        description="There are no items to display"
-      />
+      <EmptyState icon={Activity} title="No items" description="There are no items to display" />
     );
     expect(screen.getByText("No items")).toBeInTheDocument();
   });

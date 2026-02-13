@@ -79,9 +79,9 @@ describe("discoveryStore", () => {
     };
     vi.mocked(createAPI).mockReturnValue(mockAPI as any);
 
-    await expect(
-      useDiscoveryStore.getState().syncFlows("http://localhost:20555")
-    ).rejects.toThrow("Sync failed");
+    await expect(useDiscoveryStore.getState().syncFlows("http://localhost:20555")).rejects.toThrow(
+      "Sync failed"
+    );
 
     const state = useDiscoveryStore.getState();
     expect(state.syncingFlows).toBe(false);

@@ -27,12 +27,7 @@ export function PageLayout({
   padding = true,
 }: PageLayoutProps) {
   return (
-    <div
-      className={cn(
-        "min-h-screen flex flex-col",
-        gradient && "bg-app"
-      )}
-    >
+    <div className={cn("min-h-screen flex flex-col", gradient && "bg-app")}>
       <Navbar />
       <main
         className={cn(
@@ -60,8 +55,8 @@ export function PageLayout({
   );
 }
 
-/** 
- * Page header with consistent styling 
+/**
+ * Page header with consistent styling
  */
 interface PageHeaderProps {
   title: string;
@@ -81,12 +76,7 @@ export function PageHeader({ title, description, actions, backLink }: PageHeader
           href={backLink.href}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors"
         >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -100,9 +90,7 @@ export function PageHeader({ title, description, actions, backLink }: PageHeader
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-          {description && (
-            <p className="text-muted-foreground mt-1">{description}</p>
-          )}
+          {description && <p className="text-muted-foreground mt-1">{description}</p>}
         </div>
         {actions && <div className="flex items-center gap-2">{actions}</div>}
       </div>

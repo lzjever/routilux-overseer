@@ -9,7 +9,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, Play, MoreVertical, Download, Upload, CheckCircle2, XCircle, Lock, Unlock, Plus, Zap } from "lucide-react";
+import {
+  ArrowLeft,
+  Play,
+  MoreVertical,
+  Download,
+  Upload,
+  CheckCircle2,
+  XCircle,
+  Lock,
+  Unlock,
+  Plus,
+  Zap,
+} from "lucide-react";
 import Link from "next/link";
 import type { FlowResponse } from "@/lib/types/api";
 import { useFlowStore } from "@/lib/stores/flowStore";
@@ -63,10 +75,10 @@ export function FlowDetailHeader({
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        
+
         <div className="flex items-center gap-2 min-w-0">
           <h1 className="text-lg font-semibold truncate font-mono">{flow.flow_id}</h1>
-          
+
           {/* Validation Status Badge */}
           {validationStatus && (
             <Badge
@@ -87,7 +99,7 @@ export function FlowDetailHeader({
               )}
             </Badge>
           )}
-          
+
           {/* Jobs Link */}
           {serverUrl && jobCount !== null && (
             <Link href={`/jobs?flowId=${flowId}`}>
@@ -136,7 +148,7 @@ export function FlowDetailHeader({
             </>
           )}
         </Button>
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -154,7 +166,7 @@ export function FlowDetailHeader({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        
+
         {serverUrl && (
           <RunOnceDialog
             open={runOnceOpen}

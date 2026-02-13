@@ -121,10 +121,7 @@ export default function PluginsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <PluginHeader />
-      <PluginFilters
-        onSearchChange={setSearchQuery}
-        onStatusFilterChange={setStatusFilter}
-      />
+      <PluginFilters onSearchChange={setSearchQuery} onStatusFilterChange={setStatusFilter} />
       <div className="grid gap-4">
         {filteredPlugins.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">

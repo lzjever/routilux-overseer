@@ -38,9 +38,7 @@ export function PluginCard({ plugin, onToggle, onUninstall }: PluginCardProps) {
             <Badge variant={builtin ? "secondary" : "default"}>
               {builtin ? "Built-in" : "User"}
             </Badge>
-            <Badge variant={isEnabled ? "default" : "secondary"}>
-              {status}
-            </Badge>
+            <Badge variant={isEnabled ? "default" : "secondary"}>{status}</Badge>
           </div>
           <p className="text-sm text-muted-foreground mb-2">{p.description}</p>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">

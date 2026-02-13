@@ -64,7 +64,15 @@ export function MetricsPanel({ job, metrics, eventsCount, loading }: MetricsPane
         {/* Status */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Status</span>
-          <Badge variant={job.status === "running" ? "default" : job.status === "failed" ? "destructive" : "secondary"}>
+          <Badge
+            variant={
+              job.status === "running"
+                ? "default"
+                : job.status === "failed"
+                  ? "destructive"
+                  : "secondary"
+            }
+          >
             {job.status}
           </Badge>
         </div>

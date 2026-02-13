@@ -28,11 +28,14 @@ export function JobInteractionPanel({ jobId, serverUrl, jobStatus }: JobInteract
     try {
       // Note: This API endpoint doesn't exist yet in Routilux
       // This is a proposed API extension
-      const response = await fetch(`${serverUrl}/api/v1/jobs/${jobId}/shared-data/${sharedDataKey}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value: JSON.parse(sharedDataValue) }),
-      });
+      const response = await fetch(
+        `${serverUrl}/api/v1/jobs/${jobId}/shared-data/${sharedDataKey}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ value: JSON.parse(sharedDataValue) }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update shared data");
@@ -79,7 +82,11 @@ export function JobInteractionPanel({ jobId, serverUrl, jobStatus }: JobInteract
             onClick={handleUpdateSharedData}
             disabled={loading || !sharedDataKey || jobStatus !== "running"}
           >
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+            {loading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="mr-2 h-4 w-4" />
+            )}
             Update Shared Data
           </Button>
         </div>
@@ -91,9 +98,7 @@ export function JobInteractionPanel({ jobId, serverUrl, jobStatus }: JobInteract
             {Object.keys(sharedData).length === 0 ? (
               <p className="text-sm text-muted-foreground text-center">No shared data</p>
             ) : (
-              <pre className="text-xs">
-                {JSON.stringify(sharedData, null, 2)}
-              </pre>
+              <pre className="text-xs">{JSON.stringify(sharedData, null, 2)}</pre>
             )}
           </ScrollArea>
         </div>

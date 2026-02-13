@@ -2,52 +2,55 @@
  * Flows Page Object
  *
  * Represents the flows management page.
+ * Uses testid naming convention from TESTID_CONTRACT.md
  */
 
-import { Page, Locator } from '@playwright/test';
-import { BasePage } from './base.page';
+import { Page, Locator } from "@playwright/test";
+import { BasePage } from "./base.page";
 
 export class FlowsPage extends BasePage {
-  readonly url = '/flows';
+  readonly url = "/flows";
 
-  // Locators
-  private readonly flowList = this.page.locator('[data-testid="flow-list"], [data-testid="flows-list"]');
-  private readonly flowItems = this.page.locator('[data-testid^="flow-"]');
-  private readonly syncButton = this.page.locator('button:has-text("Sync")');
-  private readonly createFlowButton = this.page.locator('button:has-text("Create Flow"), [data-testid="create-flow-button"]');
-  private readonly searchInput = this.page.locator('input[placeholder*="search"], input[name="search"]');
-  private readonly emptyState = this.page.locator('[data-testid="empty-state"]');
+  // Locators - using testid convention from TESTID_CONTRACT.md
+  private readonly pageContainer = this.page.locator('[data-testid="flows-page"]');
+  private readonly flowCards = this.page.locator('[data-testid^="flows-card-"]');
+  private readonly refreshButton = this.page.locator('[data-testid="flows-button-refresh"]');
+  private readonly syncButton = this.page.locator('[data-testid="flows-button-sync"]');
+  private readonly searchInput = this.page.locator('[data-testid="flows-input-search"]');
+  private readonly emptyState = this.page.locator('[data-testid="flows-empty-state"]');
+  private readonly loadingState = this.page.locator('[data-testid="flows-loading"]');
+  private readonly notConnectedState = this.page.locator('[data-testid="flows-not-connected"]');
 
   /**
    * Navigate to the flows page.
    */
   async open(): Promise<void> {
     await this.goto(this.url);
-    await this.waitForLoading();
+    await this.page.waitForLoadState("networkidle");
   }
 
   /**
    * Get the number of flows displayed.
    */
   async getFlowCount(): Promise<number> {
-    await this.waitForVisible('[data-testid^="flow-"]');
-    return await this.flowItems.count();
+    await this.page.waitForLoadState("networkidle");
+    return await this.flowCards.count();
   }
 
   /**
    * Click on a flow by its ID.
    */
   async clickFlow(flowId: string): Promise<void> {
-    await this.clickByTestId(`flow-${flowId}`);
-    await this.waitForLoading();
+    await this.page.locator(`[data-testid="flows-card-${flowId}"]`).click();
+    await this.page.waitForLoadState("networkidle");
   }
 
   /**
-   * Click on a flow by its name.
+   * Click view button on a flow by its ID.
    */
-  async clickFlowByName(name: string): Promise<void> {
-    await this.page.click(`[data-testid="flow-${name}"], [data-testid*="${name}"]`);
-    await this.waitForLoading();
+  async clickViewFlow(flowId: string): Promise<void> {
+    await this.page.locator(`[data-testid="flows-button-view-${flowId}"]`).click();
+    await this.page.waitForLoadState("networkidle");
   }
 
   /**
@@ -62,8 +65,16 @@ export class FlowsPage extends BasePage {
    * Clear the search.
    */
   async clearSearch(): Promise<void> {
-    await this.searchInput.fill('');
+    await this.searchInput.fill("");
     await this.page.waitForTimeout(300);
+  }
+
+  /**
+   * Refresh flows list.
+   */
+  async refresh(): Promise<void> {
+    await this.refreshButton.click();
+    await this.page.waitForLoadState("networkidle");
   }
 
   /**
@@ -71,14 +82,7 @@ export class FlowsPage extends BasePage {
    */
   async syncFlows(): Promise<void> {
     await this.syncButton.click();
-    await this.waitForLoading();
-  }
-
-  /**
-   * Click the create flow button.
-   */
-  async clickCreateFlow(): Promise<void> {
-    await this.createFlowButton.click();
+    await this.page.waitForLoadState("networkidle");
   }
 
   /**
@@ -89,27 +93,50 @@ export class FlowsPage extends BasePage {
   }
 
   /**
-   * Get a flow item locator by index.
+   * Check if the not connected state is shown.
    */
-  getFlowItem(index: number): Locator {
-    return this.flowItems.nth(index);
+  async isNotConnected(): Promise<boolean> {
+    return await this.notConnectedState.isVisible().catch(() => false);
   }
 
   /**
-   * Get flow name by index.
+   * Check if loading.
    */
-  async getFlowName(index: number): Promise<string> {
-    const item = this.getFlowItem(index);
-    const nameLocator = item.locator('[data-testid="flow-name"], .flow-name');
-    return await nameLocator.textContent() || '';
+  async isLoading(): Promise<boolean> {
+    return await this.loadingState.isVisible().catch(() => false);
   }
 
   /**
-   * Get flow status by index.
+   * Get a flow card locator by index.
    */
-  async getFlowStatus(index: number): Promise<string> {
-    const item = this.getFlowItem(index);
-    const statusLocator = item.locator('[data-testid="flow-status"], .flow-status');
-    return await statusLocator.textContent() || '';
+  getFlowCard(index: number): Locator {
+    return this.flowCards.nth(index);
+  }
+
+  /**
+   * Get a flow card locator by ID.
+   */
+  getFlowCardById(flowId: string): Locator {
+    return this.page.locator(`[data-testid="flows-card-${flowId}"]`);
+  }
+
+  /**
+   * Check if a specific flow is visible.
+   */
+  async isFlowVisible(flowId: string): Promise<boolean> {
+    return await this.getFlowCardById(flowId)
+      .isVisible()
+      .catch(() => false);
+  }
+
+  /**
+   * Wait for flows to load.
+   */
+  async waitForFlows(): Promise<void> {
+    // Wait for either flows or empty state
+    await this.page.waitForSelector(
+      '[data-testid^="flows-card-"], [data-testid="flows-empty-state"], [data-testid="flows-not-connected"]',
+      { timeout: 10000 }
+    );
   }
 }

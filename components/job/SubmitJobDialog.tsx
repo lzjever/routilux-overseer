@@ -21,7 +21,10 @@ import {
 } from "@/components/ui/select";
 import { useWorkersStore } from "@/lib/stores/workersStore";
 import { Loader2, Send } from "lucide-react";
-import type { JobSubmitRequest, routilux__server__models__flow__RoutineInfo } from "@/lib/api/generated";
+import type {
+  JobSubmitRequest,
+  routilux__server__models__flow__RoutineInfo,
+} from "@/lib/api/generated";
 import { createAPI } from "@/lib/api";
 
 interface SubmitJobDialogProps {
@@ -94,7 +97,6 @@ export function SubmitJobDialog({
       }
     }
   }, [selectedRoutineId, routines]);
-
 
   const handleSubmit = async () => {
     if (!serverUrl || !selectedRoutineId || !selectedSlotName) return;
@@ -234,9 +236,7 @@ export function SubmitJobDialog({
               disabled={submitting}
               placeholder='{"key": "value"}'
             />
-            <p className="text-xs text-muted-foreground">
-              JSON object to send to the slot
-            </p>
+            <p className="text-xs text-muted-foreground">JSON object to send to the slot</p>
           </div>
 
           {error && (

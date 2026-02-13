@@ -127,7 +127,10 @@ export class WebSocketManager {
             clearTimeout(this.connectionTimeout);
             this.connectionTimeout = null;
           }
-          if (!this.isIntentionalClose && this.reconnectAttempts < this.config.maxReconnectAttempts) {
+          if (
+            !this.isIntentionalClose &&
+            this.reconnectAttempts < this.config.maxReconnectAttempts
+          ) {
             this.scheduleReconnect();
           }
         };
@@ -180,6 +183,15 @@ export class WebSocketManager {
     }
   }
 
+  /**
+   * Send a generic message over the WebSocket
+   */
+  send(message: WebSocketMessage): void {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(message));
+    }
+  }
+
   private sendPing(): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: "ping" }));
@@ -198,7 +210,10 @@ export class WebSocketManager {
       }
       this.sendPing();
       // Schedule next heartbeat
-      this.heartbeatTimeout = setTimeout(() => this.startHeartbeat(), this.config.heartbeatInterval);
+      this.heartbeatTimeout = setTimeout(
+        () => this.startHeartbeat(),
+        this.config.heartbeatInterval
+      );
     }, this.config.heartbeatInterval);
   }
 
@@ -262,7 +277,9 @@ export class WebSocketManager {
       this.config.maxReconnectDelay
     );
 
-    console.log(`Scheduling reconnect attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts} in ${delay}ms`);
+    console.log(
+      `Scheduling reconnect attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts} in ${delay}ms`
+    );
 
     this.reconnectTimeout = setTimeout(() => {
       console.log("Attempting to reconnect...");
@@ -284,12 +301,16 @@ export class WebSocketManager {
 let wsManagerInstance: WebSocketManager | null = null;
 let currentConfig: WebSocketManagerConfig = {};
 
-export function getWebSocketManager(serverUrl: string, config?: WebSocketManagerConfig): WebSocketManager {
+export function getWebSocketManager(
+  serverUrl: string,
+  config?: WebSocketManagerConfig
+): WebSocketManager {
   const wsUrl = buildWebSocketUrl(serverUrl);
 
   // Check if we need to recreate the manager (URL changed or config changed)
   const configChanged = config && JSON.stringify(config) !== JSON.stringify(currentConfig);
-  const needsNewInstance = !wsManagerInstance || wsManagerInstance["url"] !== wsUrl || configChanged;
+  const needsNewInstance =
+    !wsManagerInstance || wsManagerInstance["url"] !== wsUrl || configChanged;
 
   if (needsNewInstance) {
     if (wsManagerInstance) {
@@ -299,7 +320,7 @@ export function getWebSocketManager(serverUrl: string, config?: WebSocketManager
     wsManagerInstance = new WebSocketManager(wsUrl, currentConfig);
   }
 
-  return wsManagerInstance;
+  return wsManagerInstance!;
 }
 
 export function disposeWebSocketManager(): void {
@@ -309,10 +330,13 @@ export function disposeWebSocketManager(): void {
   }
 }
 
-function readApiKeyFromStorage(): string | undefined {
+/**
+ * Read API key from Zustand store (session-based, stored in sessionStorage)
+ */
+function readApiKeyFromStore(): string | undefined {
   if (typeof window === "undefined") return undefined;
   try {
-    const raw = window.localStorage.getItem("overseer-connection-storage");
+    const raw = window.sessionStorage.getItem("overseer-connection-storage");
     if (!raw) return undefined;
     const parsed = JSON.parse(raw) as { state?: { apiKey?: string | null } };
     const key = parsed?.state?.apiKey;
@@ -322,9 +346,13 @@ function readApiKeyFromStorage(): string | undefined {
   }
 }
 
+/**
+ * Build WebSocket URL with API key in query parameter
+ * Note: API key authentication is required by routilux server when api_key_enabled=true
+ */
 function buildWebSocketUrl(serverUrl: string): string {
   const base = serverUrl.replace("http", "ws") + "/api/v1/websocket";
-  const apiKey = readApiKeyFromStorage();
+  const apiKey = readApiKeyFromStore();
   if (!apiKey) return base;
   const separator = base.includes("?") ? "&" : "?";
   return `${base}${separator}api_key=${encodeURIComponent(apiKey)}`;

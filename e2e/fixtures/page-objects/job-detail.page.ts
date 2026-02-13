@@ -4,8 +4,8 @@
  * Represents the job detail page with real-time monitoring.
  */
 
-import { Page } from '@playwright/test';
-import { BasePage } from './base.page';
+import { Page } from "@playwright/test";
+import { BasePage } from "./base.page";
 
 export class JobDetailPage extends BasePage {
   /**
@@ -20,7 +20,7 @@ export class JobDetailPage extends BasePage {
    * Get the current job status.
    */
   async getStatus(): Promise<string> {
-    return await this.getTextByTestId('job-status');
+    return await this.getTextByTestId("job-status");
   }
 
   /**
@@ -28,7 +28,7 @@ export class JobDetailPage extends BasePage {
    */
   async isRunning(): Promise<boolean> {
     const status = await this.getStatus();
-    return status.toLowerCase().includes('running');
+    return status.toLowerCase().includes("running");
   }
 
   /**
@@ -36,7 +36,7 @@ export class JobDetailPage extends BasePage {
    */
   async isCompleted(): Promise<boolean> {
     const status = await this.getStatus();
-    return status.toLowerCase().includes('completed');
+    return status.toLowerCase().includes("completed");
   }
 
   /**
@@ -44,28 +44,28 @@ export class JobDetailPage extends BasePage {
    */
   async isFailed(): Promise<boolean> {
     const status = await this.getStatus();
-    return status.toLowerCase().includes('failed');
+    return status.toLowerCase().includes("failed");
   }
 
   /**
    * Pause the job.
    */
   async pauseJob(): Promise<void> {
-    await this.clickByTestId('pause-job-button');
+    await this.clickByTestId("pause-job-button");
   }
 
   /**
    * Resume the job.
    */
   async resumeJob(): Promise<void> {
-    await this.clickByTestId('resume-job-button');
+    await this.clickByTestId("resume-job-button");
   }
 
   /**
    * Cancel the job.
    */
   async cancelJob(): Promise<void> {
-    await this.clickByTestId('cancel-job-button');
+    await this.clickByTestId("cancel-job-button");
   }
 
   /**
@@ -79,13 +79,13 @@ export class JobDetailPage extends BasePage {
    * Get the event log text.
    */
   async getEventLog(): Promise<string> {
-    return await this.getTextByTestId('event-log');
+    return await this.getTextByTestId("event-log");
   }
 
   /**
    * Check if breakpoint panel is visible.
    */
   async isBreakpointPanelVisible(): Promise<boolean> {
-    return await this.isVisibleByTestId('breakpoint-panel');
+    return await this.isVisibleByTestId("breakpoint-panel");
   }
 }

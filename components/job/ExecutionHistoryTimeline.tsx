@@ -9,20 +9,13 @@ interface ExecutionHistoryTimelineProps {
   routineId?: string;
 }
 
-export function ExecutionHistoryTimeline({
-  history,
-  routineId
-}: ExecutionHistoryTimelineProps) {
+export function ExecutionHistoryTimeline({ history, routineId }: ExecutionHistoryTimelineProps) {
   return (
     <Card className="surface-panel flex flex-col h-full">
       <CardHeader>
         <CardTitle>Execution History</CardTitle>
-        {routineId && (
-          <CardDescription>Routine: {routineId}</CardDescription>
-        )}
-        <p className="text-sm text-muted-foreground">
-          {history.length} events
-        </p>
+        {routineId && <CardDescription>Routine: {routineId}</CardDescription>}
+        <p className="text-sm text-muted-foreground">{history.length} events</p>
       </CardHeader>
       <CardContent className="flex-1 min-h-0">
         <ScrollArea className="h-full">

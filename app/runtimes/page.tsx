@@ -9,7 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2, Plug, RefreshCw, Cpu } from "lucide-react";
 import { createAPI } from "@/lib/api";
 
@@ -51,7 +57,9 @@ export default function RuntimesPage() {
       setIsDefault("false");
       await loadRuntimes(serverUrl);
     } catch (createError) {
-      setFormError(createError instanceof Error ? createError.message : "Failed to create runtime.");
+      setFormError(
+        createError instanceof Error ? createError.message : "Failed to create runtime."
+      );
     } finally {
       setCreating(false);
     }
@@ -73,9 +81,7 @@ export default function RuntimesPage() {
                 <Plug className="h-5 w-5" />
                 Not Connected
               </CardTitle>
-              <CardDescription>
-                Connect to a Routilux server to manage runtimes
-              </CardDescription>
+              <CardDescription>Connect to a Routilux server to manage runtimes</CardDescription>
             </CardHeader>
             <CardContent>
               <Button onClick={() => router.push("/connect")} className="w-full">
@@ -95,9 +101,7 @@ export default function RuntimesPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold">Runtimes</h1>
-            <p className="text-muted-foreground">
-              Manage execution runtimes and capacity.
-            </p>
+            <p className="text-muted-foreground">Manage execution runtimes and capacity.</p>
           </div>
           <Button variant="outline" onClick={handleRefresh} className="gap-2">
             <RefreshCw className="h-4 w-4" />
@@ -112,9 +116,7 @@ export default function RuntimesPage() {
                 <Cpu className="h-5 w-5" />
                 Registered Runtimes
               </CardTitle>
-              <CardDescription>
-                Default runtime: {defaultRuntimeId || "not set"}
-              </CardDescription>
+              <CardDescription>Default runtime: {defaultRuntimeId || "not set"}</CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -152,9 +154,7 @@ export default function RuntimesPage() {
           <Card>
             <CardHeader>
               <CardTitle>Create Runtime</CardTitle>
-              <CardDescription>
-                Register a new runtime instance for job execution.
-              </CardDescription>
+              <CardDescription>Register a new runtime instance for job execution.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -198,7 +198,11 @@ export default function RuntimesPage() {
                 </div>
               )}
 
-              <Button onClick={handleCreate} disabled={creating || !runtimeId.trim()} className="w-full">
+              <Button
+                onClick={handleCreate}
+                disabled={creating || !runtimeId.trim()}
+                className="w-full"
+              >
                 {creating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

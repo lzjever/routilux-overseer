@@ -6,34 +6,44 @@ import { mockJobState } from "@/test/test-utils";
 vi.mock("@/lib/api", () => ({
   createAPI: vi.fn((serverUrl: string) => ({
     jobs: {
-      getMonitoringData: vi.fn(() => Promise.resolve({
-        job_status: "running",
-        updated_at: "2025-01-15T10:00:00Z",
-      })),
-      getRoutinesStatus: vi.fn(() => Promise.resolve({
-        "routine-1": {
-          status: "completed",
-          execution_count: 1,
-          last_execution_time: "2025-01-15T10:00:00Z",
-          error_count: 0,
-        },
-      })),
-      getExecutionTrace: vi.fn(() => Promise.resolve({
-        events: [
-          {
-            routine_id: "routine-1",
-            timestamp: "2025-01-15T10:00:00Z",
-            event_type: "on_start",
-            data: { message: "Started" },
+      getMonitoringData: vi.fn(() =>
+        Promise.resolve({
+          job_status: "running",
+          updated_at: "2025-01-15T10:00:00Z",
+        })
+      ),
+      getRoutinesStatus: vi.fn(() =>
+        Promise.resolve({
+          "routine-1": {
+            status: "completed",
+            execution_count: 1,
+            last_execution_time: "2025-01-15T10:00:00Z",
+            error_count: 0,
           },
-        ],
-      })),
-      getData: vi.fn(() => Promise.resolve({
-        data: mockJobState.shared_data,
-      })),
-      get: vi.fn(() => Promise.resolve({
-        created_at: 1736949600, // 2025-01-15T10:00:00Z in seconds
-      })),
+        })
+      ),
+      getExecutionTrace: vi.fn(() =>
+        Promise.resolve({
+          events: [
+            {
+              routine_id: "routine-1",
+              timestamp: "2025-01-15T10:00:00Z",
+              event_type: "on_start",
+              data: { message: "Started" },
+            },
+          ],
+        })
+      ),
+      getData: vi.fn(() =>
+        Promise.resolve({
+          data: mockJobState.shared_data,
+        })
+      ),
+      get: vi.fn(() =>
+        Promise.resolve({
+          created_at: 1736949600, // 2025-01-15T10:00:00Z in seconds
+        })
+      ),
     },
   })),
 }));

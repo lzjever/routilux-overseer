@@ -4,10 +4,10 @@
  * Tests the complete user journey of creating a flow and executing it.
  */
 
-import { test, expect } from '../../fixtures';
-import { ConnectPage, FlowsPage, JobsPage, JobDetailPage } from '../../fixtures/page-objects';
+import { test, expect } from "../../fixtures/fixtures";
+import { ConnectPage, FlowsPage, JobsPage, JobDetailPage } from "../../fixtures/page-objects";
 
-test.describe('Journey: Create and Execute Flow', () => {
+test.describe("Journey: Create and Execute Flow", () => {
   let connectPage: ConnectPage;
   let flowsPage: FlowsPage;
   let jobsPage: JobsPage;
@@ -20,7 +20,10 @@ test.describe('Journey: Create and Execute Flow', () => {
     jobDetailPage = new JobDetailPage(page);
   });
 
-  test('complete flow: connect -> create flow -> execute job -> monitor', async ({ page, server }) => {
+  test("complete flow: connect -> create flow -> execute job -> monitor", async ({
+    page,
+    server,
+  }) => {
     // Step 1: Connect to server
     await connectPage.open();
     await connectPage.setServerUrl(server.getServerUrl());
@@ -29,7 +32,7 @@ test.describe('Journey: Create and Execute Flow', () => {
     await connectPage.connect();
 
     // Should redirect to home
-    await expect(page).toHaveURL('/');
+    await expect(page).toHaveURL("/");
 
     // Step 2: Navigate to flows page
     await flowsPage.open();
@@ -37,35 +40,35 @@ test.describe('Journey: Create and Execute Flow', () => {
 
     // Step 3: Create a flow via API (since UI wizard may vary)
     const flowData = {
-      name: 'journey_test_flow',
-      description: 'Flow created during journey test',
+      name: "journey_test_flow",
+      description: "Flow created during journey test",
       routines: [
         {
-          id: 'source',
-          factory_name: 'e2e_data_generator',
-          config: { count: 10, pattern: 'sequential' }
+          id: "source",
+          factory_name: "e2e_data_generator",
+          config: { count: 10, pattern: "sequential" },
         },
         {
-          id: 'transformer',
-          factory_name: 'e2e_data_transformer',
-          config: { transform_type: 'uppercase' }
+          id: "transformer",
+          factory_name: "e2e_data_transformer",
+          config: { transform_type: "uppercase" },
         },
         {
-          id: 'sink',
-          factory_name: 'e2e_data_collector',
-          config: {}
-        }
+          id: "sink",
+          factory_name: "e2e_data_collector",
+          config: {},
+        },
       ],
       connections: [
-        { from: 'source.output', to: 'transformer.input' },
-        { from: 'transformer.output', to: 'sink.input' }
-      ]
+        { from: "source.output", to: "transformer.input" },
+        { from: "transformer.output", to: "sink.input" },
+      ],
     };
 
     const flowResponse = await fetch(`${server.getServerUrl()}/api/v1/flows`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(flowData)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(flowData),
     });
 
     expect(flowResponse.ok).toBe(true);
@@ -83,9 +86,9 @@ test.describe('Journey: Create and Execute Flow', () => {
 
     // Step 6: Submit job
     const jobResponse = await fetch(`${server.getServerUrl()}/api/v1/execute/flow`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ flow_id: flow.id })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ flow_id: flow.id }),
     });
 
     expect(jobResponse.ok).toBe(true);
@@ -106,40 +109,42 @@ test.describe('Journey: Create and Execute Flow', () => {
 
     // Step 9: Verify job completed
     const status = await jobDetailPage.getStatus();
-    expect(['completed', 'running', 'pending'].some(s => status.toLowerCase().includes(s))).toBe(true);
+    expect(["completed", "running", "pending"].some((s) => status.toLowerCase().includes(s))).toBe(
+      true
+    );
 
     // Step 10: Check visualization is present
-    await expect(page.locator('[data-testid="flow-canvas"], [data-testid="job-visualization"]')).toBeVisible({ timeout: 5000 });
+    await expect(
+      page.locator('[data-testid="flow-canvas"], [data-testid="job-visualization"]')
+    ).toBeVisible({ timeout: 5000 });
   });
 
-  test('journey with error: handle failing job gracefully', async ({ page, server }) => {
+  test("journey with error: handle failing job gracefully", async ({ page, server }) => {
     // Connect
     await connectPage.connectTo(server.getServerUrl());
 
     // Create a flow that will fail
     const flowData = {
-      name: 'journey_error_flow',
+      name: "journey_error_flow",
       routines: [
         {
-          id: 'source',
-          factory_name: 'e2e_data_generator',
-          config: { count: 3 }
+          id: "source",
+          factory_name: "e2e_data_generator",
+          config: { count: 3 },
         },
         {
-          id: 'error_gen',
-          factory_name: 'e2e_error_simulator',
-          config: { error_type: 'runtime' }
-        }
+          id: "error_gen",
+          factory_name: "e2e_error_simulator",
+          config: { error_type: "runtime" },
+        },
       ],
-      connections: [
-        { from: 'source.output', to: 'error_gen.input' }
-      ]
+      connections: [{ from: "source.output", to: "error_gen.input" }],
     };
 
     const flowResponse = await fetch(`${server.getServerUrl()}/api/v1/flows`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(flowData)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(flowData),
     });
 
     if (flowResponse.ok) {
@@ -147,9 +152,9 @@ test.describe('Journey: Create and Execute Flow', () => {
 
       // Submit job
       const jobResponse = await fetch(`${server.getServerUrl()}/api/v1/execute/flow`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ flow_id: flow.id })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ flow_id: flow.id }),
       });
 
       if (jobResponse.ok) {
@@ -164,7 +169,7 @@ test.describe('Journey: Create and Execute Flow', () => {
         // Should show error state
         const status = await jobDetailPage.getStatus();
 
-        if (status.toLowerCase().includes('fail')) {
+        if (status.toLowerCase().includes("fail")) {
           // Error handling should be visible
           const errorElements = page.locator('[data-testid*="error"], .error, .failed');
           const count = await errorElements.count();

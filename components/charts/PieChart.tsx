@@ -16,14 +16,7 @@ interface PieChartProps {
   className?: string;
 }
 
-const DEFAULT_COLORS = [
-  "#8884d8",
-  "#82ca9d",
-  "#ffc658",
-  "#ff7300",
-  "#00ff00",
-  "#0088fe",
-];
+const DEFAULT_COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#00ff00", "#0088fe"];
 
 export function PieChart({
   data,
@@ -33,10 +26,19 @@ export function PieChart({
 }: PieChartProps) {
   // Ensure minimum dimensions to prevent chart errors
   const minHeight = Math.max(height || 300, 100);
-  
+
   if (!data || data.length === 0) {
     return (
-      <div className={className} style={{ width: "100%", height: minHeight, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        className={className}
+        style={{
+          width: "100%",
+          height: minHeight,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <span className="text-muted-foreground text-sm">No data available</span>
       </div>
     );

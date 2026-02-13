@@ -4,13 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Plus,
-  Trash2,
-  Power,
-  PowerOff,
-  Bug,
-} from "lucide-react";
+import { Plus, Trash2, Power, PowerOff, Bug } from "lucide-react";
 import { useBreakpointStore } from "@/lib/stores/breakpointStore";
 import { BreakpointCreateRequest } from "@/lib/api/generated";
 import { useFlowStore } from "@/lib/stores/flowStore";
@@ -77,7 +71,6 @@ export function BreakpointControls({
       console.error("Failed to toggle breakpoint:", error);
     }
   };
-
 
   const content = (
     <>
@@ -159,9 +152,7 @@ export function BreakpointControls({
 
       {/* Breakpoints List */}
       {currentBreakpoints.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-4">
-          No breakpoints set
-        </p>
+        <p className="text-sm text-muted-foreground text-center py-4">No breakpoints set</p>
       ) : (
         <ScrollArea className={embedded ? "h-[200px]" : "h-[300px]"}>
           <div className="space-y-2">
@@ -175,16 +166,14 @@ export function BreakpointControls({
                 <Bug className="h-4 w-4" />
 
                 <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm font-medium truncate">
-                    {bp.routine_id}.{bp.slot_name}
-                  </span>
-                </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-medium truncate">
+                      {bp.routine_id}.{bp.slot_name}
+                    </span>
+                  </div>
 
                   {bp.hit_count > 0 && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Hits: {bp.hit_count}
-                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">Hits: {bp.hit_count}</div>
                   )}
                 </div>
 
@@ -196,11 +185,7 @@ export function BreakpointControls({
                     title={bp.enabled ? "Disable" : "Enable"}
                     className="h-6 w-6 p-0"
                   >
-                    {bp.enabled ? (
-                      <Power className="h-3 w-3" />
-                    ) : (
-                      <PowerOff className="h-3 w-3" />
-                    )}
+                    {bp.enabled ? <Power className="h-3 w-3" /> : <PowerOff className="h-3 w-3" />}
                   </Button>
 
                   <Button
@@ -230,9 +215,7 @@ export function BreakpointControls({
       <CardHeader>
         <CardTitle>Breakpoints</CardTitle>
       </CardHeader>
-      <CardContent>
-        {content}
-      </CardContent>
+      <CardContent>{content}</CardContent>
     </Card>
   );
 }

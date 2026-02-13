@@ -44,9 +44,7 @@ export function JobDetailHeader({
 
           <span className="text-muted-foreground">•</span>
 
-          <p className="text-xs text-muted-foreground truncate">
-            Flow: {job.flow_id}
-          </p>
+          <p className="text-xs text-muted-foreground truncate">Flow: {job.flow_id}</p>
 
           {job.worker_id && (
             <>
@@ -66,10 +64,10 @@ export function JobDetailHeader({
               isRunning
                 ? "default"
                 : job.status === "completed"
-                ? "secondary"
-                : job.status === "failed"
-                ? "destructive"
-                : "outline"
+                  ? "secondary"
+                  : job.status === "failed"
+                    ? "destructive"
+                    : "outline"
             }
             className="h-5 text-xs"
           >

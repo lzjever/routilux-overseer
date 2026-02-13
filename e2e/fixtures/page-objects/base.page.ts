@@ -4,7 +4,7 @@
  * Provides common functionality for all page objects.
  */
 
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator } from "@playwright/test";
 
 export class BasePage {
   constructor(protected readonly page: Page) {}
@@ -20,14 +20,14 @@ export class BasePage {
    * Wait for a selector to be visible.
    */
   async waitForVisible(selector: string, timeout: number = 5000): Promise<void> {
-    await this.page.waitForSelector(selector, { state: 'visible', timeout });
+    await this.page.waitForSelector(selector, { state: "visible", timeout });
   }
 
   /**
    * Wait for a selector to be hidden.
    */
   async waitForHidden(selector: string, timeout: number = 5000): Promise<void> {
-    await this.page.waitForSelector(selector, { state: 'hidden', timeout });
+    await this.page.waitForSelector(selector, { state: "hidden", timeout });
   }
 
   /**
@@ -42,7 +42,7 @@ export class BasePage {
    */
   async getTextByTestId(testId: string): Promise<string> {
     const locator = this.page.locator(`[data-testid="${testId}"]`);
-    return await locator.textContent() || '';
+    return (await locator.textContent()) || "";
   }
 
   /**
@@ -65,7 +65,10 @@ export class BasePage {
    */
   async waitForLoading(): Promise<void> {
     try {
-      await this.page.waitForSelector('[data-testid="loading"]', { state: 'hidden', timeout: 10000 });
+      await this.page.waitForSelector('[data-testid="loading"]', {
+        state: "hidden",
+        timeout: 10000,
+      });
     } catch {
       // Loading element may not exist, continue
     }

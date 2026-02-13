@@ -7,7 +7,7 @@ interface DiscoveryState {
   discoveredFlows: string[]; // Flow IDs
   discoveredJobs: string[]; // Job IDs
   discoveredWorkers: string[]; // Worker IDs
-  
+
   // Sync status
   syncingFlows: boolean;
   syncingJobs: boolean;
@@ -15,10 +15,10 @@ interface DiscoveryState {
   lastFlowSync: Date | null;
   lastJobSync: Date | null;
   lastWorkerSync: Date | null;
-  
+
   // Auto-sync preference
   autoSync: boolean;
-  
+
   // Actions
   discoverFlows: (serverUrl: string) => Promise<void>;
   syncFlows: (serverUrl: string) => Promise<number>; // Returns count of synced items

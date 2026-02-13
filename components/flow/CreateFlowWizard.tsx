@@ -35,11 +35,7 @@ interface CreateFlowWizardProps {
 
 type CreationMethod = "scratch" | "import" | "clone" | "template";
 
-export function CreateFlowWizard({
-  serverUrl,
-  onSuccess,
-  trigger,
-}: CreateFlowWizardProps) {
+export function CreateFlowWizard({ serverUrl, onSuccess, trigger }: CreateFlowWizardProps) {
   const [open, setOpen] = useState(false);
   const [method, setMethod] = useState<CreationMethod>("scratch");
   const [flowId, setFlowId] = useState("");
@@ -180,9 +176,7 @@ export function CreateFlowWizard({
         if (!isOpen) resetForm();
       }}
     >
-      <DialogTrigger asChild>
-        {trigger || <Button>Create Flow</Button>}
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger || <Button>Create Flow</Button>}</DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Flow</DialogTitle>
@@ -250,9 +244,7 @@ export function CreateFlowWizard({
               placeholder="e.g., my_workflow"
               required
             />
-            <p className="text-xs text-muted-foreground">
-              Creation method: {methodLabel}
-            </p>
+            <p className="text-xs text-muted-foreground">Creation method: {methodLabel}</p>
           </div>
 
           {method === "import" && (

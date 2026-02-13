@@ -28,9 +28,7 @@ export function JobStateSummary({ jobState }: JobStateSummaryProps) {
         {/* Status */}
         <div>
           <Label>Status</Label>
-          <Badge variant={getStatusVariant(jobState.status)}>
-            {jobState.status}
-          </Badge>
+          <Badge variant={getStatusVariant(jobState.status)}>{jobState.status}</Badge>
         </div>
 
         {/* Pause Points */}
@@ -43,7 +41,9 @@ export function JobStateSummary({ jobState }: JobStateSummaryProps) {
                   <div key={i} className="text-sm p-2 border-b last:border-0">
                     <div className="flex justify-between items-center mb-1">
                       <span className="font-medium">{new Date(pp.timestamp).toLocaleString()}</span>
-                      <Badge variant="outline" className="text-xs">{pp.reason}</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {pp.reason}
+                      </Badge>
                     </div>
                     <p className="text-muted-foreground text-xs">{pp.current_routine_id}</p>
                   </div>
@@ -58,9 +58,7 @@ export function JobStateSummary({ jobState }: JobStateSummaryProps) {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertTitle>{jobState.deferred_events.length} Deferred Events</AlertTitle>
-            <AlertDescription>
-              Events pending emission on resume
-            </AlertDescription>
+            <AlertDescription>Events pending emission on resume</AlertDescription>
           </Alert>
         )}
 

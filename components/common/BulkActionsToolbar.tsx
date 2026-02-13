@@ -16,8 +16,11 @@ interface BulkActionsToolbarProps {
     onClick: () => void;
     variant?: "default" | "destructive" | "outline";
     disabled?: boolean;
+    testId?: string;
   }>;
   className?: string;
+  testId?: string;
+  selectAllTestId?: string;
 }
 
 export function BulkActionsToolbar({
@@ -27,6 +30,8 @@ export function BulkActionsToolbar({
   onDeselectAll,
   actions = [],
   className,
+  testId,
+  selectAllTestId,
 }: BulkActionsToolbarProps) {
   if (selectedCount === 0) return null;
 
@@ -38,6 +43,7 @@ export function BulkActionsToolbar({
         "flex items-center justify-between gap-4 p-3 bg-muted/50 border rounded-lg",
         className
       )}
+      data-testid={testId}
     >
       <div className="flex items-center gap-3">
         <Badge variant="secondary" className="gap-1">
@@ -48,6 +54,7 @@ export function BulkActionsToolbar({
           size="sm"
           onClick={allSelected ? onDeselectAll : onSelectAll}
           className="h-7 text-xs"
+          data-testid={selectAllTestId || (testId ? `${testId}-select-all` : undefined)}
         >
           {allSelected ? "Deselect All" : "Select All"}
         </Button>
@@ -56,6 +63,7 @@ export function BulkActionsToolbar({
           size="sm"
           onClick={onDeselectAll}
           className="h-7 text-xs"
+          data-testid={testId ? `${testId}-clear` : undefined}
         >
           <X className="h-3 w-3 mr-1" />
           Clear
@@ -72,6 +80,7 @@ export function BulkActionsToolbar({
               onClick={action.onClick}
               disabled={action.disabled}
               className="h-7 text-xs gap-1"
+              data-testid={action.testId}
             >
               {Icon && <Icon className="h-3 w-3" />}
               {action.label}

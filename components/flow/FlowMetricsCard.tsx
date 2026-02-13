@@ -10,7 +10,7 @@ interface FlowMetricsCardProps {
 /**
  * FlowMetricsCard - Flow-level metrics are no longer available in the API.
  * This component is kept for compatibility but shows a message that the feature is not available.
- * 
+ *
  * Note: Flow metrics API endpoint has been removed. Use Job metrics instead for monitoring.
  */
 export function FlowMetricsCard({ flowId, serverUrl }: FlowMetricsCardProps) {
@@ -21,7 +21,8 @@ export function FlowMetricsCard({ flowId, serverUrl }: FlowMetricsCardProps) {
       </CardHeader>
       <CardContent>
         <div className="text-sm text-muted-foreground">
-          Flow-level metrics are no longer available. Use Job metrics for monitoring individual job executions.
+          Flow-level metrics are no longer available. Use Job metrics for monitoring individual job
+          executions.
         </div>
       </CardContent>
     </Card>

@@ -1,3 +1,23 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": [
+    "next/core-web-vitals",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  },
+  "rules": {
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-require-imports": "off",
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "prefer-const": "warn",
+    "no-var": "error"
+  },
+  "ignorePatterns": ["node_modules/", ".next/", "out/", "public/", "e2e/", "lib/api/generated/"]
 }

@@ -48,7 +48,7 @@ export const useJobStateStore = create<JobStateStore>((set, get) => ({
           status: status.status,
           execution_count: status.execution_count,
           last_execution: status.last_execution_time,
-          error: status.error_count > 0 ? `${status.error_count} errors` : undefined,
+          error: (status.error_count ?? 0) > 0 ? `${status.error_count} errors` : undefined,
         };
       }
 
@@ -71,7 +71,7 @@ export const useJobStateStore = create<JobStateStore>((set, get) => ({
         updated_at: updatedAt,
         shared_data: normalizeJobData(jobData),
       };
-      
+
       set((prevState) => ({
         jobStates: new Map(prevState.jobStates).set(jobId, state),
         loading: false,

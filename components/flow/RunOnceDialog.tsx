@@ -21,12 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@/components/ui/radio-group";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { createAPI } from "@/lib/api";
-import type { ExecuteResponse, routilux__server__models__flow__RoutineInfo } from "@/lib/api/generated";
+import type {
+  ExecuteResponse,
+  routilux__server__models__flow__RoutineInfo,
+} from "@/lib/api/generated";
 import { Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
 
@@ -167,7 +167,8 @@ export function RunOnceDialog({
         <DialogHeader>
           <DialogTitle>Run Once</DialogTitle>
           <DialogDescription>
-            Execute flow <span className="font-mono">{flowId}</span> without creating a persistent worker.
+            Execute flow <span className="font-mono">{flowId}</span> without creating a persistent
+            worker.
           </DialogDescription>
         </DialogHeader>
 
@@ -221,7 +222,10 @@ export function RunOnceDialog({
 
           <div className="space-y-2">
             <Label>Execution Mode</Label>
-            <RadioGroup value={waitMode} onValueChange={(value) => setWaitMode(value as "async" | "wait")}>
+            <RadioGroup
+              value={waitMode}
+              onValueChange={(value) => setWaitMode(value as "async" | "wait")}
+            >
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="async" id="run-once-async" />
                 <Label htmlFor="run-once-async">Async (return immediately)</Label>
@@ -257,9 +261,7 @@ export function RunOnceDialog({
           </div>
 
           {error && (
-            <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-              {error}
-            </div>
+            <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">{error}</div>
           )}
         </div>
 
@@ -267,7 +269,10 @@ export function RunOnceDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={submitting || !selectedRoutineId || !selectedSlotName}>
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting || !selectedRoutineId || !selectedSlotName}
+          >
             {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

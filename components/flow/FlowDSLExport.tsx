@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Download, Loader2 } from "lucide-react";
 import { createAPI } from "@/lib/api";
 
@@ -23,7 +29,8 @@ export function FlowDSLExport({ flowId, serverUrl }: FlowDSLExportProps) {
       const api = createAPI(serverUrl);
       const exportResponse = await api.flows.exportDSL(flowId, format);
       // Extract the DSL string from the response object
-      const dslString = typeof exportResponse === "string" ? exportResponse : exportResponse.dsl || "";
+      const dslString =
+        typeof exportResponse === "string" ? exportResponse : exportResponse.dsl || "";
       setDsl(dslString);
     } catch (error) {
       console.error("Failed to export DSL:", error);
@@ -59,7 +66,11 @@ export function FlowDSLExport({ flowId, serverUrl }: FlowDSLExportProps) {
             </SelectContent>
           </Select>
           <Button onClick={handleExport} disabled={loading} size="sm">
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+            {loading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
             Export
           </Button>
           {dsl && (
@@ -70,11 +81,7 @@ export function FlowDSLExport({ flowId, serverUrl }: FlowDSLExportProps) {
           )}
         </div>
 
-        {dsl && (
-          <pre className="text-xs bg-muted p-4 rounded overflow-auto max-h-96">
-            {dsl}
-          </pre>
-        )}
+        {dsl && <pre className="text-xs bg-muted p-4 rounded overflow-auto max-h-96">{dsl}</pre>}
       </CardContent>
     </Card>
   );

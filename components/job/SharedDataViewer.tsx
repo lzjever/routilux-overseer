@@ -13,9 +13,7 @@ export function SharedDataViewer({ sharedData }: SharedDataViewerProps) {
     <Card>
       <CardHeader>
         <CardTitle>Shared Data</CardTitle>
-        <CardDescription>
-          Execution-wide data storage accessible by all routines
-        </CardDescription>
+        <CardDescription>Execution-wide data storage accessible by all routines</CardDescription>
       </CardHeader>
       <CardContent>
         {Object.keys(sharedData).length === 0 ? (
@@ -31,9 +29,7 @@ export function SharedDataViewer({ sharedData }: SharedDataViewerProps) {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="p-2 bg-muted/50 rounded mt-1">
-                      <pre className="text-xs overflow-auto">
-                        {JSON.stringify(value, null, 2)}
-                      </pre>
+                      <pre className="text-xs overflow-auto">{JSON.stringify(value, null, 2)}</pre>
                     </div>
                   </CollapsibleContent>
                 </Collapsible>

@@ -40,20 +40,17 @@ export class RoutluxAPI {
 
   private get headers(): Record<string, string> {
     const h: Record<string, string> = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
 
     if (this.apiKey) {
-      h['X-API-Key'] = this.apiKey;
+      h["X-API-Key"] = this.apiKey;
     }
 
     return h;
   }
 
-  private async request<T>(
-    path: string,
-    options?: RequestInit
-  ): Promise<T> {
+  private async request<T>(path: string, options?: RequestInit): Promise<T> {
     const url = `${this.baseURL}${path}`;
     const response = await fetch(url, {
       ...options,
@@ -75,16 +72,16 @@ export class RoutluxAPI {
 
   // Health checks
   async healthLive(): Promise<{ status: string }> {
-    return this.request('/api/v1/health/live');
+    return this.request("/api/v1/health/live");
   }
 
   async healthReady(): Promise<{ status: string }> {
-    return this.request('/api/v1/health/ready');
+    return this.request("/api/v1/health/ready");
   }
 
   // Flows
   async listFlows(): Promise<{ flows: unknown[]; total: number }> {
-    return this.request('/api/v1/flows');
+    return this.request("/api/v1/flows");
   }
 
   async getFlow(flowId: string): Promise<unknown> {
@@ -92,25 +89,28 @@ export class RoutluxAPI {
   }
 
   async createFlow(request: FlowCreateRequest): Promise<unknown> {
-    return this.request('/api/v1/flows', {
-      method: 'POST',
+    return this.request("/api/v1/flows", {
+      method: "POST",
       body: JSON.stringify(request),
     });
   }
 
   async deleteFlow(flowId: string): Promise<void> {
     return this.request(`/api/v1/flows/${flowId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
-  async getFlowDSL(flowId: string, format: 'yaml' | 'json' = 'yaml'): Promise<{ format: string; dsl: string }> {
+  async getFlowDSL(
+    flowId: string,
+    format: "yaml" | "json" = "yaml"
+  ): Promise<{ format: string; dsl: string }> {
     return this.request(`/api/v1/flows/${flowId}/dsl?format=${format}`);
   }
 
   async validateFlow(flowId: string): Promise<{ valid: boolean; issues: string[] }> {
     return this.request(`/api/v1/flows/${flowId}/validate`, {
-      method: 'POST',
+      method: "POST",
     });
   }
 
@@ -119,16 +119,19 @@ export class RoutluxAPI {
     return this.request(`/api/v1/flows/${flowId}/routines`);
   }
 
-  async addRoutine(flowId: string, routine: RoutineInfo): Promise<{ routine_id: string; status: string }> {
+  async addRoutine(
+    flowId: string,
+    routine: RoutineInfo
+  ): Promise<{ routine_id: string; status: string }> {
     return this.request(`/api/v1/flows/${flowId}/routines`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(routine),
     });
   }
 
   async removeRoutine(flowId: string, routineId: string): Promise<void> {
     return this.request(`/api/v1/flows/${flowId}/routines/${routineId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
@@ -139,14 +142,14 @@ export class RoutluxAPI {
 
   async addConnection(flowId: string, connection: ConnectionInfo): Promise<{ status: string }> {
     return this.request(`/api/v1/flows/${flowId}/connections`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(connection),
     });
   }
 
   // Jobs
   async listJobs(): Promise<unknown[]> {
-    return this.request('/api/v1/jobs');
+    return this.request("/api/v1/jobs");
   }
 
   async getJob(jobId: string): Promise<unknown> {
@@ -154,51 +157,51 @@ export class RoutluxAPI {
   }
 
   async executeFlow(flowId: string, config?: Record<string, unknown>): Promise<unknown> {
-    return this.request('/api/v1/execute/flow', {
-      method: 'POST',
+    return this.request("/api/v1/execute/flow", {
+      method: "POST",
       body: JSON.stringify({ flow_id: flowId, config }),
     });
   }
 
   async pauseJob(jobId: string): Promise<void> {
     return this.request(`/api/v1/jobs/${jobId}/pause`, {
-      method: 'POST',
+      method: "POST",
     });
   }
 
   async resumeJob(jobId: string): Promise<void> {
     return this.request(`/api/v1/jobs/${jobId}/resume`, {
-      method: 'POST',
+      method: "POST",
     });
   }
 
   async cancelJob(jobId: string): Promise<void> {
     return this.request(`/api/v1/jobs/${jobId}/cancel`, {
-      method: 'POST',
+      method: "POST",
     });
   }
 
   // Workers
   async listWorkers(): Promise<unknown[]> {
-    return this.request('/api/v1/workers');
+    return this.request("/api/v1/workers");
   }
 
   async startWorker(flowId: string, config?: Record<string, unknown>): Promise<unknown> {
-    return this.request('/api/v1/workers', {
-      method: 'POST',
+    return this.request("/api/v1/workers", {
+      method: "POST",
       body: JSON.stringify({ flow_id: flowId, config }),
     });
   }
 
   async stopWorker(workerId: string): Promise<void> {
     return this.request(`/api/v1/workers/${workerId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   // Factory (Discovery)
   async listFactoryObjects(): Promise<unknown[]> {
-    return this.request('/api/v1/factory/objects');
+    return this.request("/api/v1/factory/objects");
   }
 
   async getFactoryObject(name: string): Promise<unknown> {

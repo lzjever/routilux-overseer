@@ -124,7 +124,10 @@ class IndexedDBAPI {
   /**
    * 获取对象仓库
    */
-  private async getStore(storeName: string, mode: IDBTransactionMode = "readonly"): Promise<IDBObjectStore> {
+  private async getStore(
+    storeName: string,
+    mode: IDBTransactionMode = "readonly"
+  ): Promise<IDBObjectStore> {
     const db = await this.init();
 
     // 如果 store 不存在，创建它

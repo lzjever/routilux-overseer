@@ -15,6 +15,7 @@
 ### Task 1.1: 创建 Toast UI 组件
 
 **Files:**
+
 - Create: `components/ui/toast.tsx`
 - Create: `components/ui/sonner.tsx`
 - Create: `components/ui/use-toast.ts`
@@ -106,44 +107,44 @@ export function Toaster() {
 Create file `components/ui/use-toast.ts`:
 
 ```typescript
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 
 export type ToastProps = {
-  id?: string
-  title?: string
-  description?: string
-  action?: React.ReactNode
-}
+  id?: string;
+  title?: string;
+  description?: string;
+  action?: React.ReactNode;
+};
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 1;
+const TOAST_REMOVE_DELAY = 1000000;
 
 type ToasterToast = ToastProps & {
-  id: string
-  title?: string
-  description?: string
-  action?: React.ReactNode
-}
+  id: string;
+  title?: string;
+  description?: string;
+  action?: React.ReactNode;
+};
 
-let count = 0
+let count = 0;
 
 function genId() {
-  count = (count + 1) % Number.MAX_VALUE
-  return count.toString()
+  count = (count + 1) % Number.MAX_VALUE;
+  return count.toString();
 }
 
 type ActionType = {
-  ADD_TOAST: ToasterToast
-  UPDATE_TOAST: Partial<ToasterToast> & { id: string }
-  DISMISS_TOAST: ToasterToast["id"]
-  REMOVE_TOAST: ToasterToast["id"]
-}
+  ADD_TOAST: ToasterToast;
+  UPDATE_TOAST: Partial<ToasterToast> & { id: string };
+  DISMISS_TOAST: ToasterToast["id"];
+  REMOVE_TOAST: ToasterToast["id"];
+};
 
-let memoryState: { toasts: ToasterToast[] } = { toasts: [] }
+let memoryState: { toasts: ToasterToast[] } = { toasts: [] };
 
 const dispatch = (action: ActionType) => {
-  memoryState = reducer(memoryState, action)
-}
+  memoryState = reducer(memoryState, action);
+};
 
 function reducer(state: typeof memoryState, action: ActionType): typeof memoryState {
   switch (action.type) {
@@ -151,7 +152,7 @@ function reducer(state: typeof memoryState, action: ActionType): typeof memorySt
       return {
         ...state,
         toasts: [action.payload, ...state.toasts].slice(0, TOAST_LIMIT),
-      }
+      };
 
     case "UPDATE_TOAST":
       return {
@@ -159,38 +160,38 @@ function reducer(state: typeof memoryState, action: ActionType): typeof memorySt
         toasts: state.toasts.map((t) =>
           t.id === action.payload.id ? { ...t, ...action.payload } : t
         ),
-      }
+      };
 
     case "DISMISS_TOAST": {
-      const { toastId } = action
+      const { toastId } = action;
       return {
         ...state,
         toasts: state.toasts.filter((t) => t.id !== toastId),
-      }
+      };
     }
     case "REMOVE_TOAST":
       if (action.payload.id === memoryState.toasts[0]?.id) {
         return {
           ...state,
           toasts: state.toasts.slice(1),
-        }
+        };
       }
       return {
         ...state,
         toasts: state.toasts.filter((t) => t.id !== action.payload.id),
-      }
+      };
   }
 }
 
 function toast({ ...props }: ToastProps) {
-  const id = genId()
+  const id = genId();
 
   const update = (props: ToasterToast) =>
     dispatch({
       type: "UPDATE_TOAST",
       payload: { id, ...props },
-    })
-  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+    });
+  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id });
 
   dispatch({
     type: "ADD_TOAST",
@@ -199,37 +200,37 @@ function toast({ ...props }: ToastProps) {
       id,
       open: true,
       onOpenChange: (open: boolean) => {
-        if (!open) dismiss()
+        if (!open) dismiss();
       },
     },
-  })
+  });
 
   return {
     id: id,
     dismiss,
     update,
-  }
+  };
 }
 
 function useToast() {
-  const [state, setState] = useState<typeof memoryState>(memoryState)
+  const [state, setState] = useState<typeof memoryState>(memoryState);
 
   useEffect(() => {
     const listener = () => {
-      setState(memoryState)
-    }
-    window.addEventListener("toast-update", listener)
-    return () => window.removeEventListener("toast-update", listener)
-  }, [])
+      setState(memoryState);
+    };
+    window.addEventListener("toast-update", listener);
+    return () => window.removeEventListener("toast-update", listener);
+  }, []);
 
   return {
     toasts: state.toasts,
     toast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
-  }
+  };
 }
 
-export { useToast, toast }
+export { useToast, toast };
 ```
 
 **Step 4: Add Toaster to root layout**
@@ -263,6 +264,7 @@ git commit -m "feat: add toast components with sonner"
 ### Task 1.2: 创建错误类型定义
 
 **Files:**
+
 - Create: `lib/errors/types.ts`
 
 **Step 1: Write error types**
@@ -289,8 +291,8 @@ export class AppError extends Error {
  * 网络错误
  */
 export class NetworkError extends AppError {
-  constructor(message: string = 'Network error occurred') {
-    super(message, 'NETWORK_ERROR', 0);
+  constructor(message: string = "Network error occurred") {
+    super(message, "NETWORK_ERROR", 0);
   }
 }
 
@@ -299,7 +301,7 @@ export class NetworkError extends AppError {
  */
 export class APIError extends AppError {
   constructor(message: string, statusCode: number = 500, details?: unknown) {
-    super(message, 'API_ERROR', statusCode, details);
+    super(message, "API_ERROR", statusCode, details);
   }
 }
 
@@ -307,8 +309,8 @@ export class APIError extends AppError {
  * 连接错误
  */
 export class ConnectionError extends AppError {
-  constructor(message: string = 'Failed to connect to server') {
-    super(message, 'CONNECTION_ERROR', 0);
+  constructor(message: string = "Failed to connect to server") {
+    super(message, "CONNECTION_ERROR", 0);
   }
 }
 
@@ -317,7 +319,7 @@ export class ConnectionError extends AppError {
  */
 export class ValidationError extends AppError {
   constructor(message: string, details?: unknown) {
-    super(message, 'VALIDATION_ERROR', 400, details);
+    super(message, "VALIDATION_ERROR", 400, details);
   }
 }
 
@@ -325,8 +327,8 @@ export class ValidationError extends AppError {
  * 认证错误
  */
 export class AuthenticationError extends AppError {
-  constructor(message: string = 'Authentication failed') {
-    super(message, 'AUTH_ERROR', 401);
+  constructor(message: string = "Authentication failed") {
+    super(message, "AUTH_ERROR", 401);
   }
 }
 ```
@@ -336,61 +338,68 @@ export class AuthenticationError extends AppError {
 Create file `test/unit/errors/types.test.ts`:
 
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { AppError, NetworkError, APIError, ConnectionError, ValidationError, AuthenticationError } from '@/lib/errors/types';
+import { describe, it, expect } from "vitest";
+import {
+  AppError,
+  NetworkError,
+  APIError,
+  ConnectionError,
+  ValidationError,
+  AuthenticationError,
+} from "@/lib/errors/types";
 
-describe('Error Types', () => {
-  describe('AppError', () => {
-    it('should create base error', () => {
-      const error = new AppError('Test error', 'TEST_CODE', 500);
-      expect(error.message).toBe('Test error');
-      expect(error.code).toBe('TEST_CODE');
+describe("Error Types", () => {
+  describe("AppError", () => {
+    it("should create base error", () => {
+      const error = new AppError("Test error", "TEST_CODE", 500);
+      expect(error.message).toBe("Test error");
+      expect(error.code).toBe("TEST_CODE");
       expect(error.statusCode).toBe(500);
-      expect(error.name).toBe('AppError');
+      expect(error.name).toBe("AppError");
     });
   });
 
-  describe('NetworkError', () => {
-    it('should create network error with default message', () => {
+  describe("NetworkError", () => {
+    it("should create network error with default message", () => {
       const error = new NetworkError();
-      expect(error.code).toBe('NETWORK_ERROR');
+      expect(error.code).toBe("NETWORK_ERROR");
       expect(error.statusCode).toBe(0);
-      expect(error.message).toBe('Network error occurred');
+      expect(error.message).toBe("Network error occurred");
     });
 
-    it('should create network error with custom message', () => {
-      const error = new NetworkError('Custom network error');
-      expect(error.message).toBe('Custom network error');
+    it("should create network error with custom message", () => {
+      const error = new NetworkError("Custom network error");
+      expect(error.message).toBe("Custom network error");
     });
   });
 
-  describe('APIError', () => {
-    it('should create API error with status code', () => {
-      const error = new APIError('Not found', 404);
-      expect(error.code).toBe('API_ERROR');
+  describe("APIError", () => {
+    it("should create API error with status code", () => {
+      const error = new APIError("Not found", 404);
+      expect(error.code).toBe("API_ERROR");
       expect(error.statusCode).toBe(404);
     });
   });
 
-  describe('ConnectionError', () => {
-    it('should create connection error', () => {
+  describe("ConnectionError", () => {
+    it("should create connection error", () => {
       const error = new ConnectionError();
-      expect(error.code).toBe('CONNECTION_ERROR');
+      expect(error.code).toBe("CONNECTION_ERROR");
     });
   });
 
-  describe('ValidationError', () => {
-    it('should create validation error', () => {
-      const error = new ValidationError('Invalid input');
-      expect(error.code).toBe('VALIDATION_ERROR');
+  describe("ValidationError", () => {
+    it("should create validation error", () => {
+      const error = new ValidationError("Invalid input");
+      expect(error.code).toBe("VALIDATION_ERROR");
       expect(error.statusCode).toBe(400);
     });
   });
 
-  describe('AuthenticationError', () => {
-    it('should create auth error', () => {
+  describe("AuthenticationError", () => {
+    it("should create auth error", () => {
       const error = new AuthenticationError();
-      expect(error.code).toBe('AUTH_ERROR');
+      expect(error.code).toBe("AUTH_ERROR");
       expect(error.statusCode).toBe(401);
     });
   });
@@ -415,6 +424,7 @@ git commit -m "feat: add error type definitions"
 ### Task 1.3: 创建错误处理器
 
 **Files:**
+
 - Create: `lib/errors/error-handler.ts`
 - Create: `lib/errors/index.ts`
 
@@ -423,8 +433,8 @@ git commit -m "feat: add error type definitions"
 Create file `lib/errors/error-handler.ts`:
 
 ```typescript
-import { toast } from 'sonner';
-import type { AppError } from './types';
+import { toast } from "sonner";
+import type { AppError } from "./types";
 
 /**
  * 错误处理配置
@@ -446,18 +456,19 @@ const defaultConfig: ErrorHandlerConfig = {
 /**
  * 统一错误处理函数
  */
-export function handleError(
-  error: unknown,
-  config: ErrorHandlerConfig | string = {}
-): void {
-  const options: ErrorHandlerConfig = typeof config === 'string'
-    ? { ...defaultConfig, context: config }
-    : { ...defaultConfig, ...config };
+export function handleError(error: unknown, config: ErrorHandlerConfig | string = {}): void {
+  const options: ErrorHandlerConfig =
+    typeof config === "string"
+      ? { ...defaultConfig, context: config }
+      : { ...defaultConfig, ...config };
 
   const appError = parseError(error, options.context);
 
   if (options.logToConsole) {
-    console.error(`[${appError.code}] ${options.context ? options.context + ': ' : ''}${appError.message}`, error);
+    console.error(
+      `[${appError.code}] ${options.context ? options.context + ": " : ""}${appError.message}`,
+      error
+    );
   }
 
   if (options.showToast) {
@@ -470,30 +481,36 @@ export function handleError(
  */
 function parseError(error: unknown, context?: string): AppError {
   // Import dynamically to avoid circular dependency
-  const { AppError: AppErrorClass, NetworkError, APIError, ValidationError, AuthenticationError } = require('./types');
+  const {
+    AppError: AppErrorClass,
+    NetworkError,
+    APIError,
+    ValidationError,
+    AuthenticationError,
+  } = require("./types");
 
   if (error instanceof AppErrorClass) {
     return error;
   }
 
   if (error instanceof Error) {
-    if (error.message.includes('fetch') || error.message.includes('network')) {
+    if (error.message.includes("fetch") || error.message.includes("network")) {
       return new NetworkError(error.message);
     }
-    if (error.message.includes('401') || error.message.includes('unauthorized')) {
+    if (error.message.includes("401") || error.message.includes("unauthorized")) {
       return new AuthenticationError(error.message);
     }
-    if (error.message.includes('400') || error.message.includes('validation')) {
+    if (error.message.includes("400") || error.message.includes("validation")) {
       return new ValidationError(error.message);
     }
     return new APIError(error.message, 500);
   }
 
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return new APIError(error);
   }
 
-  return new APIError('An unknown error occurred');
+  return new APIError("An unknown error occurred");
 }
 
 /**
@@ -512,13 +529,13 @@ function showErrorToast(error: AppError): void {
  */
 function getErrorTitle(code: string): string {
   const titles: Record<string, string> = {
-    NETWORK_ERROR: 'Network Error',
-    API_ERROR: 'API Error',
-    CONNECTION_ERROR: 'Connection Error',
-    VALIDATION_ERROR: 'Validation Error',
-    AUTH_ERROR: 'Authentication Failed',
+    NETWORK_ERROR: "Network Error",
+    API_ERROR: "API Error",
+    CONNECTION_ERROR: "Connection Error",
+    VALIDATION_ERROR: "Validation Error",
+    AUTH_ERROR: "Authentication Failed",
   };
-  return titles[code] || 'Error';
+  return titles[code] || "Error";
 }
 
 /**
@@ -544,8 +561,8 @@ export function withErrorHandling<T extends (...args: any[]) => Promise<any>>(
 Create file `lib/errors/index.ts`:
 
 ```typescript
-export * from './types';
-export * from './error-handler';
+export * from "./types";
+export * from "./error-handler";
 ```
 
 **Step 3: Write test for error handler**
@@ -553,36 +570,39 @@ export * from './error-handler';
 Create file `test/unit/errors/error-handler.test.ts`:
 
 ```typescript
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { handleError, withErrorHandling } from '@/lib/errors/error-handler';
-import { NetworkError, APIError, ValidationError, AuthenticationError } from '@/lib/errors/types';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { handleError, withErrorHandling } from "@/lib/errors/error-handler";
+import { NetworkError, APIError, ValidationError, AuthenticationError } from "@/lib/errors/types";
 
 // Mock sonner toast
-vi.mock('sonner', () => ({
+vi.mock("sonner", () => ({
   toast: {
     error: vi.fn(),
   },
 }));
 
-describe('ErrorHandler', () => {
+describe("ErrorHandler", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('handleError', () => {
-    it('should handle AppError', () => {
-      const error = new NetworkError('Test network error');
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  describe("handleError", () => {
+    it("should handle AppError", () => {
+      const error = new NetworkError("Test network error");
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      handleError(error, 'TestContext');
+      handleError(error, "TestContext");
 
-      expect(consoleSpy).toHaveBeenCalledWith('[NETWORK_ERROR] TestContext: Test network error', error);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[NETWORK_ERROR] TestContext: Test network error",
+        error
+      );
       consoleSpy.mockRestore();
     });
 
-    it('should handle Error instance', () => {
-      const error = new Error('fetch failed');
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    it("should handle Error instance", () => {
+      const error = new Error("fetch failed");
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       handleError(error);
 
@@ -590,36 +610,36 @@ describe('ErrorHandler', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should handle string error', () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    it("should handle string error", () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      handleError('test error');
+      handleError("test error");
 
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
   });
 
-  describe('withErrorHandling', () => {
-    it('should wrap async function and handle errors', async () => {
+  describe("withErrorHandling", () => {
+    it("should wrap async function and handle errors", async () => {
       const fn = async () => {
-        throw new Error('Test error');
+        throw new Error("Test error");
       };
 
       const wrapped = withErrorHandling(fn);
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      await expect(wrapped()).rejects.toThrow('Test error');
+      await expect(wrapped()).rejects.toThrow("Test error");
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
-    it('should return result when no error', async () => {
-      const fn = async () => 'success';
+    it("should return result when no error", async () => {
+      const fn = async () => "success";
       const wrapped = withErrorHandling(fn);
 
       const result = await wrapped();
-      expect(result).toBe('success');
+      expect(result).toBe("success");
     });
   });
 });
@@ -643,6 +663,7 @@ git commit -m "feat: add error handler"
 ### Task 1.4: 创建 APIClient 单例
 
 **Files:**
+
 - Create: `lib/services/api-client.ts`
 
 **Step 1: Write APIClient**
@@ -650,8 +671,8 @@ git commit -m "feat: add error handler"
 Create file `lib/services/api-client.ts`:
 
 ```typescript
-import { OpenAPI } from '../api/generated';
-import { createAPI, type API } from '../api/index';
+import { OpenAPI } from "../api/generated";
+import { createAPI, type API } from "../api/index";
 
 /**
  * API 客户端单例
@@ -686,9 +707,9 @@ class APIClientManager {
       this.baseURL = serverUrl;
       this.apiKey = apiKey || null;
 
-      OpenAPI.BASE = serverUrl.replace(/\/$/, '');
+      OpenAPI.BASE = serverUrl.replace(/\/$/, "");
       if (this.apiKey) {
-        OpenAPI.HEADERS = { 'X-API-Key': this.apiKey };
+        OpenAPI.HEADERS = { "X-API-Key": this.apiKey };
       } else {
         OpenAPI.HEADERS = undefined;
       }
@@ -704,7 +725,7 @@ class APIClientManager {
    */
   getAPI(): API {
     if (!this.api) {
-      throw new Error('APIClient not configured. Call configure() first.');
+      throw new Error("APIClient not configured. Call configure() first.");
     }
     return this.api;
   }
@@ -716,7 +737,7 @@ class APIClientManager {
     this.api = null;
     this.baseURL = null;
     this.apiKey = null;
-    OpenAPI.BASE = '';
+    OpenAPI.BASE = "";
     OpenAPI.HEADERS = undefined;
   }
 
@@ -749,28 +770,28 @@ export function resetAPI(): void {
 Create file `test/unit/services/api-client.test.ts`:
 
 ```typescript
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { configureAPI, resetAPI, apiClient } from '@/lib/services/api-client';
-import { OpenAPI } from '@/lib/api/generated';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { configureAPI, resetAPI, apiClient } from "@/lib/services/api-client";
+import { OpenAPI } from "@/lib/api/generated";
 
 // Mock the OpenAPI services
-vi.mock('@/lib/api/generated', () => ({
+vi.mock("@/lib/api/generated", () => ({
   OpenAPI: {
-    BASE: '',
+    BASE: "",
     HEADERS: undefined,
   },
 }));
 
 // Mock createAPI function
-vi.mock('@/lib/api/index', () => ({
+vi.mock("@/lib/api/index", () => ({
   createAPI: (url: string) => ({
     flows: { list: async () => ({ flows: [] }) },
     jobs: { list: async () => ({ jobs: [] }) },
-    health: { readiness: async () => ({ status: 'ok' }) },
+    health: { readiness: async () => ({ status: "ok" }) },
   }),
 }));
 
-describe('APIClient', () => {
+describe("APIClient", () => {
   beforeEach(() => {
     resetAPI();
   });
@@ -779,79 +800,79 @@ describe('APIClient', () => {
     resetAPI();
   });
 
-  describe('configure', () => {
-    it('should configure API with server URL', () => {
-      const api = configureAPI('http://localhost:8000', 'test-key');
+  describe("configure", () => {
+    it("should configure API with server URL", () => {
+      const api = configureAPI("http://localhost:8000", "test-key");
 
       expect(api).toBeDefined();
-      expect(OpenAPI.BASE).toBe('http://localhost:8000');
+      expect(OpenAPI.BASE).toBe("http://localhost:8000");
     });
 
-    it('should reuse existing API if configuration unchanged', () => {
-      const api1 = configureAPI('http://localhost:8000', 'key1');
-      const api2 = configureAPI('http://localhost:8000', 'key1');
+    it("should reuse existing API if configuration unchanged", () => {
+      const api1 = configureAPI("http://localhost:8000", "key1");
+      const api2 = configureAPI("http://localhost:8000", "key1");
 
       expect(api1).toBe(api2);
     });
 
-    it('should create new API if server URL changes', () => {
-      const api1 = configureAPI('http://localhost:8000', 'key1');
-      const api2 = configureAPI('http://localhost:8001', 'key1');
+    it("should create new API if server URL changes", () => {
+      const api1 = configureAPI("http://localhost:8000", "key1");
+      const api2 = configureAPI("http://localhost:8001", "key1");
 
       expect(api1).not.toBe(api2);
     });
 
-    it('should set API key header', () => {
-      configureAPI('http://localhost:8000', 'secret-key');
+    it("should set API key header", () => {
+      configureAPI("http://localhost:8000", "secret-key");
 
-      expect(OpenAPI.HEADERS).toEqual({ 'X-API-Key': 'secret-key' });
+      expect(OpenAPI.HEADERS).toEqual({ "X-API-Key": "secret-key" });
     });
   });
 
-  describe('getAPI', () => {
-    it('should return API instance after configuration', () => {
-      configureAPI('http://localhost:8000');
+  describe("getAPI", () => {
+    it("should return API instance after configuration", () => {
+      configureAPI("http://localhost:8000");
       const api = apiClient.getAPI();
 
       expect(api).toBeDefined();
     });
 
-    it('should throw error if not configured', () => {
+    it("should throw error if not configured", () => {
       resetAPI();
 
-      expect(() => apiClient.getAPI()).toThrow('APIClient not configured');
+      expect(() => apiClient.getAPI()).toThrow("APIClient not configured");
     });
   });
 
-  describe('reset', () => {
-    it('should clear API instance', () => {
-      configureAPI('http://localhost:8000');
+  describe("reset", () => {
+    it("should clear API instance", () => {
+      configureAPI("http://localhost:8000");
       resetAPI();
 
-      expect(() => apiClient.getAPI()).toThrow('APIClient not configured');
+      expect(() => apiClient.getAPI()).toThrow("APIClient not configured");
     });
 
-    it('should clear OpenAPI configuration', () => {
-      configureAPI('http://localhost:8000', 'key');
+    it("should clear OpenAPI configuration", () => {
+      configureAPI("http://localhost:8000", "key");
       resetAPI();
 
-      expect(OpenAPI.BASE).toBe('');
+      expect(OpenAPI.BASE).toBe("");
       expect(OpenAPI.HEADERS).toBeUndefined();
     });
   });
 
-  describe('getConnectionInfo', () => {
-    it('should return connection info', () => {
-      configureAPI('http://localhost:8000', 'key');
+  describe("getConnectionInfo", () => {
+    it("should return connection info", () => {
+      configureAPI("http://localhost:8000", "key");
       const info = apiClient.getConnectionInfo();
 
       expect(info).toEqual({
-        serverUrl: 'http://localhost:8000',
-        apiKey: 'key',
+        serverUrl: "http://localhost:8000",
+        apiKey: "key",
       });
     });
 
-    it('should return null when not configured', () => {
+    it("should return null when not configured", () => {
       resetAPI();
       const info = apiClient.getConnectionInfo();
 
@@ -882,6 +903,7 @@ git commit -m "feat: add APIClient singleton"
 ### Task 1.5: 创建 QueryService
 
 **Files:**
+
 - Create: `lib/services/query-service.ts`
 - Create: `lib/services/index.ts`
 
@@ -890,8 +912,8 @@ git commit -m "feat: add APIClient singleton"
 Create file `lib/services/query-service.ts`:
 
 ```typescript
-import { getAPI } from './api-client';
-import { handleError } from '../errors/error-handler';
+import { getAPI } from "./api-client";
+import { handleError } from "../errors/error-handler";
 
 /**
  * 请求缓存项
@@ -955,14 +977,14 @@ class QueryService {
 
     // 发起请求
     const promise = fetchFn()
-      .then(data => {
+      .then((data) => {
         // 缓存结果
         if (cache) {
           this.cache.set(key, { data, timestamp: Date.now() });
         }
         return data;
       })
-      .catch(error => {
+      .catch((error) => {
         handleError(error, `Query: ${key}`);
         throw error;
       })
@@ -989,10 +1011,17 @@ class QueryService {
    * Flows 查询
    */
   flows = {
-    list: () => this.query('flows:list', () => getAPI().flows.list().then(r => r.flows || [])),
+    list: () =>
+      this.query("flows:list", () =>
+        getAPI()
+          .flows.list()
+          .then((r) => r.flows || [])
+      ),
     get: (flowId: string) => this.query(`flows:get:${flowId}`, () => getAPI().flows.get(flowId)),
     getMetrics: (flowId: string) =>
-      this.query(`flows:metrics:${flowId}`, () => getAPI().flows.getMetrics(flowId), { cache: false }),
+      this.query(`flows:metrics:${flowId}`, () => getAPI().flows.getMetrics(flowId), {
+        cache: false,
+      }),
   };
 
   /**
@@ -1000,14 +1029,16 @@ class QueryService {
    */
   jobs = {
     list: (filters?: { workerId?: string; flowId?: string; status?: string }) =>
-      this.query(
-        `jobs:list:${JSON.stringify(filters)}`,
-        () => getAPI().jobs.list(filters?.workerId, filters?.flowId, filters?.status, 100)
-          .then(r => r.jobs || [])
+      this.query(`jobs:list:${JSON.stringify(filters)}`, () =>
+        getAPI()
+          .jobs.list(filters?.workerId, filters?.flowId, filters?.status, 100)
+          .then((r) => r.jobs || [])
       ),
     get: (jobId: string) => this.query(`jobs:get:${jobId}`, () => getAPI().jobs.get(jobId)),
     getMonitoringData: (jobId: string) =>
-      this.query(`jobs:monitoring:${jobId}`, () => getAPI().jobs.getMonitoringData(jobId), { cache: false }),
+      this.query(`jobs:monitoring:${jobId}`, () => getAPI().jobs.getMonitoringData(jobId), {
+        cache: false,
+      }),
   };
 
   /**
@@ -1015,28 +1046,51 @@ class QueryService {
    */
   workers = {
     list: (filters?: { flowId?: string; status?: string }) =>
-      this.query(
-        `workers:list:${JSON.stringify(filters)}`,
-        () => getAPI().workers.list(filters?.flowId, filters?.status, 100)
-          .then(r => r.workers || [])
+      this.query(`workers:list:${JSON.stringify(filters)}`, () =>
+        getAPI()
+          .workers.list(filters?.flowId, filters?.status, 100)
+          .then((r) => r.workers || [])
       ),
-    get: (workerId: string) => this.query(`workers:get:${workerId}`, () => getAPI().workers.get(workerId)),
+    get: (workerId: string) =>
+      this.query(`workers:get:${workerId}`, () => getAPI().workers.get(workerId)),
   };
 
   /**
    * Runtimes 查询
    */
   runtimes = {
-    list: () => this.query('runtimes:list', () => getAPI().runtimes.list().then(r => r.runtimes || [])),
-    get: (runtimeId: string) => this.query(`runtimes:get:${runtimeId}`, () => getAPI().runtimes.get(runtimeId)),
+    list: () =>
+      this.query("runtimes:list", () =>
+        getAPI()
+          .runtimes.list()
+          .then((r) => r.runtimes || [])
+      ),
+    get: (runtimeId: string) =>
+      this.query(`runtimes:get:${runtimeId}`, () => getAPI().runtimes.get(runtimeId)),
   };
 
   /**
    * Discovery 查询
    */
   discovery = {
-    syncFlows: () => this.query('discovery:syncFlows', () => getAPI().discovery.syncFlows().then(r => r.flows || []), { cache: false }),
-    syncJobs: () => this.query('discovery:syncJobs', () => getAPI().discovery.syncJobs().then(r => r.jobs || []), { cache: false }),
+    syncFlows: () =>
+      this.query(
+        "discovery:syncFlows",
+        () =>
+          getAPI()
+            .discovery.syncFlows()
+            .then((r) => r.flows || []),
+        { cache: false }
+      ),
+    syncJobs: () =>
+      this.query(
+        "discovery:syncJobs",
+        () =>
+          getAPI()
+            .discovery.syncJobs()
+            .then((r) => r.jobs || []),
+        { cache: false }
+      ),
   };
 }
 
@@ -1049,8 +1103,8 @@ export const queryService = new QueryService();
 Create file `lib/services/index.ts`:
 
 ```typescript
-export * from './api-client';
-export * from './query-service';
+export * from "./api-client";
+export * from "./query-service";
 ```
 
 **Step 3: Write test for QueryService**
@@ -1058,67 +1112,67 @@ export * from './query-service';
 Create file `test/unit/services/query-service.test.ts`:
 
 ```typescript
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { queryService } from '@/lib/services/query-service';
-import { configureAPI, resetAPI } from '@/lib/services/api-client';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { queryService } from "@/lib/services/query-service";
+import { configureAPI, resetAPI } from "@/lib/services/api-client";
 
 // Mock getAPI
-vi.mock('@/lib/services/api-client', () => ({
+vi.mock("@/lib/services/api-client", () => ({
   configureAPI: vi.fn(),
   resetAPI: vi.fn(),
   getAPI: vi.fn(() => ({
     flows: {
-      list: async () => ({ flows: [{ flow_id: '1', name: 'Test' }] }),
-      get: async (id: string) => ({ flow_id: id, name: 'Test' }),
+      list: async () => ({ flows: [{ flow_id: "1", name: "Test" }] }),
+      get: async (id: string) => ({ flow_id: id, name: "Test" }),
     },
   })),
 }));
 
-describe('QueryService', () => {
+describe("QueryService", () => {
   beforeEach(() => {
     queryService.invalidate();
   });
 
-  describe('query', () => {
-    it('should cache results by default', async () => {
-      const fetchFn = vi.fn().mockResolvedValue({ data: 'test' });
+  describe("query", () => {
+    it("should cache results by default", async () => {
+      const fetchFn = vi.fn().mockResolvedValue({ data: "test" });
 
-      await queryService.query('test-key', fetchFn);
-      await queryService.query('test-key', fetchFn);
+      await queryService.query("test-key", fetchFn);
+      await queryService.query("test-key", fetchFn);
 
       // Should only call once due to cache
       expect(fetchFn).toHaveBeenCalledTimes(1);
     });
 
-    it('should not cache when disabled', async () => {
-      const fetchFn = vi.fn().mockResolvedValue({ data: 'test' });
+    it("should not cache when disabled", async () => {
+      const fetchFn = vi.fn().mockResolvedValue({ data: "test" });
 
-      await queryService.query('test-key', fetchFn, { cache: false });
-      await queryService.query('test-key', fetchFn, { cache: false });
+      await queryService.query("test-key", fetchFn, { cache: false });
+      await queryService.query("test-key", fetchFn, { cache: false });
 
       expect(fetchFn).toHaveBeenCalledTimes(2);
     });
 
-    it('should invalidate cache', async () => {
-      const fetchFn = vi.fn().mockResolvedValue({ data: 'test' });
+    it("should invalidate cache", async () => {
+      const fetchFn = vi.fn().mockResolvedValue({ data: "test" });
 
-      await queryService.query('test-key', fetchFn);
-      queryService.invalidate('test-key');
-      await queryService.query('test-key', fetchFn);
+      await queryService.query("test-key", fetchFn);
+      queryService.invalidate("test-key");
+      await queryService.query("test-key", fetchFn);
 
       expect(fetchFn).toHaveBeenCalledTimes(2);
     });
   });
 
-  describe('invalidate', () => {
-    it('should clear all cache when no key provided', async () => {
-      const fetchFn = vi.fn().mockResolvedValue({ data: 'test' });
+  describe("invalidate", () => {
+    it("should clear all cache when no key provided", async () => {
+      const fetchFn = vi.fn().mockResolvedValue({ data: "test" });
 
-      await queryService.query('key1', fetchFn);
-      await queryService.query('key2', fetchFn);
+      await queryService.query("key1", fetchFn);
+      await queryService.query("key2", fetchFn);
       queryService.invalidate();
-      await queryService.query('key1', fetchFn);
-      await queryService.query('key2', fetchFn);
+      await queryService.query("key1", fetchFn);
+      await queryService.query("key2", fetchFn);
 
       expect(fetchFn).toHaveBeenCalledTimes(4);
     });
@@ -1146,6 +1200,7 @@ git commit -m "feat: add QueryService with caching"
 ### Task 2.1: 迁移 flowStore
 
 **Files:**
+
 - Modify: `lib/stores/flowStore.ts`
 
 **Step 1: Update imports and use QueryService**
@@ -1154,7 +1209,15 @@ Modify `lib/stores/flowStore.ts`, update the file to use QueryService:
 
 ```typescript
 import { create } from "zustand";
-import { Edge, Node, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange, MarkerType } from "reactflow";
+import {
+  Edge,
+  Node,
+  applyNodeChanges,
+  applyEdgeChanges,
+  NodeChange,
+  EdgeChange,
+  MarkerType,
+} from "reactflow";
 import type { Slot, Event, FlowResponse, ConnectionInfo } from "@/lib/types/flow";
 import type { RoutineInfo } from "@/lib/types/api";
 import { queryService } from "@/lib/services";
@@ -1168,7 +1231,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
   loadFlows: async () => {
     const { serverUrl } = get();
-    if (!serverUrl) return set({ error: 'Not connected to server' });
+    if (!serverUrl) return set({ error: "Not connected to server" });
 
     set({ loading: true, error: null });
     try {
@@ -1227,37 +1290,39 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 Modify existing `test/unit/stores/flowStore.test.ts` or create it:
 
 ```typescript
-import { describe, it, expect, beforeEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useFlowStore } from '@/lib/stores/flowStore';
-import { configureAPI, resetAPI } from '@/lib/services/api-client';
-import { queryService } from '@/lib/services/query-service';
+import { describe, it, expect, beforeEach } from "vitest";
+import { renderHook, act, waitFor } from "@testing-library/react";
+import { useFlowStore } from "@/lib/stores/flowStore";
+import { configureAPI, resetAPI } from "@/lib/services/api-client";
+import { queryService } from "@/lib/services/query-service";
 
 // Mock queryService
-vi.mock('@/lib/services/query-service', () => ({
+vi.mock("@/lib/services/query-service", () => ({
   queryService: {
     flows: {
-      list: vi.fn(() => Promise.resolve([
-        { flow_id: '1', name: 'Flow 1', routines: {}, connections: [] },
-      ])),
-      get: vi.fn((id: string) => Promise.resolve({
-        flow_id: id,
-        name: `Flow ${id}`,
-        routines: {},
-        connections: [],
-      })),
+      list: vi.fn(() =>
+        Promise.resolve([{ flow_id: "1", name: "Flow 1", routines: {}, connections: [] }])
+      ),
+      get: vi.fn((id: string) =>
+        Promise.resolve({
+          flow_id: id,
+          name: `Flow ${id}`,
+          routines: {},
+          connections: [],
+        })
+      ),
     },
   },
 }));
 
-describe('useFlowStore', () => {
+describe("useFlowStore", () => {
   beforeEach(() => {
     resetAPI();
-    configureAPI('http://localhost:8000');
+    configureAPI("http://localhost:8000");
   });
 
-  describe('loadFlows', () => {
-    it('should load flows successfully', async () => {
+  describe("loadFlows", () => {
+    it("should load flows successfully", async () => {
       const { result } = renderHook(() => useFlowStore());
 
       await act(async () => {
@@ -1290,6 +1355,7 @@ git commit -m "refactor: migrate flowStore to use QueryService"
 ### Task 2.2: 迁移 jobStore
 
 **Files:**
+
 - Modify: `lib/stores/jobStore.ts`
 
 **Step 1: Update jobStore to use QueryService**
@@ -1302,7 +1368,11 @@ import type { JobResponse, JobSubmitRequest } from "@/lib/api/generated";
 import type { JobMonitoringData, ExecutionMetricsResponse } from "@/lib/api/generated";
 import { queryService } from "@/lib/services";
 import { handleError } from "@/lib/errors";
-import { getWebSocketManager, disposeWebSocketManager, WebSocketMessage } from "@/lib/websocket/websocket-manager";
+import {
+  getWebSocketManager,
+  disposeWebSocketManager,
+  WebSocketMessage,
+} from "@/lib/websocket/websocket-manager";
 
 export const useJobStore = create<JobState>((set, get) => ({
   // ... initial state
@@ -1365,6 +1435,7 @@ git commit -m "refactor: migrate jobStore to use QueryService"
 ### Task 2.3: 迁移 workersStore
 
 **Files:**
+
 - Modify: `lib/stores/workersStore.ts`
 
 **Step 1-4:** Similar to flowStore migration, replace `createAPI` with `queryService`.
@@ -1389,6 +1460,7 @@ Migrate remaining stores in order: runtimeStore, breakpointStore.
 ### Task 3.1: 优化 WebSocketManager
 
 **Files:**
+
 - Modify: `lib/websocket/websocket-manager.ts`
 
 **Step 1: Add heartbeat and reconnection config**
@@ -1411,12 +1483,13 @@ git commit -m "feat: enhance WebSocket with heartbeat and exponential backoff"
 ### Task 3.2: 创建 websocket-store
 
 **Files:**
+
 - Create: `lib/stores/websocket-store.ts`
 
 **Step 1: Create WebSocket state store**
 
 ```typescript
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface WebSocketState {
   connected: boolean;
@@ -1438,8 +1511,7 @@ export const useWebSocketStore = create<WebSocketState>((set) => ({
   setReconnectState: (attempts, isReconnecting) =>
     set({ reconnectAttempts: attempts, isReconnecting }),
 
-  reset: () =>
-    set({ connected: false, reconnectAttempts: 0, isReconnecting: false }),
+  reset: () => set({ connected: false, reconnectAttempts: 0, isReconnecting: false }),
 }));
 ```
 
@@ -1455,6 +1527,7 @@ git commit -m "feat: add WebSocket state store"
 ### Task 3.3: 添加离线检测
 
 **Files:**
+
 - Modify: `app/layout.tsx`
 
 **Step 1: Add network detection initialization**
@@ -1473,6 +1546,7 @@ git commit -m "feat: add network online/offline detection for WebSocket"
 ### Task 4.1: 添加 Switch UI 组件
 
 **Files:**
+
 - Create: `components/ui/switch.tsx`
 
 **Step 1: Create switch component (shadcn/ui)**
@@ -1489,6 +1563,7 @@ git commit -m "feat: add Switch UI component"
 ### Task 4.2: 创建插件组件
 
 **Files:**
+
 - Create: `components/plugins/plugin-card.tsx`
 - Create: `components/plugins/plugin-header.tsx`
 - Create: `components/plugins/plugin-filters.tsx`
@@ -1508,6 +1583,7 @@ git commit -m "feat: add plugin management components"
 ### Task 4.3: 创建插件页面
 
 **Files:**
+
 - Create: `app/plugins/page.tsx`
 - Create: `app/plugins/layout.tsx`
 - Create: `app/plugins/[pluginId]/page.tsx`
@@ -1526,6 +1602,7 @@ git commit -m "feat: add plugin management pages"
 ### Task 4.4: 更新导航
 
 **Files:**
+
 - Modify: `components/layout/navbar.tsx`
 
 **Step 1: Add plugins link to navigation**
@@ -1544,6 +1621,7 @@ git commit -m "feat: add plugins link to navigation"
 ### Task 5.1: 设置 MSW Mock 服务器
 
 **Files:**
+
 - Create: `test/mocks/server.ts`
 
 **Step 1: Create MSW handlers**
@@ -1562,6 +1640,7 @@ git commit -m "test: add MSW mock server"
 ### Task 5.2: 添加集成测试
 
 **Files:**
+
 - Create: `test/integration/api/flows-api.test.ts`
 - Create: `test/integration/plugins/plugin-manager.test.ts`
 
@@ -1579,6 +1658,7 @@ git commit -m "test: add integration tests"
 ### Task 5.3: 添加 E2E 测试
 
 **Files:**
+
 - Create: `test/e2e/flows.spec.ts`
 - Create: `test/e2e/jobs.spec.ts`
 - Create: `test/e2e/plugins.spec.ts`
@@ -1597,6 +1677,7 @@ git commit -m "test: add E2E tests"
 ### Task 5.4: 更新覆盖率配置
 
 **Files:**
+
 - Modify: `vitest.config.ts`
 
 **Step 1: Add coverage thresholds**
@@ -1630,6 +1711,7 @@ git commit -m "test: configure coverage thresholds"
 ### Task 6.1: 清理未使用的代码
 
 **Files:**
+
 - Multiple files to clean up
 
 **Step 1: Run linter and fix issues**
@@ -1652,6 +1734,7 @@ git commit -m "chore: cleanup unused code and imports"
 ### Task 6.2: 更新文档
 
 **Files:**
+
 - Modify: `README.md`
 - Create: `CHANGELOG.md`
 

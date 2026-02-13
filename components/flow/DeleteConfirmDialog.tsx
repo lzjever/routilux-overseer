@@ -104,10 +104,10 @@ export function DeleteConfirmDialog({
 
       // Success - close dialog and notify parent
       onOpenChange(false);
-      
+
       // Show success toast
-      const routineCount = items.filter(i => i.type === "routine").length;
-      const connectionCount = items.filter(i => i.type === "connection").length;
+      const routineCount = items.filter((i) => i.type === "routine").length;
+      const connectionCount = items.filter((i) => i.type === "connection").length;
       if (routineCount > 0 && connectionCount > 0) {
         toast.success("Items deleted successfully", {
           description: `Deleted ${routineCount} routine(s) and ${connectionCount} connection(s)`,
@@ -121,7 +121,7 @@ export function DeleteConfirmDialog({
           description: `Deleted ${connectionCount} connection(s)`,
         });
       }
-      
+
       onSuccess();
     } catch (error) {
       const err = error instanceof Error ? error : new Error("Delete failed");
@@ -170,8 +170,8 @@ export function DeleteConfirmDialog({
                     <ul className="space-y-1 text-muted-foreground font-mono text-xs">
                       {affectedConnections.slice(0, 5).map((conn, i) => (
                         <li key={i}>
-                          • {conn.sourceRoutine}.{conn.sourceEvent} →{" "}
-                          {conn.targetRoutine}.{conn.targetSlot}
+                          • {conn.sourceRoutine}.{conn.sourceEvent} → {conn.targetRoutine}.
+                          {conn.targetSlot}
                         </li>
                       ))}
                       {affectedConnections.length > 5 && (
@@ -182,9 +182,7 @@ export function DeleteConfirmDialog({
                     </ul>
                   </div>
                 )}
-                <p className="text-sm text-muted-foreground">
-                  This action cannot be undone.
-                </p>
+                <p className="text-sm text-muted-foreground">This action cannot be undone.</p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -206,12 +204,9 @@ export function DeleteConfirmDialog({
               <div className="space-y-3">
                 <p>Are you sure you want to delete this connection?</p>
                 <div className="rounded-md bg-muted p-3 font-mono text-sm">
-                  {conn.sourceRoutine}.{conn.sourceEvent} →{" "}
-                  {conn.targetRoutine}.{conn.targetSlot}
+                  {conn.sourceRoutine}.{conn.sourceEvent} → {conn.targetRoutine}.{conn.targetSlot}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  This action cannot be undone.
-                </p>
+                <p className="text-sm text-muted-foreground">This action cannot be undone.</p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -241,9 +236,7 @@ export function DeleteConfirmDialog({
                     {routineItems.slice(0, 5).map((item) => (
                       <li key={item.id}>• {item.routineId}</li>
                     ))}
-                    {routineItems.length > 5 && (
-                      <li>... and {routineItems.length - 5} more</li>
-                    )}
+                    {routineItems.length > 5 && <li>... and {routineItems.length - 5} more</li>}
                   </ul>
                 </div>
               )}
@@ -257,8 +250,8 @@ export function DeleteConfirmDialog({
                   <ul className="space-y-1 text-xs font-mono text-muted-foreground">
                     {connectionItems.slice(0, 5).map((item) => (
                       <li key={item.id}>
-                        • {item.sourceRoutine}.{item.sourceEvent} →{" "}
-                        {item.targetRoutine}.{item.targetSlot}
+                        • {item.sourceRoutine}.{item.sourceEvent} → {item.targetRoutine}.
+                        {item.targetSlot}
                       </li>
                     ))}
                     {connectionItems.length > 5 && (
@@ -270,14 +263,11 @@ export function DeleteConfirmDialog({
 
               {hasRoutines && (
                 <div className="text-sm text-amber-600 dark:text-amber-500">
-                  Note: Deleting routines will also remove their associated
-                  connections.
+                  Note: Deleting routines will also remove their associated connections.
                 </div>
               )}
 
-              <p className="text-sm text-muted-foreground">
-                This action cannot be undone.
-              </p>
+              <p className="text-sm text-muted-foreground">This action cannot be undone.</p>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -321,13 +311,16 @@ export function DeleteConfirmDialog({
  */
 export function getAffectedConnections(
   routineIds: string[],
-  connections: { source_routine: string; source_event: string; target_routine: string; target_slot: string }[]
+  connections: {
+    source_routine: string;
+    source_event: string;
+    target_routine: string;
+    target_slot: string;
+  }[]
 ): ConnectionInfo[] {
   return connections
     .filter(
-      (conn) =>
-        routineIds.includes(conn.source_routine) ||
-        routineIds.includes(conn.target_routine)
+      (conn) => routineIds.includes(conn.source_routine) || routineIds.includes(conn.target_routine)
     )
     .map((conn) => ({
       sourceRoutine: conn.source_routine,

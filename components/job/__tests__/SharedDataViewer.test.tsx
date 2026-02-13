@@ -44,9 +44,7 @@ describe("SharedDataViewer", () => {
     render(<SharedDataViewer sharedData={sharedData} />);
 
     expect(
-      screenByText(
-        "Execution-wide data storage accessible by all routines"
-      )
+      screenByText("Execution-wide data storage accessible by all routines")
     ).toBeInTheDocument();
   });
 });

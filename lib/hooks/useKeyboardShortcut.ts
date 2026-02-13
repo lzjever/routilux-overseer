@@ -42,7 +42,7 @@ export function useKeyboardShortcut(shortcut: KeyboardShortcut) {
       const altMatch = shortcut.alt ? e.altKey : !e.altKey;
 
       // Check if we're in an input/textarea/contenteditable
-      const isInput = 
+      const isInput =
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement ||
         (e.target instanceof HTMLElement && e.target.isContentEditable);
@@ -87,7 +87,7 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcut[]) {
         const shiftMatch = shortcut.shift ? e.shiftKey : !e.shiftKey;
         const altMatch = shortcut.alt ? e.altKey : !e.altKey;
 
-        const isInput = 
+        const isInput =
           e.target instanceof HTMLInputElement ||
           e.target instanceof HTMLTextAreaElement ||
           (e.target instanceof HTMLElement && e.target.isContentEditable);

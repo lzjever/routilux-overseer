@@ -147,7 +147,9 @@ export function FlowMetadata({ flow, flowId, serverUrl }: FlowMetadataProps) {
                 )}
               </div>
             ) : (
-              <div className="text-sm text-muted-foreground">Click validate to check flow structure</div>
+              <div className="text-sm text-muted-foreground">
+                Click validate to check flow structure
+              </div>
             )}
           </div>
         )}
@@ -188,7 +190,7 @@ export function FlowMetadata({ flow, flowId, serverUrl }: FlowMetadataProps) {
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold">
-              {flow.connections.filter(c => c.source_routine !== c.target_routine).length}
+              {flow.connections.filter((c) => c.source_routine !== c.target_routine).length}
             </p>
             <p className="text-xs text-muted-foreground">Cross-Connections</p>
           </div>

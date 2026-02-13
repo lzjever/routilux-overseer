@@ -2,78 +2,122 @@
  * Workers Page Object
  *
  * Represents the worker management page.
+ * Uses testid naming convention from TESTID_CONTRACT.md
  */
 
-import { Page, Locator } from '@playwright/test';
-import { BasePage } from './base.page';
+import { Page, Locator } from "@playwright/test";
+import { BasePage } from "./base.page";
 
 export class WorkersPage extends BasePage {
-  readonly url = '/workers';
+  readonly url = "/workers";
 
-  // Locators
-  private readonly workerList = this.page.locator('[data-testid="worker-list"]');
-  private readonly workerItems = this.page.locator('[data-testid^="worker-"]');
+  // Locators - using testid convention from TESTID_CONTRACT.md
+  private readonly pageContainer = this.page.locator('[data-testid="workers-page"]');
+  private readonly workerCards = this.page.locator('[data-testid^="workers-card-"]');
+  private readonly refreshButton = this.page.locator('[data-testid="workers-button-refresh"]');
+  private readonly syncButton = this.page.locator('[data-testid="workers-button-sync"]');
+  private readonly emptyState = this.page.locator('[data-testid="workers-empty-state"]');
+  private readonly loadingState = this.page.locator('[data-testid="workers-loading"]');
+  private readonly notConnectedState = this.page.locator('[data-testid="workers-not-connected"]');
 
   /**
    * Navigate to the workers page.
    */
   async open(): Promise<void> {
     await this.goto(this.url);
-    await this.waitForLoading();
+    await this.page.waitForLoadState("networkidle");
   }
 
   /**
    * Get the number of workers displayed.
    */
   async getWorkerCount(): Promise<number> {
-    return await this.workerItems.count();
-  }
-
-  /**
-   * Start a worker for a flow.
-   */
-  async startWorker(flowId: string): Promise<void> {
-    await this.clickByTestId(`start-worker-${flowId}`);
-    await this.waitForLoading();
+    await this.page.waitForLoadState("networkidle");
+    return await this.workerCards.count();
   }
 
   /**
    * Stop a worker.
    */
   async stopWorker(workerId: string): Promise<void> {
-    await this.clickByTestId(`stop-worker-${workerId}`);
-    await this.waitForLoading();
+    await this.page.locator(`[data-testid="workers-button-stop-${workerId}"]`).click();
+    await this.page.waitForLoadState("networkidle");
   }
 
   /**
    * Pause a worker.
    */
   async pauseWorker(workerId: string): Promise<void> {
-    await this.clickByTestId(`pause-worker-${workerId}`);
-    await this.waitForLoading();
+    await this.page.locator(`[data-testid="workers-button-pause-${workerId}"]`).click();
+    await this.page.waitForLoadState("networkidle");
   }
 
   /**
    * Resume a worker.
    */
   async resumeWorker(workerId: string): Promise<void> {
-    await this.clickByTestId(`resume-worker-${workerId}`);
-    await this.waitForLoading();
+    await this.page.locator(`[data-testid="workers-button-resume-${workerId}"]`).click();
+    await this.page.waitForLoadState("networkidle");
   }
 
   /**
-   * Get a worker item locator by index.
+   * Refresh the workers list.
    */
-  getWorkerItem(index: number): Locator {
-    return this.workerItems.nth(index);
+  async refresh(): Promise<void> {
+    await this.refreshButton.click();
+    await this.page.waitForLoadState("networkidle");
   }
 
   /**
-   * Get worker status by index.
+   * Sync workers.
    */
-  async getWorkerStatus(index: number): Promise<string> {
-    const item = this.getWorkerItem(index);
-    const statusLocator = item.locator('[data-testid="worker-status"]');
-    return await statusLocator.textContent() || '';
+  async sync(): Promise<void> {
+    await this.syncButton.click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
+  /**
+   * Check if the empty state is shown.
+   */
+  async isEmpty(): Promise<boolean> {
+    return await this.emptyState.isVisible().catch(() => false);
+  }
+
+  /**
+   * Check if the not connected state is shown.
+   */
+  async isNotConnected(): Promise<boolean> {
+    return await this.notConnectedState.isVisible().catch(() => false);
+  }
+
+  /**
+   * Check if loading.
+   */
+  async isLoading(): Promise<boolean> {
+    return await this.loadingState.isVisible().catch(() => false);
+  }
+
+  /**
+   * Get a worker card locator by index.
+   */
+  getWorkerCard(index: number): Locator {
+    return this.workerCards.nth(index);
+  }
+
+  /**
+   * Get a worker card locator by ID.
+   */
+  getWorkerCardById(workerId: string): Locator {
+    return this.page.locator(`[data-testid="workers-card-${workerId}"]`);
+  }
+
+  /**
+   * Wait for workers to load.
+   */
+  async waitForWorkers(): Promise<void> {
+    await this.page.waitForSelector(
+      '[data-testid^="workers-card-"], [data-testid="workers-empty-state"], [data-testid="workers-not-connected"]',
+      { timeout: 10000 }
+    );
   }
 }

@@ -29,7 +29,8 @@ import { ApiClientError, normalizeApiError } from "@/lib/api/error";
 function readApiKeyFromStorage(): string | undefined {
   if (typeof window === "undefined") return undefined;
   try {
-    const raw = window.localStorage.getItem("overseer-connection-storage");
+    // Use sessionStorage for security (cleared when tab closes)
+    const raw = window.sessionStorage.getItem("overseer-connection-storage");
     if (!raw) return undefined;
     const parsed = JSON.parse(raw) as { state?: { apiKey?: string | null } };
     const key = parsed?.state?.apiKey;
@@ -104,7 +105,10 @@ export function createAPI(baseURL: string, apiKey?: string) {
         return await FlowsService.validateFlowApiV1FlowsFlowIdValidatePost(flowId);
       },
       getRoutineInfo: async (flowId: string, routineId: string) => {
-        return await FlowsService.getRoutineInfoApiV1FlowsFlowIdRoutinesRoutineIdInfoGet(flowId, routineId);
+        return await FlowsService.getRoutineInfoApiV1FlowsFlowIdRoutinesRoutineIdInfoGet(
+          flowId,
+          routineId
+        );
       },
       getRoutines: async (flowId: string) => {
         return await FlowsService.listFlowRoutinesApiV1FlowsFlowIdRoutinesGet(flowId);
@@ -116,21 +120,42 @@ export function createAPI(baseURL: string, apiKey?: string) {
         return await FlowsService.addRoutineToFlowApiV1FlowsFlowIdRoutinesPost(flowId, request);
       },
       removeRoutine: async (flowId: string, routineId: string) => {
-        await FlowsService.removeRoutineFromFlowApiV1FlowsFlowIdRoutinesRoutineIdDelete(flowId, routineId);
+        await FlowsService.removeRoutineFromFlowApiV1FlowsFlowIdRoutinesRoutineIdDelete(
+          flowId,
+          routineId
+        );
       },
       addConnection: async (flowId: string, request: AddConnectionRequest) => {
-        return await FlowsService.addConnectionToFlowApiV1FlowsFlowIdConnectionsPost(flowId, request);
+        return await FlowsService.addConnectionToFlowApiV1FlowsFlowIdConnectionsPost(
+          flowId,
+          request
+        );
       },
       removeConnection: async (flowId: string, connectionIndex: number) => {
-        await FlowsService.removeConnectionFromFlowApiV1FlowsFlowIdConnectionsConnectionIndexDelete(flowId, connectionIndex);
+        await FlowsService.removeConnectionFromFlowApiV1FlowsFlowIdConnectionsConnectionIndexDelete(
+          flowId,
+          connectionIndex
+        );
       },
     },
 
     // Jobs API
     jobs: {
       // Core operations
-      list: async (workerId?: string | null, flowId?: string | null, status?: string | null, limit: number = 100, offset?: number) => {
-        return await JobsService.listJobsApiV1JobsGet(workerId || null, flowId || null, status || null, limit, offset);
+      list: async (
+        workerId?: string | null,
+        flowId?: string | null,
+        status?: string | null,
+        limit: number = 100,
+        offset?: number
+      ) => {
+        return await JobsService.listJobsApiV1JobsGet(
+          workerId || null,
+          flowId || null,
+          status || null,
+          limit,
+          offset
+        );
       },
       get: async (jobId: string) => {
         return await JobsService.getJobApiV1JobsJobIdGet(jobId);
@@ -156,13 +181,16 @@ export function createAPI(baseURL: string, apiKey?: string) {
       getTrace: async (jobId: string) => {
         return await JobsService.getJobTraceApiV1JobsJobIdTraceGet(jobId);
       },
-      
+
       // Monitoring functions (migrated from MonitorService)
       getMetrics: async (jobId: string) => {
         return await JobsService.getJobMetricsApiV1JobsJobIdMetricsGet(jobId);
       },
       getExecutionTrace: async (jobId: string, limit?: number) => {
-        return await JobsService.getJobExecutionTraceApiV1JobsJobIdExecutionTraceGet(jobId, limit || null);
+        return await JobsService.getJobExecutionTraceApiV1JobsJobIdExecutionTraceGet(
+          jobId,
+          limit || null
+        );
       },
       getLogs: async (jobId: string) => {
         return await JobsService.getJobLogsApiV1JobsJobIdLogsGet(jobId);
@@ -177,7 +205,10 @@ export function createAPI(baseURL: string, apiKey?: string) {
         return await JobsService.getRoutinesStatusApiV1JobsJobIdRoutinesStatusGet(jobId);
       },
       getRoutineQueueStatus: async (jobId: string, routineId: string) => {
-        return await JobsService.getRoutineQueueStatusApiV1JobsJobIdRoutinesRoutineIdQueueStatusGet(jobId, routineId);
+        return await JobsService.getRoutineQueueStatusApiV1JobsJobIdRoutinesRoutineIdQueueStatusGet(
+          jobId,
+          routineId
+        );
       },
       getQueuesStatus: async (jobId: string) => {
         return await JobsService.getJobQueuesStatusApiV1JobsJobIdQueuesStatusGet(jobId);
@@ -190,8 +221,18 @@ export function createAPI(baseURL: string, apiKey?: string) {
       create: async (request: WorkerCreateRequest) => {
         return await WorkersService.createWorkerApiV1WorkersPost(request);
       },
-      list: async (flowId?: string | null, status?: string | null, limit: number = 100, offset?: number) => {
-        return await WorkersService.listWorkersApiV1WorkersGet(flowId || null, status || null, limit, offset);
+      list: async (
+        flowId?: string | null,
+        status?: string | null,
+        limit: number = 100,
+        offset?: number
+      ) => {
+        return await WorkersService.listWorkersApiV1WorkersGet(
+          flowId || null,
+          status || null,
+          limit,
+          offset
+        );
       },
       get: async (workerId: string) => {
         return await WorkersService.getWorkerApiV1WorkersWorkerIdGet(workerId);
@@ -205,23 +246,49 @@ export function createAPI(baseURL: string, apiKey?: string) {
       resume: async (workerId: string) => {
         return await WorkersService.resumeWorkerApiV1WorkersWorkerIdResumePost(workerId);
       },
-      listJobs: async (workerId: string, status?: string | null, limit: number = 100, offset?: number) => {
-        return await WorkersService.listWorkerJobsApiV1WorkersWorkerIdJobsGet(workerId, status || null, limit, offset);
+      listJobs: async (
+        workerId: string,
+        status?: string | null,
+        limit: number = 100,
+        offset?: number
+      ) => {
+        return await WorkersService.listWorkerJobsApiV1WorkersWorkerIdJobsGet(
+          workerId,
+          status || null,
+          limit,
+          offset
+        );
       },
-      
+
       // Enhanced features
       getStatistics: async (workerId: string) => {
         return await WorkersService.getWorkerStatisticsApiV1WorkersWorkerIdStatisticsGet(workerId);
       },
-      getHistory: async (workerId: string, routineId?: string, limit: number = 100, offset?: number) => {
-        return await WorkersService.getWorkerHistoryApiV1WorkersWorkerIdHistoryGet(workerId, routineId || null, limit, offset);
+      getHistory: async (
+        workerId: string,
+        routineId?: string,
+        limit: number = 100,
+        offset?: number
+      ) => {
+        return await WorkersService.getWorkerHistoryApiV1WorkersWorkerIdHistoryGet(
+          workerId,
+          routineId || null,
+          limit,
+          offset
+        );
       },
       getRoutineStates: async (workerId: string) => {
-        return await WorkersService.getWorkerRoutineStatesApiV1WorkersWorkerIdRoutinesStatesGet(workerId);
+        return await WorkersService.getWorkerRoutineStatesApiV1WorkersWorkerIdRoutinesStatesGet(
+          workerId
+        );
       },
       updateBreakpoint: async (workerId: string, breakpointId: string, enabled: boolean) => {
         const request: BreakpointUpdateRequest = { enabled };
-        return await WorkersService.updateBreakpointEnabledApiV1WorkersWorkerIdBreakpointsBreakpointIdPut(workerId, breakpointId, request);
+        return await WorkersService.updateBreakpointEnabledApiV1WorkersWorkerIdBreakpointsBreakpointIdPut(
+          workerId,
+          breakpointId,
+          request
+        );
       },
     },
 
@@ -232,17 +299,22 @@ export function createAPI(baseURL: string, apiKey?: string) {
       },
     },
 
-
     // Breakpoints API
     breakpoints: {
       list: async (jobId: string) => {
         return await BreakpointsService.listBreakpointsApiV1JobsJobIdBreakpointsGet(jobId);
       },
       create: async (jobId: string, request: BreakpointCreateRequest) => {
-        return await BreakpointsService.createBreakpointApiV1JobsJobIdBreakpointsPost(jobId, request);
+        return await BreakpointsService.createBreakpointApiV1JobsJobIdBreakpointsPost(
+          jobId,
+          request
+        );
       },
       delete: async (jobId: string, breakpointId: string) => {
-        await BreakpointsService.deleteBreakpointApiV1JobsJobIdBreakpointsBreakpointIdDelete(jobId, breakpointId);
+        await BreakpointsService.deleteBreakpointApiV1JobsJobIdBreakpointsBreakpointIdDelete(
+          jobId,
+          breakpointId
+        );
       },
       // Note: update (enable/disable) is now in workers.updateBreakpoint
     },
@@ -278,7 +350,9 @@ export function createAPI(baseURL: string, apiKey?: string) {
         return await FactoryService.getFactoryObjectMetadataApiV1FactoryObjectsNameGet(name);
       },
       getObjectInterface: async (name: string) => {
-        return await FactoryService.getFactoryObjectInterfaceApiV1FactoryObjectsNameInterfaceGet(name);
+        return await FactoryService.getFactoryObjectInterfaceApiV1FactoryObjectsNameInterfaceGet(
+          name
+        );
       },
     },
 
@@ -290,7 +364,11 @@ export function createAPI(baseURL: string, apiKey?: string) {
       get: async (runtimeId: string) => {
         return await RuntimesService.getRuntimeApiV1RuntimesRuntimeIdGet(runtimeId);
       },
-      create: async (request: { runtime_id: string; thread_pool_size?: number; is_default?: boolean }) => {
+      create: async (request: {
+        runtime_id: string;
+        thread_pool_size?: number;
+        is_default?: boolean;
+      }) => {
         return await RuntimesService.createRuntimeApiV1RuntimesPost(request);
       },
     },

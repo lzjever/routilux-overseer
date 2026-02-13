@@ -12,6 +12,7 @@ interface FlowSearchBarProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  testId?: string;
 }
 
 export function FlowSearchBar({
@@ -19,6 +20,7 @@ export function FlowSearchBar({
   onChange,
   placeholder = "Search flows...",
   className,
+  testId,
 }: FlowSearchBarProps) {
   const debouncedOnChange = useMemo(() => debounce(onChange, 200), [onChange]);
   const [localValue, setLocalValue] = useState(value);
@@ -33,7 +35,7 @@ export function FlowSearchBar({
   };
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative", className)} data-testid={testId}>
       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <Input
         type="text"
@@ -41,6 +43,7 @@ export function FlowSearchBar({
         onChange={(e) => handleChange(e.target.value)}
         placeholder={placeholder}
         className="pl-9 pr-9"
+        data-testid={testId ? `${testId}-input` : undefined}
       />
       {localValue && (
         <Button
@@ -51,6 +54,7 @@ export function FlowSearchBar({
             setLocalValue("");
             onChange("");
           }}
+          data-testid={testId ? `${testId}-clear` : undefined}
         >
           <X className="h-3 w-3" />
         </Button>

@@ -7,7 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useJobStore } from "@/lib/stores/jobStore";
 import { useFlowStore } from "@/lib/stores/flowStore";
-import type { JobMonitoringData, ExecutionMetricsResponse, SlotQueueStatus, RoutineMonitoringData } from "@/lib/api/generated";
+import type {
+  JobMonitoringData,
+  ExecutionMetricsResponse,
+  SlotQueueStatus,
+  RoutineMonitoringData,
+} from "@/lib/api/generated";
 import { Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -69,21 +74,29 @@ export function JobDetailsSidebar({
   }
 
   const selectedRoutine = selectedNodeId ? monitoring.routines[selectedNodeId] : null;
-  const selectedEdge = selectedEdgeId ? edges.find(e => e.id === selectedEdgeId) : null;
+  const selectedEdge = selectedEdgeId ? edges.find((e) => e.id === selectedEdgeId) : null;
 
   return (
     <div className="w-80 border-l bg-background flex flex-col h-full">
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col h-full">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as any)}
+        className="flex-1 flex flex-col h-full"
+      >
         <div className="border-b px-4 pt-3">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+            <TabsTrigger value="overview" className="text-xs">
+              Overview
+            </TabsTrigger>
             <TabsTrigger value="node" className="text-xs" disabled={!selectedNodeId}>
               Node
             </TabsTrigger>
             <TabsTrigger value="edge" className="text-xs" disabled={!selectedEdgeId}>
               Edge
             </TabsTrigger>
-            <TabsTrigger value="metrics" className="text-xs">Metrics</TabsTrigger>
+            <TabsTrigger value="metrics" className="text-xs">
+              Metrics
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -185,22 +198,32 @@ export function JobDetailsSidebar({
                 <>
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">Routine: {selectedRoutine.routine_id}</CardTitle>
+                      <CardTitle className="text-sm">
+                        Routine: {selectedRoutine.routine_id}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Type:</span>
-                        <span className="font-mono text-xs">{selectedRoutine.info.routine_type}</span>
+                        <span className="font-mono text-xs">
+                          {selectedRoutine.info.routine_type}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Status:</span>
-                        <Badge variant={selectedRoutine.execution_status.is_active ? "default" : "secondary"}>
+                        <Badge
+                          variant={
+                            selectedRoutine.execution_status.is_active ? "default" : "secondary"
+                          }
+                        >
                           {selectedRoutine.execution_status.status}
                         </Badge>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Execution Count:</span>
-                        <span className="font-semibold">{selectedRoutine.execution_status.execution_count || 0}</span>
+                        <span className="font-semibold">
+                          {selectedRoutine.execution_status.execution_count || 0}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Error Count:</span>
@@ -210,15 +233,20 @@ export function JobDetailsSidebar({
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Active Threads:</span>
-                        <span className="font-semibold">{selectedRoutine.execution_status.active_thread_count || 0}</span>
+                        <span className="font-semibold">
+                          {selectedRoutine.execution_status.active_thread_count || 0}
+                        </span>
                       </div>
                       {selectedRoutine.execution_status.last_execution_time && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Last Execution:</span>
                           <span className="text-xs">
-                            {formatDistanceToNow(new Date(selectedRoutine.execution_status.last_execution_time), {
-                              addSuffix: true,
-                            })}
+                            {formatDistanceToNow(
+                              new Date(selectedRoutine.execution_status.last_execution_time),
+                              {
+                                addSuffix: true,
+                              }
+                            )}
                           </span>
                         </div>
                       )}
@@ -241,8 +269,8 @@ export function JobDetailsSidebar({
                                   queue.pressure_level === "critical"
                                     ? "destructive"
                                     : queue.pressure_level === "high"
-                                    ? "default"
-                                    : "secondary"
+                                      ? "default"
+                                      : "secondary"
                                 }
                                 className="text-xs"
                               >
@@ -256,7 +284,9 @@ export function JobDetailsSidebar({
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Unconsumed:</span>
-                                <span>{queue.unconsumed_count}/{queue.total_count}</span>
+                                <span>
+                                  {queue.unconsumed_count}/{queue.total_count}
+                                </span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Max Length:</span>
@@ -331,11 +361,15 @@ export function JobDetailsSidebar({
                         <div key={queue.slot_name} className="pt-2 border-t space-y-2">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Queue Usage:</span>
-                            <span className="font-semibold">{(queue.usage_percentage * 100).toFixed(1)}%</span>
+                            <span className="font-semibold">
+                              {(queue.usage_percentage * 100).toFixed(1)}%
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Unconsumed:</span>
-                            <span>{queue.unconsumed_count}/{queue.total_count}</span>
+                            <span>
+                              {queue.unconsumed_count}/{queue.total_count}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Pressure:</span>
@@ -344,8 +378,8 @@ export function JobDetailsSidebar({
                                 queue.pressure_level === "critical"
                                   ? "destructive"
                                   : queue.pressure_level === "high"
-                                  ? "default"
-                                  : "secondary"
+                                    ? "default"
+                                    : "secondary"
                               }
                               className="text-xs"
                             >
@@ -408,12 +442,19 @@ export function JobDetailsSidebar({
                     <CardContent>
                       <div className="space-y-3">
                         {Object.values(metrics.routine_metrics).map((routineMetrics) => (
-                          <div key={routineMetrics.routine_id} className="p-2 rounded border bg-muted/50">
-                            <div className="font-medium text-sm mb-2">{routineMetrics.routine_id}</div>
+                          <div
+                            key={routineMetrics.routine_id}
+                            className="p-2 rounded border bg-muted/50"
+                          >
+                            <div className="font-medium text-sm mb-2">
+                              {routineMetrics.routine_id}
+                            </div>
                             <div className="grid grid-cols-2 gap-2 text-xs">
                               <div>
                                 <span className="text-muted-foreground">Executions:</span>
-                                <span className="ml-1 font-semibold">{routineMetrics.execution_count}</span>
+                                <span className="ml-1 font-semibold">
+                                  {routineMetrics.execution_count}
+                                </span>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">Errors:</span>
@@ -423,24 +464,33 @@ export function JobDetailsSidebar({
                               </div>
                               <div>
                                 <span className="text-muted-foreground">Avg Duration:</span>
-                                <span className="ml-1">{(routineMetrics.avg_duration * 1000).toFixed(2)}ms</span>
+                                <span className="ml-1">
+                                  {(routineMetrics.avg_duration * 1000).toFixed(2)}ms
+                                </span>
                               </div>
                               {routineMetrics.min_duration && routineMetrics.max_duration && (
                                 <>
                                   <div>
                                     <span className="text-muted-foreground">Min:</span>
-                                    <span className="ml-1">{(routineMetrics.min_duration * 1000).toFixed(2)}ms</span>
+                                    <span className="ml-1">
+                                      {(routineMetrics.min_duration * 1000).toFixed(2)}ms
+                                    </span>
                                   </div>
                                   <div>
                                     <span className="text-muted-foreground">Max:</span>
-                                    <span className="ml-1">{(routineMetrics.max_duration * 1000).toFixed(2)}ms</span>
+                                    <span className="ml-1">
+                                      {(routineMetrics.max_duration * 1000).toFixed(2)}ms
+                                    </span>
                                   </div>
                                 </>
                               )}
                             </div>
                             {routineMetrics.last_execution && (
                               <div className="text-xs text-muted-foreground mt-1">
-                                Last: {formatDistanceToNow(new Date(routineMetrics.last_execution), { addSuffix: true })}
+                                Last:{" "}
+                                {formatDistanceToNow(new Date(routineMetrics.last_execution), {
+                                  addSuffix: true,
+                                })}
                               </div>
                             )}
                           </div>

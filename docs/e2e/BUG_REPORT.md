@@ -20,12 +20,15 @@ This document outlines bugs and potential improvements discovered in the routilu
 **Location**: Line 79-82
 
 ### Description
+
 The `server stop` command is documented but not implemented. When users run `routilux server stop`, they receive a message stating the command is not yet implemented and are told to use Ctrl+C instead.
 
 ### Expected Behavior
+
 The `server stop` command should gracefully stop a running routilux server process.
 
 ### Actual Behavior
+
 ```python
 @server.command("stop")
 def stop():
@@ -34,17 +37,21 @@ def stop():
 ```
 
 ### Impact
+
 Users must manually track and terminate server processes using Ctrl+C or system tools. This makes automated server management difficult, especially for:
+
 - CI/CD pipelines
 - Testing frameworks
 - Process orchestration tools
 
 ### Reproduction Steps
+
 1. Start a server: `routilux server start`
 2. In another terminal, try: `routilux server stop`
 3. Observe the "not yet implemented" message
 
 ### Suggested Fix
+
 Implement proper server lifecycle management:
 
 1. **PID File Approach**: Store the server PID in a file (e.g., `.routilux/server.pid`)
@@ -80,10 +87,13 @@ def stop():
 **Location**: Line 85-88
 
 ### Description
+
 The `server status` command returns a "not yet implemented" message.
 
 ### Expected Behavior
+
 Should report:
+
 - Whether the server is running
 - Server URL and port
 - Process ID
@@ -91,6 +101,7 @@ Should report:
 - Number of active connections/jobs
 
 ### Actual Behavior
+
 ```python
 @server.command("status")
 def status():
@@ -99,9 +110,11 @@ def status():
 ```
 
 ### Impact
+
 Users cannot easily verify if a server is running without manually checking ports or processes.
 
 ### Suggested Fix
+
 Implement status checking using PID file or port binding detection:
 
 ```python
@@ -132,9 +145,11 @@ def status():
 **Component**: `routilux/server/main.py`
 
 ### Description
+
 While the server provides `/api/v1/health/live` and `/api/v1/health/ready` endpoints, there's no CLI command to quickly check server health without using curl or similar tools.
 
 ### Suggested Improvement
+
 Add a `health` command:
 
 ```python
@@ -162,13 +177,16 @@ def health():
 **Location**: Line 153-172
 
 ### Description
+
 The `get_default_routines_dirs()` function only checks for:
+
 1. `./routines/` (project local)
 2. `~/.routilux/routines/` (user global)
 
 For E2E testing and more flexible routine organization, it would be helpful to support additional discovery mechanisms.
 
 ### Suggested Improvement
+
 Add environment variable support for custom routines directories:
 
 ```python
@@ -204,13 +222,16 @@ def get_default_routines_dirs() -> List[Path]:
 **Location**: Line 32-34
 
 ### Description
+
 When multiple routines directories are specified, the order of discovery combines:
+
 1. User-provided directories
 2. Default directories
 
 If the same routine name exists in multiple directories, the first one found wins, which may not be intuitive.
 
 ### Suggested Improvement
+
 Document the discovery order clearly or add a `--priority` flag to specify which directories take precedence.
 
 ---
@@ -221,12 +242,15 @@ Document the discovery order clearly or add a `--priority` flag to specify which
 **Component**: `routilux/cli/decorators.py`
 
 ### Description
+
 The `register_routine` and `auto_register_routine` decorators don't validate routine names for:
+
 - Collisions (only checked at registration time, not import time)
 - Invalid characters
 - Reserved names
 
 ### Suggested Improvement
+
 Add name validation in the decorator:
 
 ```python
@@ -255,14 +279,18 @@ def validate_routine_name(name: str) -> None:
 **Component**: Multiple files
 
 ### Description
+
 There's an inconsistency in default port configuration:
+
 - CLI `server start` command defaults to `8080` (`routilux/cli/commands/server.py:24`)
 - Server main module defaults to `20555` (`routilux/server/main.py:334`)
 
 ### Impact
+
 When starting the server via CLI, the default port is 8080, but the overseer app may expect 20555.
 
 ### Suggested Fix
+
 Standardize on a single default port (20555 seems more established in the codebase) and document it clearly.
 
 ---
@@ -273,9 +301,11 @@ Standardize on a single default port (20555 seems more established in the codeba
 **Component**: `routilux/cli/server_wrapper.py`
 
 ### Description
+
 The `start_server` function doesn't provide options to redirect server output to a log file. This makes debugging server issues in production difficult.
 
 ### Suggested Improvement
+
 Add `--log-file` option:
 
 ```python
@@ -298,9 +328,11 @@ def start(..., log_file):
 **Component**: `routilux/server/main.py`
 
 ### Description
+
 The server doesn't properly handle SIGTERM signals for graceful shutdown. It relies on uvicorn's default behavior but doesn't implement custom cleanup in the lifespan shutdown.
 
 ### Suggested Improvement
+
 Add signal handlers in the lifespan manager:
 
 ```python
@@ -331,20 +363,22 @@ async def lifespan(app: FastAPI):
 **Component**: Test infrastructure (not routilux itself)
 
 ### Description
+
 The E2E test infrastructure requires adding the test routines directory to Python's path for the server to discover routines.
 
 ### Workaround
+
 The current implementation handles this by passing `--routines-dir` to the server, but this could be better documented.
 
 ---
 
 ## Summary by Severity
 
-| Severity | Count | Issues |
-|----------|-------|--------|
-| High | 0 | - |
-| Medium | 3 | #1 (server stop), #7 (port inconsistency), #9 (SIGTERM handling) |
-| Low | 7 | #2, #3, #4, #5, #6, #8, #10 |
+| Severity | Count | Issues                                                           |
+| -------- | ----- | ---------------------------------------------------------------- |
+| High     | 0     | -                                                                |
+| Medium   | 3     | #1 (server stop), #7 (port inconsistency), #9 (SIGTERM handling) |
+| Low      | 7     | #2, #3, #4, #5, #6, #8, #10                                      |
 
 ---
 
@@ -361,6 +395,7 @@ The current implementation handles this by passing `--routines-dir` to the serve
 ## Testing Notes
 
 All bugs were discovered while implementing the E2E test infrastructure for routilux-overseer. The test suite includes:
+
 - Server lifecycle management tests
 - Connection and authentication tests
 - Flow execution and monitoring tests

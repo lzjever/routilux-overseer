@@ -68,7 +68,9 @@ describe("Jobs API", () => {
     });
 
     it("should list jobs with query parameters", async () => {
-      const mockJobs = [{ job_id: "job-1", flow_id: "flow-1", status: "running", worker_id: "worker-1" }];
+      const mockJobs = [
+        { job_id: "job-1", flow_id: "flow-1", status: "running", worker_id: "worker-1" },
+      ];
 
       vi.mocked(JobsService.listJobsApiV1JobsGet).mockResolvedValue({
         jobs: mockJobs,
@@ -91,7 +93,12 @@ describe("Jobs API", () => {
 
   describe("get", () => {
     it("should get a specific job", async () => {
-      const mockJob = { job_id: "job-1", flow_id: "flow-1", status: "running", worker_id: "worker-1" };
+      const mockJob = {
+        job_id: "job-1",
+        flow_id: "flow-1",
+        status: "running",
+        worker_id: "worker-1",
+      };
 
       vi.mocked(JobsService.getJobApiV1JobsJobIdGet).mockResolvedValue(mockJob as any);
 
@@ -104,7 +111,12 @@ describe("Jobs API", () => {
 
   describe("submit", () => {
     it("should submit a job", async () => {
-      const mockJob = { job_id: "job-1", flow_id: "flow-1", status: "pending", worker_id: "worker-1" };
+      const mockJob = {
+        job_id: "job-1",
+        flow_id: "flow-1",
+        status: "pending",
+        worker_id: "worker-1",
+      };
       const request = {
         flow_id: "flow-1",
         routine_id: "source",
@@ -130,7 +142,9 @@ describe("Jobs API", () => {
         duration: 1.5,
       };
 
-      vi.mocked(JobsService.getJobMetricsApiV1JobsJobIdMetricsGet).mockResolvedValue(mockMetrics as any);
+      vi.mocked(JobsService.getJobMetricsApiV1JobsJobIdMetricsGet).mockResolvedValue(
+        mockMetrics as any
+      );
 
       const result = await api.jobs.getMetrics("job-1");
 
@@ -149,12 +163,16 @@ describe("Jobs API", () => {
         updated_at: new Date().toISOString(),
       };
 
-      vi.mocked(JobsService.getJobMonitoringDataApiV1JobsJobIdMonitoringGet).mockResolvedValue(mockData as any);
+      vi.mocked(JobsService.getJobMonitoringDataApiV1JobsJobIdMonitoringGet).mockResolvedValue(
+        mockData as any
+      );
 
       const result = await api.jobs.getMonitoringData("job-1");
 
       expect(result).toEqual(mockData);
-      expect(JobsService.getJobMonitoringDataApiV1JobsJobIdMonitoringGet).toHaveBeenCalledWith("job-1");
+      expect(JobsService.getJobMonitoringDataApiV1JobsJobIdMonitoringGet).toHaveBeenCalledWith(
+        "job-1"
+      );
     });
   });
 });

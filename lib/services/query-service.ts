@@ -1,4 +1,14 @@
-import { getAPI, type API } from './api-client';
+import { getAPI, type API } from "./api-client";
+import type { FlowListResponse } from "@/lib/api/generated/models/FlowListResponse";
+import type { FlowResponse } from "@/lib/api/generated/models/FlowResponse";
+import type { JobListResponse } from "@/lib/api/generated/models/JobListResponse";
+import type { JobResponse } from "@/lib/api/generated/models/JobResponse";
+import type { WorkerListResponse } from "@/lib/api/generated/models/WorkerListResponse";
+import type { WorkerResponse } from "@/lib/api/generated/models/WorkerResponse";
+import type { RuntimeListResponse } from "@/lib/api/generated/models/RuntimeListResponse";
+import type { RuntimeResponse } from "@/lib/api/generated/models/RuntimeResponse";
+import type { BreakpointListResponse } from "@/lib/api/generated/models/BreakpointListResponse";
+import type { BreakpointResponse } from "@/lib/api/generated/models/BreakpointResponse";
 
 /**
  * Query cache entry
@@ -23,6 +33,7 @@ interface QueryOptions<T = unknown> {
 interface QueryServiceConfig {
   cacheTTL: number;
   enabled: boolean;
+  maxCacheSize: number; // Maximum number of cached entries
 }
 
 /**
@@ -42,6 +53,45 @@ class QueryService {
   private config: QueryServiceConfig = {
     cacheTTL: 30000,
     enabled: true,
+    maxCacheSize: 100, // Default max cache size
+  };
+
+  // Domain wrappers (attached after instantiation)
+  declare flows: {
+    list: (options?: QueryOptions) => Promise<FlowListResponse>;
+    get: (flowId: string, options?: QueryOptions) => Promise<FlowResponse>;
+    getMetrics: (flowId: string, options?: QueryOptions) => Promise<any>;
+  };
+  declare jobs: {
+    list: (
+      filters?: { workerId?: string; flowId?: string; status?: string },
+      options?: QueryOptions
+    ) => Promise<JobListResponse>;
+    get: (jobId: string, options?: QueryOptions) => Promise<JobResponse>;
+    getMonitoringData: (jobId: string, options?: QueryOptions) => Promise<any>;
+    getMetrics: (jobId: string, options?: QueryOptions) => Promise<any>;
+    submit: (request: any, options?: QueryOptions) => Promise<any>;
+  };
+  declare workers: {
+    list: (
+      filters?: { flowId?: string; status?: string },
+      options?: QueryOptions
+    ) => Promise<WorkerListResponse>;
+    get: (workerId: string, options?: QueryOptions) => Promise<WorkerResponse>;
+    create: (request: any, options?: QueryOptions) => Promise<any>;
+    stop: (workerId: string, options?: QueryOptions) => Promise<any>;
+    pause: (workerId: string, options?: QueryOptions) => Promise<any>;
+    resume: (workerId: string, options?: QueryOptions) => Promise<any>;
+    updateBreakpoint: (workerId: string, breakpointId: string, enabled: boolean) => Promise<any>;
+  };
+  declare runtimes: {
+    list: (options?: QueryOptions) => Promise<RuntimeListResponse>;
+    get: (runtimeId: string, options?: QueryOptions) => Promise<RuntimeResponse>;
+  };
+  declare breakpoints: {
+    list: (jobId: string, options?: QueryOptions) => Promise<BreakpointListResponse>;
+    create: (jobId: string, request: any, options?: QueryOptions) => Promise<BreakpointResponse>;
+    delete: (jobId: string, breakpointId: string, options?: QueryOptions) => Promise<any>;
   };
 
   /**
@@ -52,11 +102,7 @@ class QueryService {
     fetchFn: () => Promise<T>,
     options: QueryOptions<T> = {}
   ): Promise<T> {
-    const {
-      enabled = this.config.enabled,
-      cacheTTL = this.config.cacheTTL,
-      transform,
-    } = options;
+    const { enabled = this.config.enabled, cacheTTL = this.config.cacheTTL, transform } = options;
 
     // If caching is disabled, just fetch
     if (!enabled) {
@@ -80,6 +126,8 @@ class QueryService {
     const promise = fetchFn()
       .then((data) => {
         const result = transform ? transform(data) : data;
+        // Evict old entries if cache is full
+        this.evictIfNeeded();
         this.cache.set(key, { data: result, timestamp: Date.now() });
         this.pendingRequests.delete(key);
         return result;
@@ -91,6 +139,22 @@ class QueryService {
 
     this.pendingRequests.set(key, { promise, timestamp: Date.now() });
     return promise;
+  }
+
+  /**
+   * Evict oldest cache entries if cache size exceeds maxCacheSize
+   */
+  private evictIfNeeded(): void {
+    if (this.cache.size >= this.config.maxCacheSize) {
+      // Remove oldest 20% of entries (LRU-style eviction)
+      const entriesToDelete = Math.ceil(this.config.maxCacheSize * 0.2);
+      const entries = Array.from(this.cache.entries()).sort(
+        (a, b) => a[1].timestamp - b[1].timestamp
+      );
+      for (let i = 0; i < entriesToDelete && i < entries.length; i++) {
+        this.cache.delete(entries[i][0]);
+      }
+    }
   }
 
   /**
@@ -109,7 +173,7 @@ class QueryService {
   /**
    * Get API client
    */
-  private getAPI(): API {
+  getAPI(): API {
     return getAPI();
   }
 
@@ -119,7 +183,7 @@ class QueryService {
    * List all flows
    */
   async listFlows(options?: QueryOptions): Promise<any> {
-    return this.query('flows:list', () => this.getAPI().flows.list(), options);
+    return this.query("flows:list", () => this.getAPI().flows.list(), options);
   }
 
   /**
@@ -145,11 +209,21 @@ class QueryService {
   /**
    * List jobs with optional filters
    */
-  async listJobs(filters?: { workerId?: string; flowId?: string; status?: string }, options?: QueryOptions): Promise<any> {
-    const filterKey = filters ? `:${filters.workerId || ''}:${filters.flowId || ''}:${filters.status || ''}` : '';
+  async listJobs(
+    filters?: { workerId?: string; flowId?: string; status?: string },
+    options?: QueryOptions
+  ): Promise<any> {
+    const filterKey = filters
+      ? `:${filters.workerId || ""}:${filters.flowId || ""}:${filters.status || ""}`
+      : "";
     return this.query(
       `jobs:list${filterKey}`,
-      () => this.getAPI().jobs.list(filters?.workerId || null, filters?.flowId || null, filters?.status || null),
+      () =>
+        this.getAPI().jobs.list(
+          filters?.workerId || null,
+          filters?.flowId || null,
+          filters?.status || null
+        ),
       { ...options, cacheTTL: 5000 } // Shorter cache for lists
     );
   }
@@ -196,8 +270,11 @@ class QueryService {
   /**
    * List workers with optional filters
    */
-  async listWorkers(filters?: { flowId?: string; status?: string }, options?: QueryOptions): Promise<any> {
-    const filterKey = filters ? `:${filters.flowId || ''}:${filters.status || ''}` : '';
+  async listWorkers(
+    filters?: { flowId?: string; status?: string },
+    options?: QueryOptions
+  ): Promise<any> {
+    const filterKey = filters ? `:${filters.flowId || ""}:${filters.status || ""}` : "";
     return this.query(
       `workers:list${filterKey}`,
       () => this.getAPI().workers.list(filters?.flowId || null, filters?.status || null),
@@ -209,7 +286,11 @@ class QueryService {
    * Get a specific worker
    */
   async getWorker(workerId: string, options?: QueryOptions): Promise<any> {
-    return this.query(`workers:get:${workerId}`, () => this.getAPI().workers.get(workerId), options);
+    return this.query(
+      `workers:get:${workerId}`,
+      () => this.getAPI().workers.get(workerId),
+      options
+    );
   }
 
   /**
@@ -250,14 +331,18 @@ class QueryService {
    * List all runtimes
    */
   async listRuntimes(options?: QueryOptions): Promise<any> {
-    return this.query('runtimes:list', () => this.getAPI().runtimes.list(), options);
+    return this.query("runtimes:list", () => this.getAPI().runtimes.list(), options);
   }
 
   /**
    * Get a specific runtime
    */
   async getRuntime(runtimeId: string, options?: QueryOptions): Promise<any> {
-    return this.query(`runtimes:get:${runtimeId}`, () => this.getAPI().runtimes.get(runtimeId), options);
+    return this.query(
+      `runtimes:get:${runtimeId}`,
+      () => this.getAPI().runtimes.get(runtimeId),
+      options
+    );
   }
 
   // ==================== Breakpoints ====================
@@ -266,7 +351,11 @@ class QueryService {
    * List breakpoints for a job
    */
   async listBreakpoints(jobId: string, options?: QueryOptions): Promise<any> {
-    return this.query(`breakpoints:list:${jobId}`, () => this.getAPI().breakpoints.list(jobId), options);
+    return this.query(
+      `breakpoints:list:${jobId}`,
+      () => this.getAPI().breakpoints.list(jobId),
+      options
+    );
   }
 
   /**
@@ -280,7 +369,11 @@ class QueryService {
   /**
    * Delete a breakpoint
    */
-  async deleteBreakpoint(jobId: string, breakpointId: string, options?: QueryOptions): Promise<any> {
+  async deleteBreakpoint(
+    jobId: string,
+    breakpointId: string,
+    options?: QueryOptions
+  ): Promise<any> {
     // Mutations are never cached
     return this.getAPI().breakpoints.delete(jobId, breakpointId);
   }
@@ -339,14 +432,18 @@ export const queryService = new QueryService();
 export const flows = {
   list: (options?: QueryOptions) => queryService.listFlows(options),
   get: (flowId: string, options?: QueryOptions) => queryService.getFlow(flowId, options),
-  getMetrics: (flowId: string, options?: QueryOptions) => queryService.getFlowMetrics(flowId, options),
+  getMetrics: (flowId: string, options?: QueryOptions) =>
+    queryService.getFlowMetrics(flowId, options),
 };
 
 export const jobs = {
-  list: (filters?: { workerId?: string; flowId?: string; status?: string }, options?: QueryOptions) =>
-    queryService.listJobs(filters, options),
+  list: (
+    filters?: { workerId?: string; flowId?: string; status?: string },
+    options?: QueryOptions
+  ) => queryService.listJobs(filters, options),
   get: (jobId: string, options?: QueryOptions) => queryService.getJob(jobId, options),
-  getMonitoringData: (jobId: string, options?: QueryOptions) => queryService.getJobMonitoringData(jobId, options),
+  getMonitoringData: (jobId: string, options?: QueryOptions) =>
+    queryService.getJobMonitoringData(jobId, options),
   getMetrics: (jobId: string, options?: QueryOptions) => queryService.getJobMetrics(jobId, options),
   submit: (request: any, options?: QueryOptions) => queryService.submitJob(request, options),
 };
@@ -358,7 +455,8 @@ export const workers = {
   create: (request: any, options?: QueryOptions) => queryService.createWorker(request, options),
   stop: (workerId: string, options?: QueryOptions) => queryService.stopWorker(workerId, options),
   pause: (workerId: string, options?: QueryOptions) => queryService.pauseWorker(workerId, options),
-  resume: (workerId: string, options?: QueryOptions) => queryService.resumeWorker(workerId, options),
+  resume: (workerId: string, options?: QueryOptions) =>
+    queryService.resumeWorker(workerId, options),
   updateBreakpoint: (workerId: string, breakpointId: string, enabled: boolean) =>
     queryService.getAPI().workers.updateBreakpoint(workerId, breakpointId, enabled),
 };
@@ -370,8 +468,10 @@ export const runtimes = {
 
 export const breakpoints = {
   list: (jobId: string, options?: QueryOptions) => queryService.listBreakpoints(jobId, options),
-  create: (jobId: string, request: any, options?: QueryOptions) => queryService.createBreakpoint(jobId, request, options),
-  delete: (jobId: string, breakpointId: string, options?: QueryOptions) => queryService.deleteBreakpoint(jobId, breakpointId, options),
+  create: (jobId: string, request: any, options?: QueryOptions) =>
+    queryService.createBreakpoint(jobId, request, options),
+  delete: (jobId: string, breakpointId: string, options?: QueryOptions) =>
+    queryService.deleteBreakpoint(jobId, breakpointId, options),
 };
 
 // Attach domain wrappers to queryService instance

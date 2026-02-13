@@ -83,27 +83,33 @@ export class JobMonitor {
     this.unsubscribeCallbacks.push(unsubscribeFailed);
 
     // Routine started
-    const unsubscribeRoutineStarted = wsManager.on("routine_started", (message: WebSocketMessage) => {
-      console.log("Routine started:", message);
-      const data = (message.data as Record<string, any>) || {};
-      if (!data.routine_id) return;
-      this.updateRoutineStatus(data.routine_id, "running");
-      this.highlightConnection(data.routine_id, data.event_name);
-      this.addEventToStore("routine_start", data.routine_id, data);
-      this.handleProgress(message);
-    });
+    const unsubscribeRoutineStarted = wsManager.on(
+      "routine_started",
+      (message: WebSocketMessage) => {
+        console.log("Routine started:", message);
+        const data = (message.data as Record<string, any>) || {};
+        if (!data.routine_id) return;
+        this.updateRoutineStatus(data.routine_id, "running");
+        this.highlightConnection(data.routine_id, data.event_name);
+        this.addEventToStore("routine_start", data.routine_id, data);
+        this.handleProgress(message);
+      }
+    );
     this.unsubscribeCallbacks.push(unsubscribeRoutineStarted);
 
     // Routine completed
-    const unsubscribeRoutineCompleted = wsManager.on("routine_completed", (message: WebSocketMessage) => {
-      console.log("Routine completed:", message);
-      const data = (message.data as Record<string, any>) || {};
-      if (!data.routine_id) return;
-      this.updateRoutineStatus(data.routine_id, "completed");
-      this.incrementExecutionCount(data.routine_id);
-      this.addEventToStore("routine_end", data.routine_id, data);
-      this.handleProgress(message);
-    });
+    const unsubscribeRoutineCompleted = wsManager.on(
+      "routine_completed",
+      (message: WebSocketMessage) => {
+        console.log("Routine completed:", message);
+        const data = (message.data as Record<string, any>) || {};
+        if (!data.routine_id) return;
+        this.updateRoutineStatus(data.routine_id, "completed");
+        this.incrementExecutionCount(data.routine_id);
+        this.addEventToStore("routine_end", data.routine_id, data);
+        this.handleProgress(message);
+      }
+    );
     this.unsubscribeCallbacks.push(unsubscribeRoutineCompleted);
 
     // Routine failed
@@ -178,15 +184,13 @@ export class JobMonitor {
   private updateRoutineProgress(routineId: string, progress: number, message?: string): void {
     useFlowStore.getState().updateNodeData(routineId, {
       progress,
-      progressMessage: message
+      progressMessage: message,
     });
   }
 
   private handleProgress(message: WebSocketMessage): void {
     const payload = message.data as Record<string, any> | undefined;
-    const progress = payload?._progress as
-      | { percentage?: number; message?: string }
-      | undefined;
+    const progress = payload?._progress as { percentage?: number; message?: string } | undefined;
     if (!payload?.routine_id || !progress) return;
     const percentage = typeof progress.percentage === "number" ? progress.percentage : undefined;
     if (percentage == null) return;

@@ -54,7 +54,7 @@ const config: Config = {
       },
       animation: {
         "pulse-slow": "pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        "flow": "flow-animation 1s linear infinite",
+        flow: "flow-animation 1s linear infinite",
       },
     },
   },

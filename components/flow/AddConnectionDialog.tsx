@@ -78,9 +78,7 @@ export function AddConnectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || <Button size="sm">Add Connection</Button>}
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger || <Button size="sm">Add Connection</Button>}</DialogTrigger>
       <DialogContent className="max-w-2xl">
         <form onSubmit={handleSubmit}>
           <DialogHeader>

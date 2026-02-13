@@ -11,16 +11,13 @@ import ReactFlow, {
   Edge,
   Connection,
   MarkerType,
+  ConnectionLineType,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { RoutineNode } from "./RoutineNode";
 import { ConnectionEdgeData } from "./ConnectionEdge";
 import { nodeTypes, edgeTypes, defaultEdgeOptions } from "./flowTypes";
-import {
-  DeleteConfirmDialog,
-  DeleteItem,
-  getAffectedConnections,
-} from "./DeleteConfirmDialog";
+import { DeleteConfirmDialog, DeleteItem, getAffectedConnections } from "./DeleteConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useUIStore } from "@/lib/stores/uiStore";
@@ -30,7 +27,13 @@ import { useJobStore } from "@/lib/stores/jobStore";
 import { RoutineDetailPanel } from "@/components/job/RoutineDetailPanel";
 import { layoutNodes } from "@/lib/utils/flow-layout";
 import { ZoomIn, ZoomOut, Maximize, Lock } from "lucide-react";
-import { calculateNodeHeat, calculateEdgeHeat, getHeatBorderColor, getHeatStrokeColor, getHeatStrokeWidth } from "@/lib/utils/heatmap";
+import {
+  calculateNodeHeat,
+  calculateEdgeHeat,
+  getHeatBorderColor,
+  getHeatStrokeColor,
+  getHeatStrokeWidth,
+} from "@/lib/utils/heatmap";
 import { createAPI } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -82,7 +85,7 @@ export function FlowCanvas({
   const isEditable = editable && flowId ? !isFlowLocked(flowId) : false;
   // In lock mode, allow dragging and viewing but not editing (connect/delete)
   const isLocked = flowId ? isFlowLocked(flowId) : false;
-  
+
   // Update edit mode in store when isEditable changes
   useEffect(() => {
     if (flowId && flowId === selectedFlowId) {
@@ -120,69 +123,78 @@ export function FlowCanvas({
   }, []);
 
   // Handle connection creation via drag-and-drop
-  const handleConnect = useCallback(async (connection: Connection) => {
-    if (!flowId || !serverUrl || isFlowLocked(flowId) || !connection.sourceHandle || !connection.targetHandle) {
-      return;
-    }
+  const handleConnect = useCallback(
+    async (connection: Connection) => {
+      if (
+        !flowId ||
+        !serverUrl ||
+        isFlowLocked(flowId) ||
+        !connection.sourceHandle ||
+        !connection.targetHandle ||
+        !connection.source ||
+        !connection.target
+      ) {
+        return;
+      }
 
-    try {
-      const api = createAPI(serverUrl);
-      await api.flows.addConnection(flowId, {
-        source_routine: connection.source,
-        source_event: connection.sourceHandle,
-        target_routine: connection.target,
-        target_slot: connection.targetHandle,
-      });
-      
-      // Add edge to existing edges without re-layout
-      // Get the new connection index from the API response or calculate it
-      const flow = await api.flows.get(flowId);
-      const connectionIndex = flow.connections.length - 1;
-      const newConn = flow.connections[connectionIndex];
-      
-      const newEdge: Edge = {
-        id: newConn.connection_id || `conn-${connectionIndex}`,
-        source: connection.source,
-        sourceHandle: connection.sourceHandle,
-        target: connection.target,
-        targetHandle: connection.targetHandle,
-        type: "connection",
-        selectable: true,
-        focusable: true,
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          width: 20,
-          height: 20,
-        },
-        data: {
-          sourceEvent: connection.sourceHandle,
-          targetSlot: connection.targetHandle,
-          active: false,
-        },
-      };
-      
-      // Add edge to existing edges without re-layout
-      const { edges: currentEdges, flows: currentFlows } = useFlowStore.getState();
-      const newEdgeWithDeletable: Edge = {
-        ...newEdge,
-        deletable: isEditable, // Use current edit mode
-      };
-      const updatedFlows = new Map(currentFlows);
-      updatedFlows.set(flowId, flow);
-      
-      useFlowStore.setState({
-        edges: [...currentEdges, newEdgeWithDeletable],
-        flows: updatedFlows,
-      });
-    } catch (error) {
-      // Show error message
-      const errorMessage = error instanceof Error ? error.message : "Failed to create connection";
-      toast.error("Failed to create connection", {
-        description: errorMessage,
-      });
-      console.error("Connection creation error:", error);
-    }
-  }, [flowId, serverUrl, isFlowLocked, isEditable]);
+      try {
+        const api = createAPI(serverUrl);
+        await api.flows.addConnection(flowId, {
+          source_routine: connection.source,
+          source_event: connection.sourceHandle,
+          target_routine: connection.target,
+          target_slot: connection.targetHandle,
+        });
+
+        // Add edge to existing edges without re-layout
+        // Get the new connection index from the API response or calculate it
+        const flow = await api.flows.get(flowId);
+        const connectionIndex = flow.connections.length - 1;
+        const newConn = flow.connections[connectionIndex];
+
+        const newEdge: Edge = {
+          id: newConn.connection_id || `conn-${connectionIndex}`,
+          source: connection.source,
+          sourceHandle: connection.sourceHandle,
+          target: connection.target,
+          targetHandle: connection.targetHandle,
+          type: "connection",
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 20,
+            height: 20,
+          },
+          data: {
+            sourceEvent: connection.sourceHandle,
+            targetSlot: connection.targetHandle,
+            active: false,
+          },
+        };
+
+        // Add edge to existing edges without re-layout
+        const { edges: currentEdges, flows: currentFlows } = useFlowStore.getState();
+        const newEdgeWithDeletable: Edge = {
+          ...newEdge,
+          deletable: isEditable, // Use current edit mode
+        };
+        const updatedFlows = new Map(currentFlows);
+        updatedFlows.set(flowId, flow);
+
+        useFlowStore.setState({
+          edges: [...currentEdges, newEdgeWithDeletable],
+          flows: updatedFlows,
+        });
+      } catch (error) {
+        // Show error message
+        const errorMessage = error instanceof Error ? error.message : "Failed to create connection";
+        toast.error("Failed to create connection", {
+          description: errorMessage,
+        });
+        console.error("Connection creation error:", error);
+      }
+    },
+    [flowId, serverUrl, isFlowLocked, isEditable]
+  );
 
   // Handle node click
   const onNodeClick = useCallback(
@@ -238,7 +250,7 @@ export function FlowCanvas({
     if (!jobId) {
       nodes.forEach((node) => {
         updateNodeData(node.id, {
-          mode: 'flow',
+          mode: "flow",
         });
       });
       return;
@@ -253,7 +265,9 @@ export function FlowCanvas({
     nodes.forEach((node) => {
       const routineId = node.id;
       const routineState = jobId ? jobState?.routine_states?.[routineId] : undefined;
-      const nodeBreakpoints = jobId ? jobBreakpoints.filter((bp) => bp.routine_id === routineId) : [];
+      const nodeBreakpoints = jobId
+        ? jobBreakpoints.filter((bp) => bp.routine_id === routineId)
+        : [];
 
       // Calculate heat if monitoring data is available
       let heat = 0;
@@ -268,7 +282,7 @@ export function FlowCanvas({
         breakpoints: nodeBreakpoints,
         heat,
         heatBorderColor,
-        mode: jobId ? 'job' : 'flow', // Set mode based on jobId
+        mode: jobId ? "job" : "flow", // Set mode based on jobId
         onToggleBreakpoint: () => {
           if (jobId && flowId) {
             selectRoutine({ routineId, jobId, flowId });
@@ -310,7 +324,7 @@ export function FlowCanvas({
 
       setEdges(updatedEdges);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId, breakpoints, monitoringData, nodes.length]);
 
   // Debug logging
@@ -330,65 +344,69 @@ export function FlowCanvas({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Check for Delete or Backspace key (but not when typing in input fields)
-      if ((e.key === 'Delete' || e.key === 'Backspace') && !e.ctrlKey && !e.metaKey) {
+      if ((e.key === "Delete" || e.key === "Backspace") && !e.ctrlKey && !e.metaKey) {
         const target = e.target as HTMLElement;
         // Don't delete if user is typing in an input field
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        if (
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable
+        ) {
           return;
         }
 
         const instance = (window as any).reactFlowInstance;
         if (!instance) return;
 
-        const selectedNodes = nodes.filter(n => n.selected);
-        const selectedEdges = edges.filter(e => e.selected);
+        const selectedNodes = nodes.filter((n) => n.selected);
+        const selectedEdges = edges.filter((e) => e.selected);
 
         if (selectedNodes.length > 0 || selectedEdges.length > 0) {
           e.preventDefault();
-          
+
           // Build delete items list
           const items: DeleteItem[] = [];
-          
+
           // Add selected connections
           for (const edge of selectedEdges) {
             items.push({
-              type: 'connection',
+              type: "connection",
               id: edge.id,
               sourceRoutine: edge.source,
-              sourceEvent: edge.sourceHandle || '',
+              sourceEvent: edge.sourceHandle || "",
               targetRoutine: edge.target,
-              targetSlot: edge.targetHandle || '',
+              targetSlot: edge.targetHandle || "",
             });
           }
-          
+
           // Add selected routines
           for (const node of selectedNodes) {
             items.push({
-              type: 'routine',
+              type: "routine",
               id: node.id,
               routineId: node.id,
             });
           }
-          
+
           // Calculate affected connections for routine deletions
           const { flows } = useFlowStore.getState();
           const flow = flows.get(flowId);
           if (flow && selectedNodes.length > 0) {
-            const routineIds = selectedNodes.map(n => n.id);
+            const routineIds = selectedNodes.map((n) => n.id);
             const affected = getAffectedConnections(routineIds, flow.connections);
             setAffectedConnections(affected);
           } else {
             setAffectedConnections([]);
           }
-          
+
           setDeleteItems(items);
           setDeleteDialogOpen(true);
         }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isEditable, flowId, serverUrl, nodes, edges]);
 
   // Show message if flow is not selected or no nodes/edges are loaded
@@ -397,7 +415,9 @@ export function FlowCanvas({
       <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
         <div className="text-center text-muted-foreground">
           <p className="text-sm">Flow not loaded</p>
-          <p className="text-xs mt-2">Loading flow {flowId}... (selectedFlowId: {selectedFlowId || "null"})</p>
+          <p className="text-xs mt-2">
+            Loading flow {flowId}... (selectedFlowId: {selectedFlowId || "null"})
+          </p>
         </div>
       </div>
     );
@@ -414,7 +434,8 @@ export function FlowCanvas({
               <>
                 Flow {flowId} has no routines or connections
                 <br />
-                (selectedFlowId: {selectedFlowId || "null"}, nodes: {nodes.length}, edges: {edges.length})
+                (selectedFlowId: {selectedFlowId || "null"}, nodes: {nodes.length}, edges:{" "}
+                {edges.length})
               </>
             ) : (
               "Select a flow to view"
@@ -462,7 +483,7 @@ export function FlowCanvas({
           edgesFocusable={true}
           selectNodesOnDrag={false}
           deleteKeyCode={null}
-          connectionLineType="smoothstep"
+          connectionLineType={ConnectionLineType.SmoothStep}
           connectionRadius={10}
           elevateEdgesOnSelect={true}
           className="bg-background [&_.react-flow__edges]:z-[1000]"
@@ -475,37 +496,17 @@ export function FlowCanvas({
         >
           <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
           <Controls />
-          <MiniMap
-            nodeColor="#888"
-            maskColor="rgba(0, 0, 0, 0.1)"
-            pannable
-            zoomable
-          />
+          <MiniMap nodeColor="#888" maskColor="rgba(0, 0, 0, 0.1)" pannable zoomable />
 
           {/* Custom controls panel */}
           <Panel position="top-right" className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleZoomIn}
-              title="Zoom in"
-            >
+            <Button variant="outline" size="sm" onClick={handleZoomIn} title="Zoom in">
               <ZoomIn className="h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleZoomOut}
-              title="Zoom out"
-            >
+            <Button variant="outline" size="sm" onClick={handleZoomOut} title="Zoom out">
               <ZoomOut className="h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleFitView}
-              title="Fit view"
-            >
+            <Button variant="outline" size="sm" onClick={handleFitView} title="Fit view">
               <Maximize className="h-4 w-4" />
             </Button>
           </Panel>
@@ -537,8 +538,8 @@ export function FlowCanvas({
             // Clear selection
             const instance = (window as any).reactFlowInstance;
             if (instance) {
-              instance.setNodes((nds: Node[]) => nds.map(n => ({ ...n, selected: false })));
-              instance.setEdges((eds: Edge[]) => eds.map(e => ({ ...e, selected: false })));
+              instance.setNodes((nds: Node[]) => nds.map((n) => ({ ...n, selected: false })));
+              instance.setEdges((eds: Edge[]) => eds.map((e) => ({ ...e, selected: false })));
             }
           }}
         />

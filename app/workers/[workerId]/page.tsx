@@ -30,7 +30,9 @@ export default function WorkerDetailPage() {
   const { selectFlow, flows } = useFlowStore();
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "jobs" | "statistics" | "history" | "routines">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "jobs" | "statistics" | "history" | "routines"
+  >("overview");
   const [submitJobDialogOpen, setSubmitJobDialogOpen] = useState(false);
   const [workerJobs, setWorkerJobs] = useState<any[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
@@ -102,7 +104,7 @@ export default function WorkerDetailPage() {
   useEffect(() => {
     // Wait for hydration before checking connection
     if (!hydrated) return;
-    
+
     if (!connected || !serverUrl) {
       router.push("/connect");
       return;
@@ -167,7 +169,12 @@ export default function WorkerDetailPage() {
 
   const handleStop = async () => {
     if (!serverUrl) return;
-    if (!confirm("Are you sure you want to stop this worker? All jobs in progress may be interrupted.")) return;
+    if (
+      !confirm(
+        "Are you sure you want to stop this worker? All jobs in progress may be interrupted."
+      )
+    )
+      return;
 
     setActionLoading(true);
     try {
@@ -183,12 +190,7 @@ export default function WorkerDetailPage() {
     setActionLoading(true);
     try {
       await loadWorker(workerId, serverUrl);
-      await Promise.all([
-        loadWorkerJobs(),
-        loadStatistics(),
-        loadHistory(),
-        loadRoutineStates(),
-      ]);
+      await Promise.all([loadWorkerJobs(), loadStatistics(), loadHistory(), loadRoutineStates()]);
     } finally {
       setActionLoading(false);
     }
@@ -239,16 +241,15 @@ export default function WorkerDetailPage() {
             <div>
               <h1 className="text-2xl font-semibold font-mono">{worker.worker_id}</h1>
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-xs text-muted-foreground">
-                  Flow: {worker.flow_id}
-                </p>
+                <p className="text-xs text-muted-foreground">Flow: {worker.flow_id}</p>
                 <span className="text-muted-foreground">•</span>
                 <StatusBadge status={worker.status} showSpinner={isRunning} />
                 {worker.created_at && (
                   <>
                     <span className="text-muted-foreground">•</span>
                     <p className="text-sm text-muted-foreground">
-                      Created {formatDistanceToNow(new Date(worker.created_at * 1000), {
+                      Created{" "}
+                      {formatDistanceToNow(new Date(worker.created_at * 1000), {
                         addSuffix: true,
                       })}
                     </p>
@@ -347,7 +348,11 @@ export default function WorkerDetailPage() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full flex-1 min-h-0 flex flex-col">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v: any) => setActiveTab(v)}
+          className="w-full flex-1 min-h-0 flex flex-col"
+        >
           <TabsList className="grid w-full grid-cols-5 mb-4 h-auto bg-transparent p-0">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="jobs">Jobs ({workerJobs.length})</TabsTrigger>
@@ -373,7 +378,9 @@ export default function WorkerDetailPage() {
               <Card className="flex-1 min-h-[420px] surface-panel">
                 <CardContent className="flex items-center justify-center min-h-[500px]">
                   <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-2">Loading flow visualization...</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Loading flow visualization...
+                    </p>
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto" />
                   </div>
                 </CardContent>
@@ -413,9 +420,7 @@ export default function WorkerDetailPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <CardTitle className="text-lg font-mono">{job.job_id}</CardTitle>
-                          <CardDescription className="mt-1">
-                            Status: {job.status}
-                          </CardDescription>
+                          <CardDescription className="mt-1">Status: {job.status}</CardDescription>
                         </div>
                         <StatusBadge
                           status={job.status}
@@ -428,30 +433,31 @@ export default function WorkerDetailPage() {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         {job.created_at && (
                           <span>
-                            Created {formatDistanceToNow(new Date(job.created_at * 1000), {
+                            Created{" "}
+                            {formatDistanceToNow(new Date(job.created_at * 1000), {
                               addSuffix: true,
                             })}
                           </span>
                         )}
                         {job.started_at && (
                           <span>
-                            • Started {formatDistanceToNow(new Date(job.started_at * 1000), {
+                            • Started{" "}
+                            {formatDistanceToNow(new Date(job.started_at * 1000), {
                               addSuffix: true,
                             })}
                           </span>
                         )}
                         {job.completed_at && (
                           <span>
-                            • Completed {formatDistanceToNow(new Date(job.completed_at * 1000), {
+                            • Completed{" "}
+                            {formatDistanceToNow(new Date(job.completed_at * 1000), {
                               addSuffix: true,
                             })}
                           </span>
                         )}
                       </div>
                       {job.error && (
-                        <div className="mt-2 text-sm text-destructive">
-                          Error: {job.error}
-                        </div>
+                        <div className="mt-2 text-sm text-destructive">Error: {job.error}</div>
                       )}
                     </CardContent>
                   </Card>
@@ -478,55 +484,70 @@ export default function WorkerDetailPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <div className="text-sm text-muted-foreground">Jobs Processed</div>
-                        <div className="text-2xl font-bold">{statistics.jobs_processed || worker.jobs_processed || 0}</div>
+                        <div className="text-2xl font-bold">
+                          {statistics.jobs_processed || worker.jobs_processed || 0}
+                        </div>
                       </div>
                       <div>
                         <div className="text-sm text-muted-foreground">Jobs Failed</div>
-                        <div className="text-2xl font-bold text-destructive">{statistics.jobs_failed || worker.jobs_failed || 0}</div>
+                        <div className="text-2xl font-bold text-destructive">
+                          {statistics.jobs_failed || worker.jobs_failed || 0}
+                        </div>
                       </div>
                       {statistics.success_rate !== undefined && (
                         <div>
                           <div className="text-sm text-muted-foreground">Success Rate</div>
-                          <div className="text-2xl font-bold">{(statistics.success_rate * 100).toFixed(1)}%</div>
+                          <div className="text-2xl font-bold">
+                            {(statistics.success_rate * 100).toFixed(1)}%
+                          </div>
                         </div>
                       )}
                       {statistics.avg_job_duration !== undefined && (
                         <div>
                           <div className="text-sm text-muted-foreground">Avg Job Duration</div>
-                          <div className="text-2xl font-bold">{statistics.avg_job_duration.toFixed(2)}s</div>
+                          <div className="text-2xl font-bold">
+                            {statistics.avg_job_duration.toFixed(2)}s
+                          </div>
                         </div>
                       )}
                     </div>
-                    {statistics.routine_statistics && Object.keys(statistics.routine_statistics).length > 0 && (
-                      <div className="mt-6">
-                        <CardTitle className="text-lg mb-4">Routine Statistics</CardTitle>
-                        <div className="space-y-2">
-                          {Object.entries(statistics.routine_statistics).map(([routineId, stats]: [string, any]) => (
-                            <Card key={routineId} className="surface-panel">
-                              <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-mono">{routineId}</CardTitle>
-                              </CardHeader>
-                              <CardContent className="text-sm space-y-1">
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Executions:</span>
-                                  <span className="font-semibold">{stats.execution_count || 0}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Errors:</span>
-                                  <span className="font-semibold text-destructive">{stats.error_count || 0}</span>
-                                </div>
-                                {stats.avg_duration !== undefined && (
-                                  <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Avg Duration:</span>
-                                    <span>{(stats.avg_duration * 1000).toFixed(2)}ms</span>
-                                  </div>
-                                )}
-                              </CardContent>
-                            </Card>
-                          ))}
+                    {statistics.routine_statistics &&
+                      Object.keys(statistics.routine_statistics).length > 0 && (
+                        <div className="mt-6">
+                          <CardTitle className="text-lg mb-4">Routine Statistics</CardTitle>
+                          <div className="space-y-2">
+                            {Object.entries(statistics.routine_statistics).map(
+                              ([routineId, stats]: [string, any]) => (
+                                <Card key={routineId} className="surface-panel">
+                                  <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-mono">{routineId}</CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="text-sm space-y-1">
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Executions:</span>
+                                      <span className="font-semibold">
+                                        {stats.execution_count || 0}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Errors:</span>
+                                      <span className="font-semibold text-destructive">
+                                        {stats.error_count || 0}
+                                      </span>
+                                    </div>
+                                    {stats.avg_duration !== undefined && (
+                                      <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Avg Duration:</span>
+                                        <span>{(stats.avg_duration * 1000).toFixed(2)}ms</span>
+                                      </div>
+                                    )}
+                                  </CardContent>
+                                </Card>
+                              )
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 </CardContent>
               </Card>
@@ -557,7 +578,15 @@ export default function WorkerDetailPage() {
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center justify-between">
                           <span className="font-mono">{record.routine_id || "Unknown"}</span>
-                          <Badge variant={record.status === "completed" ? "secondary" : record.status === "failed" ? "destructive" : "outline"}>
+                          <Badge
+                            variant={
+                              record.status === "completed"
+                                ? "secondary"
+                                : record.status === "failed"
+                                  ? "destructive"
+                                  : "outline"
+                            }
+                          >
                             {record.status || "unknown"}
                           </Badge>
                         </div>
@@ -567,9 +596,7 @@ export default function WorkerDetailPage() {
                           </div>
                         )}
                         {record.error && (
-                          <div className="text-xs text-destructive mt-1">
-                            Error: {record.error}
-                          </div>
+                          <div className="text-xs text-destructive mt-1">Error: {record.error}</div>
                         )}
                       </div>
                     </CardContent>
@@ -619,14 +646,18 @@ export default function WorkerDetailPage() {
                         {state.error_count !== undefined && (
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Error Count:</span>
-                            <span className="font-semibold text-destructive">{state.error_count}</span>
+                            <span className="font-semibold text-destructive">
+                              {state.error_count}
+                            </span>
                           </div>
                         )}
                         {state.last_execution_time && (
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Last Execution:</span>
                             <span className="text-xs">
-                              {formatDistanceToNow(new Date(state.last_execution_time), { addSuffix: true })}
+                              {formatDistanceToNow(new Date(state.last_execution_time), {
+                                addSuffix: true,
+                              })}
                             </span>
                           </div>
                         )}

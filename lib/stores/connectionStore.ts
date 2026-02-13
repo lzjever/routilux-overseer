@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 export interface ConnectionState {
   // State
@@ -9,7 +9,7 @@ export interface ConnectionState {
   connecting: boolean;
   error: string | null;
   lastConnected: string | null;
-  hydrated: boolean; // Track if state has been hydrated from localStorage
+  hydrated: boolean; // Track if state has been hydrated from storage
 
   // Actions
   setServerUrl: (url: string) => void;
@@ -67,14 +67,16 @@ export const useConnectionStore = create<ConnectionState>()(
     }),
     {
       name: "overseer-connection-storage",
+      // Use sessionStorage for better security (cleared when tab closes)
+      storage: createJSONStorage(() => sessionStorage),
+      // Only persist non-sensitive data; apiKey is kept in memory only
       partialize: (state) => ({
         serverUrl: state.serverUrl,
         lastConnected: state.lastConnected,
-        connected: state.connected,
-        apiKey: state.apiKey,
+        // Note: apiKey is intentionally NOT persisted for security
       }),
       onRehydrateStorage: () => (state) => {
-        // Called when state is rehydrated from localStorage
+        // Called when state is rehydrated from storage
         if (state) {
           state.setHydrated(true);
         }

@@ -21,11 +21,13 @@ npx playwright test
 ## Prerequisites
 
 1. **routilux CLI installed**:
+
 ```bash
 pip install -e /path/to/routilux
 ```
 
 2. **Overseer dev server running**:
+
 ```bash
 npm run dev  # Runs on http://localhost:3000
 ```
@@ -54,26 +56,31 @@ e2e/
 ## Running Tests
 
 ### All tests
+
 ```bash
 npx playwright test
 ```
 
 ### Specific test file
+
 ```bash
 npx playwright test tests/01-connection.spec.ts
 ```
 
 ### With UI (interactive)
+
 ```bash
 npx playwright test --ui
 ```
 
 ### Debug mode
+
 ```bash
 npx playwright test --debug
 ```
 
 ### View test report
+
 ```bash
 npx playwright show-report
 ```
@@ -82,16 +89,16 @@ npx playwright show-report
 
 The test suite includes specialized routines for testing:
 
-| Category | Routines |
-|----------|----------|
-| **Sources** | `e2e_data_generator`, `e2e_number_source`, `e2e_delayed_source` |
+| Category       | Routines                                                                                |
+| -------------- | --------------------------------------------------------------------------------------- |
+| **Sources**    | `e2e_data_generator`, `e2e_number_source`, `e2e_delayed_source`                         |
 | **Processors** | `e2e_data_transformer`, `e2e_data_filter`, `e2e_data_aggregator`, `e2e_error_simulator` |
-| **Sinks** | `e2e_data_collector`, `e2e_batch_collector`, `e2e_counter_sink`, `e2e_assertion_sink` |
+| **Sinks**      | `e2e_data_collector`, `e2e_batch_collector`, `e2e_counter_sink`, `e2e_assertion_sink`   |
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
+| Variable            | Description             | Default                 |
+| ------------------- | ----------------------- | ----------------------- |
 | `OVERSEER_BASE_URL` | URL of the overseer app | `http://localhost:3000` |
 
 ## Documentation
@@ -102,6 +109,7 @@ The test suite includes specialized routines for testing:
 ## Troubleshooting
 
 **Server not starting**: Ensure routilux is installed and importable
+
 ```bash
 python -c "import routilux.cli.main; print('OK')"
 ```

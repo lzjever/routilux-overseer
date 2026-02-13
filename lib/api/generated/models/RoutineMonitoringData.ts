@@ -2,28 +2,27 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { RoutineExecutionStatus } from './RoutineExecutionStatus';
-import type { RoutineInfo } from './RoutineInfo';
-import type { SlotQueueStatus } from './SlotQueueStatus';
+import type { RoutineExecutionStatus } from "./RoutineExecutionStatus";
+import type { RoutineInfo } from "./RoutineInfo";
+import type { SlotQueueStatus } from "./SlotQueueStatus";
 /**
  * Complete monitoring data for a routine.
  */
 export type RoutineMonitoringData = {
-    /**
-     * Routine ID
-     */
-    routine_id: string;
-    /**
-     * Execution status
-     */
-    execution_status: RoutineExecutionStatus;
-    /**
-     * Queue status for all slots
-     */
-    queue_status: Array<SlotQueueStatus>;
-    /**
-     * Routine metadata information
-     */
-    info: RoutineInfo;
+  /**
+   * Routine ID
+   */
+  routine_id: string;
+  /**
+   * Execution status
+   */
+  execution_status: RoutineExecutionStatus;
+  /**
+   * Queue status for all slots
+   */
+  queue_status: Array<SlotQueueStatus>;
+  /**
+   * Routine metadata information
+   */
+  info: RoutineInfo;
 };
-

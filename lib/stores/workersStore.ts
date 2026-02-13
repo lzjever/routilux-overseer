@@ -27,8 +27,11 @@ export const useWorkersStore = create<WorkersState>((set, get) => ({
   loadWorkers: async (serverUrl: string, flowId?: string | null, status?: string | null) => {
     set({ loading: true, error: null, serverUrl });
     try {
-      const workers = await queryService.workers.list({ flowId: flowId || undefined, status: status || undefined });
-      const workerMap = new Map(workers.map((w) => [w.worker_id, w]));
+      const response = await queryService.workers.list({
+        flowId: flowId || undefined,
+        status: status || undefined,
+      });
+      const workerMap = new Map(response.workers.map((w) => [w.worker_id, w]));
       set({ workers: workerMap, loading: false, serverUrl });
     } catch (error) {
       handleError(error, "Failed to load workers");

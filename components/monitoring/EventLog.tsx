@@ -5,13 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import type { ExecutionRecord } from "@/lib/types/api";
 import { formatDistanceToNow } from "date-fns";
-import {
-  Activity,
-  CheckCircle,
-  XCircle,
-  ArrowRight,
-  ArrowLeft,
-} from "lucide-react";
+import { Activity, CheckCircle, XCircle, ArrowRight, ArrowLeft } from "lucide-react";
 
 interface EventLogProps {
   events: ExecutionRecord[];
@@ -35,7 +29,9 @@ function getEventIcon(eventType: string) {
   }
 }
 
-function getEventBadgeVariant(eventType: string): "default" | "secondary" | "destructive" | "outline" {
+function getEventBadgeVariant(
+  eventType: string
+): "default" | "secondary" | "destructive" | "outline" {
   switch (eventType) {
     case "routine_start":
       return "default";
@@ -92,15 +88,11 @@ export function EventLog({ events, loading }: EventLogProps) {
                 key={index}
                 className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
               >
-                <div className="mt-0.5">
-                  {getEventIcon(event.event_name)}
-                </div>
+                <div className="mt-0.5">{getEventIcon(event.event_name)}</div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-sm font-semibold">
-                      {event.routine_id}
-                    </span>
+                    <span className="font-mono text-sm font-semibold">{event.routine_id}</span>
                     <Badge variant={getEventBadgeVariant(event.event_name)} className="text-xs">
                       {event.event_name}
                     </Badge>
@@ -114,9 +106,7 @@ export function EventLog({ events, loading }: EventLogProps) {
 
                   {Object.keys(event.data).length > 0 && (
                     <div className="mt-2 text-xs bg-muted p-2 rounded">
-                      <div className="font-mono">
-                        {JSON.stringify(event.data, null, 2)}
-                      </div>
+                      <div className="font-mono">{JSON.stringify(event.data, null, 2)}</div>
                     </div>
                   )}
                 </div>

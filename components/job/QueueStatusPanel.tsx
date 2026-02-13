@@ -16,11 +16,7 @@ interface QueueStatusPanelProps {
   embedded?: boolean;
 }
 
-export function QueueStatusPanel({
-  jobId,
-  serverUrl,
-  embedded = false,
-}: QueueStatusPanelProps) {
+export function QueueStatusPanel({ jobId, serverUrl, embedded = false }: QueueStatusPanelProps) {
   const [queues, setQueues] = useState<Record<string, Array<SlotQueueStatus>>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,11 +85,7 @@ export function QueueStatusPanel({
   }
 
   if (error) {
-    return (
-      <div className={cn("text-sm text-destructive", embedded && "text-xs")}>
-        {error}
-      </div>
-    );
+    return <div className={cn("text-sm text-destructive", embedded && "text-xs")}>{error}</div>;
   }
 
   const routineIds = Object.keys(queues);
@@ -114,9 +106,7 @@ export function QueueStatusPanel({
         return (
           <Card key={routineId} className={embedded ? "text-sm" : ""}>
             <CardHeader className={cn("pb-2", embedded && "p-3")}>
-              <CardTitle className={cn("text-base", embedded && "text-sm")}>
-                {routineId}
-              </CardTitle>
+              <CardTitle className={cn("text-base", embedded && "text-sm")}>{routineId}</CardTitle>
             </CardHeader>
             <CardContent className={cn("space-y-3", embedded && "p-3 pt-0 space-y-2")}>
               {slots.map((slot, index) => {

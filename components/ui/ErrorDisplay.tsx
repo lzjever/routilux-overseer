@@ -25,7 +25,12 @@ interface ErrorDisplayProps {
   variant?: "default" | "destructive" | "warning";
 }
 
-export function ErrorDisplay({ error, className, onDismiss, variant = "destructive" }: ErrorDisplayProps) {
+export function ErrorDisplay({
+  error,
+  className,
+  onDismiss,
+  variant = "destructive",
+}: ErrorDisplayProps) {
   if (!error) return null;
 
   // Normalize error to ErrorInfo
@@ -43,7 +48,9 @@ export function ErrorDisplay({ error, className, onDismiss, variant = "destructi
   }
 
   // Determine error category based on status
-  const getErrorCategory = (status?: number): { title: string; description: string; action?: string } => {
+  const getErrorCategory = (
+    status?: number
+  ): { title: string; description: string; action?: string } => {
     switch (status) {
       case 400:
         return {
@@ -53,7 +60,8 @@ export function ErrorDisplay({ error, className, onDismiss, variant = "destructi
       case 401:
         return {
           title: "Unauthorized",
-          description: "You are not authorized to perform this action. Please check your credentials.",
+          description:
+            "You are not authorized to perform this action. Please check your credentials.",
         };
       case 403:
         return {
@@ -82,7 +90,8 @@ export function ErrorDisplay({ error, className, onDismiss, variant = "destructi
       case 504:
         return {
           title: "Server Error",
-          description: "The server encountered an error. Please try again later or contact support if the problem persists.",
+          description:
+            "The server encountered an error. Please try again later or contact support if the problem persists.",
           action: errorInfo.errorId ? `Error ID: ${errorInfo.errorId}` : undefined,
         };
       default:
@@ -97,36 +106,26 @@ export function ErrorDisplay({ error, className, onDismiss, variant = "destructi
   const isNetworkError = !errorInfo.status || errorInfo.status === 0;
 
   return (
-    <Alert
-      variant={variant}
-      className={cn("relative", className)}
-    >
+    <Alert variant={variant} className={cn("relative", className)}>
       <AlertCircle className="h-4 w-4" />
       <AlertTitle className="flex items-center justify-between">
         <span>{category.title}</span>
         {onDismiss && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDismiss}
-            className="h-6 w-6 p-0"
-          >
+          <Button variant="ghost" size="sm" onClick={onDismiss} className="h-6 w-6 p-0">
             <X className="h-3 w-3" />
           </Button>
         )}
       </AlertTitle>
       <AlertDescription className="space-y-2">
         <p>{category.description || errorInfo.message}</p>
-        
+
         {isNetworkError && (
           <p className="text-sm text-muted-foreground">
             This might be a network connectivity issue. Please check your connection and try again.
           </p>
         )}
 
-        {category.action && (
-          <p className="text-sm font-medium">{category.action}</p>
-        )}
+        {category.action && <p className="text-sm font-medium">{category.action}</p>}
 
         {errorInfo.details && (
           <details className="mt-2">
@@ -141,12 +140,7 @@ export function ErrorDisplay({ error, className, onDismiss, variant = "destructi
 
         <div className="flex items-center gap-2 pt-2">
           {errorInfo.retry && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={errorInfo.retry}
-              className="gap-2"
-            >
+            <Button variant="outline" size="sm" onClick={errorInfo.retry} className="gap-2">
               <RefreshCw className="h-3 w-3" />
               Retry
             </Button>

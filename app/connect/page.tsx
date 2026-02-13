@@ -5,16 +5,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
 import { createAPI } from "@/lib/api";
-import { Logo, LogoIcon } from "@/components/ui/Logo";
+import { LogoIcon } from "@/components/ui/Logo";
 import { Loader2 } from "lucide-react";
 
 export default function ConnectPage() {
@@ -35,9 +29,7 @@ export default function ConnectPage() {
 
     try {
       // Validate URL format
-      const validUrl = url.startsWith("http")
-        ? url
-        : `http://${url}`;
+      const validUrl = url.startsWith("http") ? url : `http://${url}`;
 
       console.log("Validated URL:", validUrl);
 
@@ -47,27 +39,23 @@ export default function ConnectPage() {
       // Test connection
       const api = createAPI(validUrl, key.trim() ? key.trim() : undefined);
       console.log("Testing connection...");
-      try {
-        const isConnected = await api.testConnection();
-        console.log("Connection result:", isConnected);
+      const isConnected = await api.testConnection();
+      console.log("Connection result:", isConnected);
 
-        if (isConnected) {
-          setConnected(true);
-          setLastConnected(new Date().toISOString());
-          console.log("Connected successfully, redirecting to home...");
-          router.push("/");
-        } else {
-          setError("Failed to connect to server. Please check the URL and try again.");
-          console.error("Connection test failed");
-        }
-      } catch (testError: any) {
-        // This will be caught by outer catch block, but we can provide more context
-        throw testError;
+      if (isConnected) {
+        setConnected(true);
+        setLastConnected(new Date().toISOString());
+        console.log("Connected successfully, redirecting to home...");
+        router.push("/");
+      } else {
+        setError("Failed to connect to server. Please check the URL and try again.");
+        console.error("Connection test failed");
       }
     } catch (err) {
-      const errorMsg = err instanceof Error
-        ? err.message
-        : "Failed to connect. Please check the URL and try again.";
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : "Failed to connect. Please check the URL and try again.";
       setError(errorMsg);
       console.error("Connection error:", err);
     } finally {
@@ -81,10 +69,13 @@ export default function ConnectPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-app p-4">
-      <Card className="w-full max-w-md shadow-xl">
+    <div
+      className="min-h-screen flex items-center justify-center bg-app p-4"
+      data-testid="connect-page"
+    >
+      <Card className="w-full max-w-md shadow-xl" data-testid="connect-card">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4">
+          <div className="mx-auto mb-4" data-testid="connect-logo">
             <LogoIcon size={48} />
           </div>
           <CardTitle className="text-2xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
@@ -95,11 +86,12 @@ export default function ConnectPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" data-testid="connect-form">
             <div className="space-y-2">
               <Label htmlFor="serverUrl">Server URL</Label>
               <Input
                 id="serverUrl"
+                data-testid="connect-input-server-url"
                 type="text"
                 placeholder="http://localhost:20555"
                 value={url}
@@ -107,14 +99,13 @@ export default function ConnectPage() {
                 disabled={connecting}
                 className="font-mono"
               />
-              <p className="text-xs text-muted-foreground">
-                Default: http://localhost:20555
-              </p>
+              <p className="text-xs text-muted-foreground">Default: http://localhost:20555</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="apiKey">API Key (optional)</Label>
               <Input
                 id="apiKey"
+                data-testid="connect-input-api-key"
                 type="password"
                 placeholder="Your API key"
                 value={key}
@@ -127,19 +118,23 @@ export default function ConnectPage() {
             </div>
 
             {error && (
-              <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+              <div
+                className="rounded-md bg-destructive/15 p-3 text-sm text-destructive"
+                data-testid="connect-error-message"
+              >
                 {error}
               </div>
             )}
 
             <Button
               type="submit"
+              data-testid="connect-button-submit"
               className="w-full"
               disabled={connecting || !url.trim()}
             >
               {connecting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" data-testid="connect-spinner" />
                   Connecting...
                 </>
               ) : (
@@ -151,9 +146,8 @@ export default function ConnectPage() {
           <div className="mt-6 text-center text-sm text-muted-foreground">
             <p className="mb-2 font-semibold">What is Routilux?</p>
             <p className="text-xs">
-              Routilux is an event-driven workflow orchestration framework.
-              This debugger helps you visualize, monitor, and debug your
-              workflows in real-time.
+              Routilux is an event-driven workflow orchestration framework. This debugger helps you
+              visualize, monitor, and debug your workflows in real-time.
             </p>
           </div>
         </CardContent>

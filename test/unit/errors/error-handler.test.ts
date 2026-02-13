@@ -1,33 +1,36 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { handleError, withErrorHandling } from '@/lib/errors/error-handler';
-import { NetworkError, APIError, ValidationError, AuthenticationError } from '@/lib/errors/types';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { handleError, withErrorHandling } from "@/lib/errors/error-handler";
+import { NetworkError, APIError, ValidationError, AuthenticationError } from "@/lib/errors/types";
 
 // Mock sonner toast
-vi.mock('sonner', () => ({
+vi.mock("sonner", () => ({
   toast: {
     error: vi.fn(),
   },
 }));
 
-describe('ErrorHandler', () => {
+describe("ErrorHandler", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('handleError', () => {
-    it('should handle AppError', () => {
-      const error = new NetworkError('Test network error');
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  describe("handleError", () => {
+    it("should handle AppError", () => {
+      const error = new NetworkError("Test network error");
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      handleError(error, 'TestContext');
+      handleError(error, "TestContext");
 
-      expect(consoleSpy).toHaveBeenCalledWith('[NETWORK_ERROR] TestContext: Test network error', error);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "[NETWORK_ERROR] TestContext: Test network error",
+        error
+      );
       consoleSpy.mockRestore();
     });
 
-    it('should handle Error instance', () => {
-      const error = new Error('fetch failed');
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    it("should handle Error instance", () => {
+      const error = new Error("fetch failed");
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       handleError(error);
 
@@ -35,36 +38,36 @@ describe('ErrorHandler', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should handle string error', () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    it("should handle string error", () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      handleError('test error');
+      handleError("test error");
 
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
   });
 
-  describe('withErrorHandling', () => {
-    it('should wrap async function and handle errors', async () => {
+  describe("withErrorHandling", () => {
+    it("should wrap async function and handle errors", async () => {
       const fn = async () => {
-        throw new Error('Test error');
+        throw new Error("Test error");
       };
 
       const wrapped = withErrorHandling(fn);
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      await expect(wrapped()).rejects.toThrow('Test error');
+      await expect(wrapped()).rejects.toThrow("Test error");
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
-    it('should return result when no error', async () => {
-      const fn = async () => 'success';
+    it("should return result when no error", async () => {
+      const fn = async () => "success";
       const wrapped = withErrorHandling(fn);
 
       const result = await wrapped();
-      expect(result).toBe('success');
+      expect(result).toBe("success");
     });
   });
 });

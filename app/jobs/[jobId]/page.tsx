@@ -30,15 +30,20 @@ export default function JobDetailPage() {
   const params = useParams();
   const jobId = params.jobId as string;
   const { connected, serverUrl, hydrated } = useConnectionStore();
-  const { jobs, loadJob, loadJobMonitoringData, loadJobMetrics, metricsData, wsConnected } = useJobStore();
+  const { jobs, loadJob, loadJobMonitoringData, loadJobMetrics, metricsData, wsConnected } =
+    useJobStore();
   const { selectFlow } = useFlowStore();
   const { getEvents } = useJobEventsStore();
   const { loadJobState, getSharedData, getExecutionHistory, jobStates } = useJobStateStore();
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"activity" | "metrics" | "history" | "queues">("activity");
+  const [activeTab, setActiveTab] = useState<"activity" | "metrics" | "history" | "queues">(
+    "activity"
+  );
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [selectedNodeAnchor, setSelectedNodeAnchor] = useState<{ x: number; y: number } | null>(null);
+  const [selectedNodeAnchor, setSelectedNodeAnchor] = useState<{ x: number; y: number } | null>(
+    null
+  );
   const historyPollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const job = jobs.get(jobId);
@@ -72,11 +77,10 @@ export default function JobDetailPage() {
     };
   }, [serverUrl, job, jobId, loadJobState]);
 
-
   useEffect(() => {
     // Wait for hydration before checking connection
     if (!hydrated) return;
-    
+
     if (!connected || !serverUrl) {
       router.push("/connect");
       return;
@@ -102,8 +106,17 @@ export default function JobDetailPage() {
     };
 
     loadData();
-  }, [hydrated, connected, serverUrl, jobId, loadJob, selectFlow, loadJobMonitoringData, loadJobMetrics, router]);
-
+  }, [
+    hydrated,
+    connected,
+    serverUrl,
+    jobId,
+    loadJob,
+    selectFlow,
+    loadJobMonitoringData,
+    loadJobMetrics,
+    router,
+  ]);
 
   const handleRefresh = async () => {
     if (!serverUrl) return;
@@ -134,7 +147,6 @@ export default function JobDetailPage() {
       </div>
     );
   }
-
 
   const normalizedEvents = (events.length ? events : getExecutionHistory(jobId)).map((event) => {
     const map: Record<string, string> = {
@@ -211,7 +223,15 @@ export default function JobDetailPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Status</span>
-                      <Badge variant={job.status === "running" ? "default" : job.status === "failed" ? "destructive" : "secondary"}>
+                      <Badge
+                        variant={
+                          job.status === "running"
+                            ? "default"
+                            : job.status === "failed"
+                              ? "destructive"
+                              : "secondary"
+                        }
+                      >
                         {job.status}
                       </Badge>
                     </div>
@@ -219,40 +239,74 @@ export default function JobDetailPage() {
                       {job.created_at && (
                         <div className="flex items-center justify-between">
                           <span>Created</span>
-                          <span>{formatDistanceToNow(new Date(job.created_at * 1000), { addSuffix: true })}</span>
+                          <span>
+                            {formatDistanceToNow(new Date(job.created_at * 1000), {
+                              addSuffix: true,
+                            })}
+                          </span>
                         </div>
                       )}
                       {job.started_at && (
                         <div className="flex items-center justify-between">
                           <span>Started</span>
-                          <span>{formatDistanceToNow(new Date(job.started_at * 1000), { addSuffix: true })}</span>
+                          <span>
+                            {formatDistanceToNow(new Date(job.started_at * 1000), {
+                              addSuffix: true,
+                            })}
+                          </span>
                         </div>
                       )}
                       {job.completed_at && (
                         <div className="flex items-center justify-between">
                           <span>Completed</span>
-                          <span>{formatDistanceToNow(new Date(job.completed_at * 1000), { addSuffix: true })}</span>
+                          <span>
+                            {formatDistanceToNow(new Date(job.completed_at * 1000), {
+                              addSuffix: true,
+                            })}
+                          </span>
                         </div>
                       )}
                     </div>
                   </CardContent>
                 </Card>
 
-                <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="flex flex-col">
-                <TabsList className="grid w-full grid-cols-5 mb-3 h-auto bg-transparent p-0">
-                    <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
-                    <TabsTrigger value="metrics" className="text-xs">Metrics</TabsTrigger>
-                    <TabsTrigger value="history" className="text-xs">History</TabsTrigger>
-                    <TabsTrigger value="queues" className="text-xs">Queues</TabsTrigger>
-                    <TabsTrigger value="details" className="text-xs">Details</TabsTrigger>
+                <Tabs
+                  value={activeTab}
+                  onValueChange={(v: any) => setActiveTab(v)}
+                  className="flex flex-col"
+                >
+                  <TabsList className="grid w-full grid-cols-5 mb-3 h-auto bg-transparent p-0">
+                    <TabsTrigger value="activity" className="text-xs">
+                      Activity
+                    </TabsTrigger>
+                    <TabsTrigger value="metrics" className="text-xs">
+                      Metrics
+                    </TabsTrigger>
+                    <TabsTrigger value="history" className="text-xs">
+                      History
+                    </TabsTrigger>
+                    <TabsTrigger value="queues" className="text-xs">
+                      Queues
+                    </TabsTrigger>
+                    <TabsTrigger value="details" className="text-xs">
+                      Details
+                    </TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="activity" className="pt-3 outline-none">
-                    <EventLog events={normalizedEvents} loading={loading && normalizedEvents.length === 0} />
+                    <EventLog
+                      events={normalizedEvents}
+                      loading={loading && normalizedEvents.length === 0}
+                    />
                   </TabsContent>
 
                   <TabsContent value="metrics" className="pt-3 outline-none">
-                    <MetricsPanel job={job} metrics={metrics} eventsCount={events.length} loading={loading} />
+                    <MetricsPanel
+                      job={job}
+                      metrics={metrics}
+                      eventsCount={events.length}
+                      loading={loading}
+                    />
                   </TabsContent>
 
                   <TabsContent value="history" className="pt-3 outline-none">

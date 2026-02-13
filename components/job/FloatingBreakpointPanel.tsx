@@ -53,38 +53,6 @@ export function FloatingBreakpointPanel({
     }
   }, [routineSlots, selectedSlot]);
 
-  const handleToggleBreakpoint = async () => {
-    if (!serverUrl) return;
-    setIsLoading(true);
-    try {
-      const api = createAPI(serverUrl);
-      if (hasBreakpoint) {
-        const bp = jobBreakpoints.find(
-          (item) => item.routine_id === routineId && item.slot_name === selectedSlot
-        );
-        if (bp) {
-          await api.breakpoints.delete(jobId, bp.breakpoint_id);
-        }
-      } else {
-        await api.breakpoints.create(jobId, {
-          routine_id: routineId,
-          slot_name: selectedSlot,
-          enabled: true,
-        });
-      }
-      // Reload breakpoints
-      await loadBreakpoints(jobId, serverUrl);
-    } catch (error) {
-      console.error("Failed to toggle breakpoint:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (routineSlots.length === 0) {
-    return null;
-  }
-
   const updatePosition = useCallback(() => {
     if (!anchor || !panelRef.current || typeof window === "undefined") {
       setPosition(null);
@@ -130,8 +98,7 @@ export function FloatingBreakpointPanel({
 
     const pick = candidates.find((candidate) => fits(candidate)) || candidates[0];
 
-    const clamp = (value: number, min: number, max: number) =>
-      Math.min(Math.max(value, min), max);
+    const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
     setPosition({
       placement: pick.placement,
@@ -150,6 +117,39 @@ export function FloatingBreakpointPanel({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [anchor, updatePosition]);
+
+  const handleToggleBreakpoint = async () => {
+    if (!serverUrl) return;
+    setIsLoading(true);
+    try {
+      const api = createAPI(serverUrl);
+      if (hasBreakpoint) {
+        const bp = jobBreakpoints.find(
+          (item) => item.routine_id === routineId && item.slot_name === selectedSlot
+        );
+        if (bp) {
+          await api.breakpoints.delete(jobId, bp.breakpoint_id);
+        }
+      } else {
+        await api.breakpoints.create(jobId, {
+          routine_id: routineId,
+          slot_name: selectedSlot,
+          enabled: true,
+        });
+      }
+      // Reload breakpoints
+      await loadBreakpoints(jobId, serverUrl);
+    } catch (error) {
+      console.error("Failed to toggle breakpoint:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Early return after all hooks are called
+  if (routineSlots.length === 0) {
+    return null;
+  }
 
   const pointerPlacement = position?.placement;
 
@@ -194,53 +194,57 @@ export function FloatingBreakpointPanel({
         )}
         <Card className="surface-panel shadow-2xl ring-1 ring-violet-200/60 dark:ring-violet-500/20 animate-in fade-in-0 zoom-in-95 duration-200">
           <CardHeader className="pb-3 flex flex-row items-center justify-between border-b bg-gradient-to-r from-violet-50/70 via-white/70 to-slate-50/70 dark:from-violet-950/30 dark:via-slate-950/30 dark:to-slate-900/40">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-violet-500" />
-            Breakpoint
-            <span className="text-xs text-muted-foreground font-normal truncate max-w-[160px]">{routineId}</span>
-          </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-7 w-7 p-0 rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800/70"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-violet-500" />
+              Breakpoint
+              <span className="text-xs text-muted-foreground font-normal truncate max-w-[160px]">
+                {routineId}
+              </span>
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="h-7 w-7 p-0 rounded-full hover:bg-slate-200/70 dark:hover:bg-slate-800/70"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-          <div className="space-y-1.5">
-            <label className="text-[11px] uppercase tracking-wide text-muted-foreground">Slot</label>
-            <select
-              value={selectedSlot}
-              onChange={(event) => setSelectedSlot(event.target.value)}
-              className="w-full px-3 py-2.5 text-sm rounded-md border bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            <div className="space-y-1.5">
+              <label className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                Slot
+              </label>
+              <select
+                value={selectedSlot}
+                onChange={(event) => setSelectedSlot(event.target.value)}
+                className="w-full px-3 py-2.5 text-sm rounded-md border bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              >
+                {routineSlots.map((slot) => (
+                  <option key={slot.name} value={slot.name}>
+                    {slot.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Button
+              variant={hasBreakpoint ? "default" : "outline"}
+              size="sm"
+              className={cn(
+                hasBreakpoint && "bg-violet-500 hover:bg-violet-600",
+                "w-full shadow-sm"
+              )}
+              onClick={handleToggleBreakpoint}
+              disabled={isLoading || !selectedSlot}
             >
-              {routineSlots.map((slot) => (
-                <option key={slot.name} value={slot.name}>
-                  {slot.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <Button
-            variant={hasBreakpoint ? "default" : "outline"}
-            size="sm"
-            className={cn(
-              hasBreakpoint && "bg-violet-500 hover:bg-violet-600",
-              "w-full shadow-sm"
-            )}
-            onClick={handleToggleBreakpoint}
-            disabled={isLoading || !selectedSlot}
-          >
-            {hasBreakpoint ? "Remove Breakpoint" : "Set Breakpoint"}
-          </Button>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Applies to selected slot only.</span>
-            <span className={cn(hasBreakpoint ? "text-violet-600" : "text-slate-500")}>
-              {hasBreakpoint ? "Active" : "Inactive"}
-            </span>
-          </div>
+              {hasBreakpoint ? "Remove Breakpoint" : "Set Breakpoint"}
+            </Button>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Applies to selected slot only.</span>
+              <span className={cn(hasBreakpoint ? "text-violet-600" : "text-slate-500")}>
+                {hasBreakpoint ? "Active" : "Inactive"}
+              </span>
+            </div>
           </CardContent>
         </Card>
       </div>

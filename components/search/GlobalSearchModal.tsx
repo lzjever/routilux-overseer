@@ -7,11 +7,7 @@ import { useFlowStore } from "@/lib/stores/flowStore";
 import { useJobStore } from "@/lib/stores/jobStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
 import { useRouter } from "next/navigation";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -21,17 +17,33 @@ import { useKeyboardShortcut } from "@/lib/hooks/useKeyboardShortcut";
 
 export function GlobalSearchModal() {
   const router = useRouter();
-  const { isOpen, query, results, recentSearches, selectedIndex, setQuery, setResults, addRecentSearch, open, close, setSelectedIndex, clear } = useSearchStore();
+  const {
+    isOpen,
+    query,
+    results,
+    recentSearches,
+    selectedIndex,
+    setQuery,
+    setResults,
+    addRecentSearch,
+    open,
+    close,
+    setSelectedIndex,
+    clear,
+  } = useSearchStore();
   const { flows } = useFlowStore();
   const { jobs } = useJobStore();
   const { connected, serverUrl } = useConnectionStore();
   const [searching, setSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const handleSelectResult = useCallback((result: SearchResult) => {
-    addRecentSearch(query);
-    router.push(result.url);
-    close();
-  }, [addRecentSearch, query, router, close]);
+  const handleSelectResult = useCallback(
+    (result: SearchResult) => {
+      addRecentSearch(query);
+      router.push(result.url);
+      close();
+    },
+    [addRecentSearch, query, router, close]
+  );
 
   // Keyboard shortcut: Cmd/Ctrl+K
   useKeyboardShortcut({
@@ -79,7 +91,7 @@ export function GlobalSearchModal() {
     }
 
     setSearching(true);
-    
+
     // Debounce search
     const timeoutId = setTimeout(() => {
       const searchResults: SearchResult[] = [];
@@ -88,7 +100,7 @@ export function GlobalSearchModal() {
       flows.forEach((flow) => {
         const flowId = flow.flow_id.toLowerCase();
         const description = "";
-        
+
         if (flowId.includes(trimmedQuery) || description.includes(trimmedQuery)) {
           searchResults.push({
             id: flow.flow_id,
@@ -106,8 +118,12 @@ export function GlobalSearchModal() {
         const jobId = job.job_id.toLowerCase();
         const flowId = job.flow_id?.toLowerCase() || "";
         const status = job.status?.toLowerCase() || "";
-        
-        if (jobId.includes(trimmedQuery) || flowId.includes(trimmedQuery) || status.includes(trimmedQuery)) {
+
+        if (
+          jobId.includes(trimmedQuery) ||
+          flowId.includes(trimmedQuery) ||
+          status.includes(trimmedQuery)
+        ) {
           searchResults.push({
             id: job.job_id,
             type: "job",
@@ -124,7 +140,7 @@ export function GlobalSearchModal() {
         const aExact = a.title.toLowerCase() === trimmedQuery ? 1 : 0;
         const bExact = b.title.toLowerCase() === trimmedQuery ? 1 : 0;
         if (aExact !== bExact) return bExact - aExact;
-        
+
         const typeOrder = { flow: 0, job: 1, log: 2 };
         return typeOrder[a.type] - typeOrder[b.type];
       });
@@ -168,13 +184,16 @@ export function GlobalSearchModal() {
     }
   };
 
-  const groupedResults = results.reduce((acc, result) => {
-    if (!acc[result.type]) {
-      acc[result.type] = [];
-    }
-    acc[result.type].push(result);
-    return acc;
-  }, {} as Record<string, SearchResult[]>);
+  const groupedResults = results.reduce(
+    (acc, result) => {
+      if (!acc[result.type]) {
+        acc[result.type] = [];
+      }
+      acc[result.type].push(result);
+      return acc;
+    },
+    {} as Record<string, SearchResult[]>
+  );
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -314,7 +333,9 @@ export function GlobalSearchModal() {
               </span>
             </div>
             {results.length > 0 && (
-              <span>{results.length} result{results.length !== 1 ? "s" : ""}</span>
+              <span>
+                {results.length} result{results.length !== 1 ? "s" : ""}
+              </span>
             )}
           </div>
         </div>

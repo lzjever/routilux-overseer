@@ -40,7 +40,7 @@ export function FlowDetailsSidebar({
 }: FlowDetailsSidebarProps) {
   const { isFlowLocked, selectFlow } = useFlowStore();
   const [activeTab, setActiveTab] = useState<"routines" | "connections">("routines");
-  
+
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteItems, setDeleteItems] = useState<DeleteItem[]>([]);
@@ -50,15 +50,17 @@ export function FlowDetailsSidebar({
 
   // Handle routine delete click
   const handleRoutineDeleteClick = (routineId: string) => {
-    const items: DeleteItem[] = [{
-      type: 'routine',
-      id: routineId,
-      routineId,
-    }];
-    
+    const items: DeleteItem[] = [
+      {
+        type: "routine",
+        id: routineId,
+        routineId,
+      },
+    ];
+
     // Calculate affected connections
     const affected = getAffectedConnections([routineId], flow.connections);
-    
+
     setDeleteItems(items);
     setAffectedConnections(affected);
     setDeleteDialogOpen(true);
@@ -66,15 +68,17 @@ export function FlowDetailsSidebar({
 
   // Handle connection delete click
   const handleConnectionDeleteClick = (index: number, conn: any) => {
-    const items: DeleteItem[] = [{
-      type: 'connection',
-      id: `conn-${index}`,
-      sourceRoutine: conn.source_routine,
-      sourceEvent: conn.source_event,
-      targetRoutine: conn.target_routine,
-      targetSlot: conn.target_slot,
-    }];
-    
+    const items: DeleteItem[] = [
+      {
+        type: "connection",
+        id: `conn-${index}`,
+        sourceRoutine: conn.source_routine,
+        sourceEvent: conn.source_event,
+        targetRoutine: conn.target_routine,
+        targetSlot: conn.target_slot,
+      },
+    ];
+
     setDeleteItems(items);
     setAffectedConnections([]);
     setDeleteDialogOpen(true);
@@ -91,12 +95,7 @@ export function FlowDetailsSidebar({
   if (collapsed) {
     return (
       <div className="w-12 surface-panel rounded-none flex flex-col items-center py-2 gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={onToggleCollapse}
-        >
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggleCollapse}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <div className="flex flex-col gap-2 mt-4">
@@ -125,19 +124,18 @@ export function FlowDetailsSidebar({
             </TabsTrigger>
           </TabsList>
         </Tabs>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 ml-2"
-          onClick={onToggleCollapse}
-        >
+        <Button variant="ghost" size="icon" className="h-6 w-6 ml-2" onClick={onToggleCollapse}>
           <ChevronRight className="h-3 w-3" />
         </Button>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="h-full flex flex-col">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as any)}
+          className="h-full flex flex-col"
+        >
           {/* Routines Tab */}
           <TabsContent value="routines" className="flex-1 m-0 p-3 space-y-2">
             <div className="flex items-center justify-between mb-2">
@@ -227,9 +225,7 @@ export function FlowDetailsSidebar({
             </div>
             <div className="space-y-1.5">
               {flow.connections.length === 0 ? (
-                <div className="text-xs text-muted-foreground py-4 text-center">
-                  No connections
-                </div>
+                <div className="text-xs text-muted-foreground py-4 text-center">No connections</div>
               ) : (
                 flow.connections.map((conn: any, index: number) => (
                   <div
@@ -238,13 +234,21 @@ export function FlowDetailsSidebar({
                     onClick={() => onConnectionClick?.(index)}
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5">From</div>
-                      <div className="text-xs font-mono font-medium truncate">
-                        {conn.source_routine}<span className="text-muted-foreground">.</span>{conn.source_event}
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5">
+                        From
                       </div>
-                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5 mt-1.5">To</div>
                       <div className="text-xs font-mono font-medium truncate">
-                        {conn.target_routine}<span className="text-muted-foreground">.</span>{conn.target_slot}
+                        {conn.source_routine}
+                        <span className="text-muted-foreground">.</span>
+                        {conn.source_event}
+                      </div>
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5 mt-1.5">
+                        To
+                      </div>
+                      <div className="text-xs font-mono font-medium truncate">
+                        {conn.target_routine}
+                        <span className="text-muted-foreground">.</span>
+                        {conn.target_slot}
                       </div>
                     </div>
                     {!locked && (

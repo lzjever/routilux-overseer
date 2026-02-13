@@ -3,10 +3,7 @@ import { ReactElement } from "react";
 import { vi } from "vitest";
 
 // Custom render function with providers if needed
-export function renderWithProviders(
-  ui: ReactElement,
-  options?: Omit<RenderOptions, "wrapper">
-) {
+export function renderWithProviders(ui: ReactElement, options?: Omit<RenderOptions, "wrapper">) {
   return render(ui, options);
 }
 

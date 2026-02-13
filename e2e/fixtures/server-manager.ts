@@ -5,10 +5,10 @@
  * Handles starting, stopping, and health checking the server.
  */
 
-import { ChildProcess, spawn } from 'child_process';
-import { pathToFileURL } from 'url';
-import * as path from 'path';
-import * as fs from 'fs/promises';
+import { ChildProcess, spawn } from "child_process";
+import { pathToFileURL } from "url";
+import * as path from "path";
+import * as fs from "fs/promises";
 
 export interface ServerConfig {
   /** Server port (default: random available port) */
@@ -18,7 +18,7 @@ export interface ServerConfig {
   /** Path to test routines directory */
   routinesDir: string;
   /** Log level for server */
-  logLevel?: 'debug' | 'info' | 'warning' | 'error';
+  logLevel?: "debug" | "info" | "warning" | "error";
   /** Enable auto-reload (development mode) */
   reload?: boolean;
 }
@@ -51,9 +51,9 @@ export class RoutluxServer {
   constructor(config: ServerConfig) {
     this.config = {
       port: config.port,
-      host: config.host || '127.0.0.1',
+      host: config.host || "127.0.0.1",
       routinesDir: config.routinesDir,
-      logLevel: config.logLevel || 'warning', // Reduce noise in tests
+      logLevel: config.logLevel || "warning", // Reduce noise in tests
       reload: config.reload || false,
     };
   }
@@ -64,7 +64,7 @@ export class RoutluxServer {
    */
   async start(): Promise<void> {
     if (this.process) {
-      throw new Error('Server is already running');
+      throw new Error("Server is already running");
     }
 
     console.log(`🚀 Starting routilux server on ${this.config.host}:${this.config.port}`);
@@ -73,34 +73,44 @@ export class RoutluxServer {
     const cliPath = await this.findRoutiluxCli();
 
     // Spawn the server process
-    this.process = spawn('python', [
-      '-m', 'routilux.cli.main',
-      'server', 'start',
-      '--host', this.config.host,
-      '--port', this.config.port.toString(),
-      '--routines-dir', this.config.routinesDir,
-      '--log-level', this.config.logLevel,
-    ], {
-      env: {
-        ...process.env,
-        PYTHONUNBUFFERED: '1', // Ensure unbuffered output
-      },
-    });
+    this.process = spawn(
+      "python",
+      [
+        "-m",
+        "routilux.cli.main",
+        "server",
+        "start",
+        "--host",
+        this.config.host,
+        "--port",
+        this.config.port.toString(),
+        "--routines-dir",
+        this.config.routinesDir,
+        "--log-level",
+        this.config.logLevel,
+      ],
+      {
+        env: {
+          ...process.env,
+          PYTHONUNBUFFERED: "1", // Ensure unbuffered output
+        },
+      }
+    );
 
     // Capture output for debugging
-    this.process.stdout?.on('data', (data) => {
+    this.process.stdout?.on("data", (data) => {
       const output = data.toString();
       this.stdout.push(output);
     });
 
-    this.process.stderr?.on('data', (data) => {
+    this.process.stderr?.on("data", (data) => {
       const output = data.toString();
       this.stderr.push(output);
     });
 
     // Handle unexpected exits
-    this.process.on('exit', (code, signal) => {
-      if (signal !== 'SIGTERM' && signal !== 'SIGINT') {
+    this.process.on("exit", (code, signal) => {
+      if (signal !== "SIGTERM" && signal !== "SIGINT") {
         console.error(`Server exited unexpectedly with code ${code}`);
       }
     });
@@ -124,20 +134,20 @@ export class RoutluxServer {
     console.log(`🛑 Stopping routilux server (PID: ${this.process.pid})`);
 
     // Try graceful shutdown first
-    this.process.kill('SIGTERM');
+    this.process.kill("SIGTERM");
 
     // Wait up to 5 seconds for graceful shutdown
     await this.waitForExit(5000);
 
     // Force kill if still running
     if (this.process && !this.process.killed) {
-      console.warn('⚠️  Force killing server');
-      this.process.kill('SIGKILL');
+      console.warn("⚠️  Force killing server");
+      this.process.kill("SIGKILL");
       await this.waitForExit(2000);
     }
 
     this.process = null;
-    console.log('✅ Routlux server stopped');
+    console.log("✅ Routlux server stopped");
   }
 
   /**
@@ -163,14 +173,14 @@ export class RoutluxServer {
    * Get captured stdout for debugging.
    */
   getStdout(): string {
-    return this.stdout.join('\n');
+    return this.stdout.join("\n");
   }
 
   /**
    * Get captured stderr for debugging.
    */
   getStderr(): string {
-    return this.stderr.join('\n');
+    return this.stderr.join("\n");
   }
 
   /**
@@ -224,14 +234,14 @@ except ImportError:
   sys.exit(1)
 `;
 
-    const result = await this.runPython('test', testScript);
-    if (result === 'OK') {
-      return 'routilux'; // Will use -m flag
+    const result = await this.runPython("test", testScript);
+    if (result === "OK") {
+      return "routilux"; // Will use -m flag
     }
 
     throw new Error(
-      'Routilux CLI not found. Ensure routilux is installed:\n' +
-      '  pip install -e /path/to/routilux'
+      "Routilux CLI not found. Ensure routilux is installed:\n" +
+        "  pip install -e /path/to/routilux"
     );
   }
 
@@ -239,22 +249,22 @@ except ImportError:
    * Run a Python script and return stdout.
    */
   private async runPython(name: string, script: string): Promise<string> {
-    const { spawn } = require('child_process');
+    const { spawn } = require("child_process");
 
     return new Promise((resolve, reject) => {
-      const proc = spawn('python', ['-c', script]);
-      let stdout = '';
-      let stderr = '';
+      const proc = spawn("python", ["-c", script]);
+      let stdout = "";
+      let stderr = "";
 
-      proc.stdout?.on('data', (data: Buffer) => {
+      proc.stdout?.on("data", (data: Buffer) => {
         stdout += data.toString();
       });
 
-      proc.stderr?.on('data', (data: Buffer) => {
+      proc.stderr?.on("data", (data: Buffer) => {
         stderr += data.toString();
       });
 
-      proc.on('close', (code: number) => {
+      proc.on("close", (code: number) => {
         if (code === 0) {
           resolve(stdout.trim());
         } else {
@@ -265,7 +275,7 @@ except ImportError:
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
@@ -273,7 +283,7 @@ except ImportError:
  * Find an available port for the server.
  */
 export async function findAvailablePort(startPort: number = 20555): Promise<number> {
-  const net = require('net');
+  const net = require("net");
 
   return new Promise((resolve, reject) => {
     const server = net.createServer();
@@ -285,7 +295,7 @@ export async function findAvailablePort(startPort: number = 20555): Promise<numb
       });
     });
 
-    server.on('error', () => {
+    server.on("error", () => {
       // Port is in use, try next
       resolve(findAvailablePort(startPort + 1));
     });

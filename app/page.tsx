@@ -77,21 +77,23 @@ export default function HomePage() {
   // Show connection prompt if not connected
   if (!connected) {
     return (
-      <div className="min-h-screen flex flex-col bg-app">
+      <div className="min-h-screen flex flex-col bg-app" data-testid="home-page">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <Card className="max-w-md surface-panel">
+          <Card className="max-w-md surface-panel" data-testid="home-card-not-connected">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plug className="h-5 w-5" />
                 Not Connected
               </CardTitle>
-              <CardDescription>
-                Connect to a Routilux server to view flows and jobs
-              </CardDescription>
+              <CardDescription>Connect to a Routilux server to view flows and jobs</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => router.push("/connect")} className="w-full">
+              <Button
+                onClick={() => router.push("/connect")}
+                className="w-full"
+                data-testid="home-button-connect"
+              >
                 Connect to Server
               </Button>
             </CardContent>
@@ -130,48 +132,58 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-app">
+    <div className="min-h-screen bg-app" data-testid="home-page">
       <Navbar />
       <div className="w-full px-4 py-6">
         <div className="flex flex-col gap-6">
           {/* Header */}
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h1 className="text-3xl font-semibold font-mono">Routilux Overseer</h1>
+              <h1 className="text-3xl font-semibold font-mono" data-testid="home-title">
+                Routilux Overseer
+              </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Observability, debugging, and control for Routilux workflows
               </p>
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-3">
-                <Badge variant="secondary" className="h-5">Connected</Badge>
+                <Badge variant="secondary" className="h-5" data-testid="home-badge-connected">
+                  Connected
+                </Badge>
                 {serverUrl && (
-                  <Badge variant="outline" className="h-5 font-mono">{serverUrl}</Badge>
+                  <Badge
+                    variant="outline"
+                    className="h-5 font-mono"
+                    data-testid="home-badge-server-url"
+                  >
+                    {serverUrl}
+                  </Badge>
                 )}
                 {(lastFlowSync || lastJobSync || lastWorkerSync) && (
-                  <span>
+                  <span data-testid="home-last-sync">
                     Last sync{" "}
                     {lastJobSync
                       ? lastJobSync.toLocaleString()
                       : lastFlowSync
-                      ? lastFlowSync.toLocaleString()
-                      : lastWorkerSync?.toLocaleString()}
+                        ? lastFlowSync.toLocaleString()
+                        : lastWorkerSync?.toLocaleString()}
                   </span>
                 )}
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button asChild size="sm">
+              <Button asChild size="sm" data-testid="home-button-start-job">
                 <Link href="/flows">
                   <Play className="h-4 w-4 mr-2" />
                   Start Job
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="sm">
+              <Button asChild variant="outline" size="sm" data-testid="home-button-create-flow">
                 <Link href="/flows">
                   <Activity className="h-4 w-4 mr-2" />
                   Create Flow
                 </Link>
               </Button>
-              <Button asChild variant="ghost" size="sm">
+              <Button asChild variant="ghost" size="sm" data-testid="home-button-settings">
                 <Link href="/connect">
                   <Settings className="h-4 w-4 mr-2" />
                   Settings
@@ -182,73 +194,96 @@ export default function HomePage() {
 
           {/* Statistics Cards */}
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card
-            className="surface-panel cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
-            onClick={() => router.push("/flows")}
-          >
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Activity className="h-4 w-4" />
-                Total Flows
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{flowCount}</div>
-              <p className="text-xs text-muted-foreground mt-1">Available workflows</p>
-            </CardContent>
-          </Card>
+            <Card
+              className="surface-panel cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
+              data-testid="home-card-flows"
+              onClick={() => router.push("/flows")}
+            >
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Total Flows
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold" data-testid="home-stat-flow-count">
+                  {flowCount}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Available workflows</p>
+              </CardContent>
+            </Card>
 
-          <Card
-            className="surface-panel cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
-            onClick={() => router.push("/jobs")}
-          >
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Zap className="h-4 w-4" />
-                Total Jobs
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{jobCount}</div>
-              <p className="text-xs text-muted-foreground mt-1">All time</p>
-            </CardContent>
-          </Card>
+            <Card
+              className="surface-panel cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
+              data-testid="home-card-jobs"
+              onClick={() => router.push("/jobs")}
+            >
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Zap className="h-4 w-4" />
+                  Total Jobs
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold" data-testid="home-stat-job-count">
+                  {jobCount}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">All time</p>
+              </CardContent>
+            </Card>
 
-          <Card
-            className="surface-panel cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
-            onClick={() => router.push("/jobs?status=running")}
-          >
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Play className="h-4 w-4" />
-                Running Jobs
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-600">{runningJobs}</div>
-              <p className="text-xs text-muted-foreground mt-1">Currently active</p>
-            </CardContent>
-          </Card>
+            <Card
+              className="surface-panel cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
+              data-testid="home-card-running-jobs"
+              onClick={() => router.push("/jobs?status=running")}
+            >
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Play className="h-4 w-4" />
+                  Running Jobs
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div
+                  className="text-3xl font-bold text-blue-600"
+                  data-testid="home-stat-running-count"
+                >
+                  {runningJobs}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Currently active</p>
+              </CardContent>
+            </Card>
 
-          <Card className="surface-panel">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full" size="sm">
-                <Link href="/flows">
-                  <Play className="h-4 w-4 mr-2" />
-                  Start Job
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full" size="sm">
-                <Link href="/flows">
-                  <Activity className="h-4 w-4 mr-2" />
-                  Create Flow
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+            <Card className="surface-panel" data-testid="home-card-quick-actions">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button
+                  asChild
+                  className="w-full"
+                  size="sm"
+                  data-testid="home-button-quick-start-job"
+                >
+                  <Link href="/flows">
+                    <Play className="h-4 w-4 mr-2" />
+                    Start Job
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full"
+                  size="sm"
+                  data-testid="home-button-quick-create-flow"
+                >
+                  <Link href="/flows">
+                    <Activity className="h-4 w-4 mr-2" />
+                    Create Flow
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
@@ -294,9 +329,7 @@ export default function HomePage() {
                                   className="text-xs"
                                 />
                               </div>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {job.flow_id}
-                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">{job.flow_id}</p>
                             </div>
                             <ArrowRight className="h-4 w-4 text-muted-foreground" />
                           </div>
@@ -311,11 +344,14 @@ export default function HomePage() {
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
                     <CardTitle>System Health</CardTitle>
-                    <CardDescription>
-                      Live health stats from the connected runtime.
-                    </CardDescription>
+                    <CardDescription>Live health stats from the connected runtime.</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={loadHealthStats} disabled={healthLoading}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadHealthStats}
+                    disabled={healthLoading}
+                  >
                     {healthLoading ? (
                       <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
@@ -335,7 +371,9 @@ export default function HomePage() {
                   ) : healthStats ? (
                     <div className="space-y-3">
                       {Object.keys(healthStats).length === 0 ? (
-                        <div className="text-sm text-muted-foreground">No health stats available.</div>
+                        <div className="text-sm text-muted-foreground">
+                          No health stats available.
+                        </div>
                       ) : (
                         <div className="grid gap-3 md:grid-cols-3">
                           {Object.entries(healthStats)

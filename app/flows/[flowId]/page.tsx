@@ -20,7 +20,8 @@ export default function FlowDetailPage() {
   const params = useParams();
   const flowId = params.flowId as string;
   const { connected, serverUrl, hydrated } = useConnectionStore();
-  const { selectedFlowId, nodes, selectFlow, loading, flows, loadFlows, isFlowLocked } = useFlowStore();
+  const { selectedFlowId, nodes, selectFlow, loading, flows, loadFlows, isFlowLocked } =
+    useFlowStore();
   const [routines, setRoutines] = useState<Record<string, any>>({});
   const [validationStatus, setValidationStatus] = useState<{
     valid: boolean;
@@ -36,7 +37,7 @@ export default function FlowDetailPage() {
   useEffect(() => {
     // Wait for hydration before checking connection
     if (!hydrated) return;
-    
+
     if (!connected) {
       router.push("/connect");
       return;
@@ -45,7 +46,9 @@ export default function FlowDetailPage() {
     // Always reload flow if flowId changes or if not selected
     if (flowId && serverUrl) {
       if (flowId !== selectedFlowId || !flow) {
-        console.log(`Loading flow ${flowId}, selectedFlowId: ${selectedFlowId}, hasFlow: ${!!flow}`);
+        console.log(
+          `Loading flow ${flowId}, selectedFlowId: ${selectedFlowId}, hasFlow: ${!!flow}`
+        );
         selectFlow(flowId, serverUrl);
       }
     }
@@ -94,19 +97,19 @@ export default function FlowDetailPage() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Cmd/Ctrl + B: Toggle left sidebar
-      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "b") {
         e.preventDefault();
         setLeftSidebarCollapsed(!leftSidebarCollapsed);
       }
       // Cmd/Ctrl + ]: Toggle right sidebar
-      if ((e.metaKey || e.ctrlKey) && e.key === ']') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "]") {
         e.preventDefault();
         setRightSidebarCollapsed(!rightSidebarCollapsed);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [leftSidebarCollapsed, rightSidebarCollapsed]);
 
   const handleRefresh = async () => {
@@ -130,7 +133,8 @@ export default function FlowDetailPage() {
       const api = createAPI(serverUrl);
       const exportResponse = await api.flows.exportDSL(flowId, "yaml");
       // Extract the DSL string from the response object
-      const dslString = typeof exportResponse === "string" ? exportResponse : exportResponse.dsl || "";
+      const dslString =
+        typeof exportResponse === "string" ? exportResponse : exportResponse.dsl || "";
       const blob = new Blob([dslString], { type: "text/yaml" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -163,42 +167,46 @@ export default function FlowDetailPage() {
   };
 
   // Canvas ↔ Sidebar sync handlers
-  const handleRoutineClick = useCallback((routineId: string) => {
-    // Highlight node in canvas
-    if (typeof window !== "undefined" && (window as any).reactFlowInstance) {
-      const instance = (window as any).reactFlowInstance;
-      const node = nodes.find(n => n.id === routineId);
-      if (node) {
-        instance.fitView({ padding: 0.2, duration: 800, nodes: [node] });
-        // TODO: Add visual highlight effect
-      }
-    }
-  }, [nodes]);
-
-  const handleConnectionClick = useCallback((connectionIndex: number) => {
-    // Highlight edge in canvas and zoom to it
-    if (typeof window !== "undefined" && (window as any).reactFlowInstance) {
-      const instance = (window as any).reactFlowInstance;
-      const { edges: currentEdges } = useFlowStore.getState();
-      const edge = currentEdges[connectionIndex] || null;
-      if (edge) {
-        // Select the edge in ReactFlow
-        instance.setEdges((eds: Edge[]) =>
-          eds.map((e) => ({ ...e, selected: e.id === edge.id }))
-        );
-        // Deselect all nodes
-        instance.setNodes((nds: Node[]) =>
-          nds.map((n) => ({ ...n, selected: false }))
-        );
-        // Zoom to edge by zooming to connected nodes
-        const sourceNode = nodes.find(n => n.id === edge.source);
-        const targetNode = nodes.find(n => n.id === edge.target);
-        if (sourceNode && targetNode) {
-          instance.fitView({ padding: 0.2, duration: 800, nodes: [sourceNode, targetNode] });
+  const handleRoutineClick = useCallback(
+    (routineId: string) => {
+      // Highlight node in canvas
+      if (typeof window !== "undefined" && (window as any).reactFlowInstance) {
+        const instance = (window as any).reactFlowInstance;
+        const node = nodes.find((n) => n.id === routineId);
+        if (node) {
+          instance.fitView({ padding: 0.2, duration: 800, nodes: [node] });
+          // TODO: Add visual highlight effect
         }
       }
-    }
-  }, [nodes]);
+    },
+    [nodes]
+  );
+
+  const handleConnectionClick = useCallback(
+    (connectionIndex: number) => {
+      // Highlight edge in canvas and zoom to it
+      if (typeof window !== "undefined" && (window as any).reactFlowInstance) {
+        const instance = (window as any).reactFlowInstance;
+        const { edges: currentEdges } = useFlowStore.getState();
+        const edge = currentEdges[connectionIndex] || null;
+        if (edge) {
+          // Select the edge in ReactFlow
+          instance.setEdges((eds: Edge[]) =>
+            eds.map((e) => ({ ...e, selected: e.id === edge.id }))
+          );
+          // Deselect all nodes
+          instance.setNodes((nds: Node[]) => nds.map((n) => ({ ...n, selected: false })));
+          // Zoom to edge by zooming to connected nodes
+          const sourceNode = nodes.find((n) => n.id === edge.source);
+          const targetNode = nodes.find((n) => n.id === edge.target);
+          if (sourceNode && targetNode) {
+            instance.fitView({ padding: 0.2, duration: 800, nodes: [sourceNode, targetNode] });
+          }
+        }
+      }
+    },
+    [nodes]
+  );
 
   // Show loading while hydrating or if not connected
   if (!hydrated || !connected) {

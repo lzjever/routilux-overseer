@@ -1,9 +1,9 @@
 /**
  * Flow component type definitions for ReactFlow
- * 
+ *
  * This file exports stable references to nodeTypes and edgeTypes
  * to prevent React Flow warnings about recreated objects.
- * 
+ *
  * These should NEVER be recreated or modified after module initialization.
  */
 

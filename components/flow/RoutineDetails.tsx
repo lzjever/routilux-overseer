@@ -10,7 +10,16 @@ import { Trash2 } from "lucide-react";
 import type { FlowResponse } from "@/lib/types/api";
 
 interface RoutineDetailsProps {
-  routines: Record<string, { routine_id: string; class_name: string; slots: string[]; events: string[]; config: Record<string, any> }>;
+  routines: Record<
+    string,
+    {
+      routine_id: string;
+      class_name: string;
+      slots: string[];
+      events: string[];
+      config: Record<string, any>;
+    }
+  >;
   flowId?: string;
   serverUrl?: string;
   onRoutineRemoved?: () => void;
@@ -94,8 +103,10 @@ export function RoutineDetails({
                 <div>
                   <Label>Slots (Inputs)</Label>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {routines[selectedRoutine].slots.map(slot => (
-                      <Badge key={slot} variant="outline" className="text-xs">{slot}</Badge>
+                    {routines[selectedRoutine].slots.map((slot) => (
+                      <Badge key={slot} variant="outline" className="text-xs">
+                        {slot}
+                      </Badge>
                     ))}
                   </div>
                 </div>
@@ -103,8 +114,10 @@ export function RoutineDetails({
                 <div>
                   <Label>Events (Outputs)</Label>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {routines[selectedRoutine].events.map(event => (
-                      <Badge key={event} variant="secondary" className="text-xs">{event}</Badge>
+                    {routines[selectedRoutine].events.map((event) => (
+                      <Badge key={event} variant="secondary" className="text-xs">
+                        {event}
+                      </Badge>
                     ))}
                   </div>
                 </div>

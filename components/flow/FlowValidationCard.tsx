@@ -114,7 +114,9 @@ export function FlowValidationCard({ flowId, serverUrl }: FlowValidationCardProp
             )}
           </div>
         ) : (
-          <div className="text-sm text-muted-foreground">Click validate to check flow structure</div>
+          <div className="text-sm text-muted-foreground">
+            Click validate to check flow structure
+          </div>
         )}
       </CardContent>
     </Card>

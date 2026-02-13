@@ -10,9 +10,18 @@ interface BreakpointState {
 
   // Actions
   loadBreakpoints: (jobId: string, serverUrl: string) => Promise<void>;
-  addBreakpoint: (jobId: string, request: BreakpointCreateRequest, serverUrl: string) => Promise<void>;
+  addBreakpoint: (
+    jobId: string,
+    request: BreakpointCreateRequest,
+    serverUrl: string
+  ) => Promise<void>;
   removeBreakpoint: (jobId: string, breakpointId: string, serverUrl: string) => Promise<void>;
-  toggleBreakpoint: (jobId: string, breakpointId: string, workerId: string, serverUrl: string) => Promise<void>;
+  toggleBreakpoint: (
+    jobId: string,
+    breakpointId: string,
+    workerId: string,
+    serverUrl: string
+  ) => Promise<void>;
   clearBreakpoints: () => void;
 }
 
@@ -45,10 +54,7 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
 
       const currentBreakpoints = get().breakpoints.get(jobId) || [];
       set((state) => ({
-        breakpoints: new Map(state.breakpoints).set(jobId, [
-          ...currentBreakpoints,
-          response,
-        ]),
+        breakpoints: new Map(state.breakpoints).set(jobId, [...currentBreakpoints, response]),
         loading: false,
       }));
     } catch (error) {
@@ -83,7 +89,12 @@ export const useBreakpointStore = create<BreakpointState>((set, get) => ({
     }
   },
 
-  toggleBreakpoint: async (jobId: string, breakpointId: string, workerId: string, serverUrl: string) => {
+  toggleBreakpoint: async (
+    jobId: string,
+    breakpointId: string,
+    workerId: string,
+    serverUrl: string
+  ) => {
     const currentBreakpoints = get().breakpoints.get(jobId) || [];
     const breakpoint = currentBreakpoints.find((bp) => bp.breakpoint_id === breakpointId);
 

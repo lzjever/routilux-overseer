@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useWebSocketStore } from '@/lib/stores/websocket-store';
+import { describe, it, expect, beforeEach } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { useWebSocketStore } from "@/lib/stores/websocket-store";
 
-describe('useWebSocketStore', () => {
+describe("useWebSocketStore", () => {
   beforeEach(() => {
     // Reset store state before each test
     const { result } = renderHook(() => useWebSocketStore());
@@ -11,8 +11,8 @@ describe('useWebSocketStore', () => {
     });
   });
 
-  describe('initial state', () => {
-    it('should have default values', () => {
+  describe("initial state", () => {
+    it("should have default values", () => {
       const { result } = renderHook(() => useWebSocketStore());
 
       expect(result.current.connected).toBe(false);
@@ -22,8 +22,8 @@ describe('useWebSocketStore', () => {
     });
   });
 
-  describe('setConnected', () => {
-    it('should set connected state', () => {
+  describe("setConnected", () => {
+    it("should set connected state", () => {
       const { result } = renderHook(() => useWebSocketStore());
 
       act(() => {
@@ -34,11 +34,11 @@ describe('useWebSocketStore', () => {
       expect(result.current.lastError).toBe(null);
     });
 
-    it('should clear lastError when setting connected', () => {
+    it("should clear lastError when setting connected", () => {
       const { result } = renderHook(() => useWebSocketStore());
 
       // First set an error
-      const error = new Error('Test error');
+      const error = new Error("Test error");
       act(() => {
         result.current.setLastError(error);
       });
@@ -52,8 +52,8 @@ describe('useWebSocketStore', () => {
     });
   });
 
-  describe('setReconnectState', () => {
-    it('should set reconnect state', () => {
+  describe("setReconnectState", () => {
+    it("should set reconnect state", () => {
       const { result } = renderHook(() => useWebSocketStore());
 
       act(() => {
@@ -64,7 +64,7 @@ describe('useWebSocketStore', () => {
       expect(result.current.isReconnecting).toBe(true);
     });
 
-    it('should update reconnect attempts', () => {
+    it("should update reconnect attempts", () => {
       const { result } = renderHook(() => useWebSocketStore());
 
       act(() => {
@@ -78,7 +78,7 @@ describe('useWebSocketStore', () => {
       expect(result.current.reconnectAttempts).toBe(2);
     });
 
-    it('should set isReconnecting to false', () => {
+    it("should set isReconnecting to false", () => {
       const { result } = renderHook(() => useWebSocketStore());
 
       act(() => {
@@ -93,23 +93,23 @@ describe('useWebSocketStore', () => {
     });
   });
 
-  describe('setLastError', () => {
-    it('should set last error', () => {
+  describe("setLastError", () => {
+    it("should set last error", () => {
       const { result } = renderHook(() => useWebSocketStore());
 
-      const error = new Error('Connection failed');
+      const error = new Error("Connection failed");
       act(() => {
         result.current.setLastError(error);
       });
 
       expect(result.current.lastError).toBe(error);
-      expect(result.current.lastError?.message).toBe('Connection failed');
+      expect(result.current.lastError?.message).toBe("Connection failed");
     });
 
-    it('should clear error when setting null', () => {
+    it("should clear error when setting null", () => {
       const { result } = renderHook(() => useWebSocketStore());
 
-      const error = new Error('Test error');
+      const error = new Error("Test error");
       act(() => {
         result.current.setLastError(error);
       });
@@ -122,15 +122,15 @@ describe('useWebSocketStore', () => {
     });
   });
 
-  describe('reset', () => {
-    it('should reset all state to default values', () => {
+  describe("reset", () => {
+    it("should reset all state to default values", () => {
       const { result } = renderHook(() => useWebSocketStore());
 
       // Set some non-default values
       act(() => {
         result.current.setConnected(true);
         result.current.setReconnectState(3, true);
-        result.current.setLastError(new Error('Test error'));
+        result.current.setLastError(new Error("Test error"));
       });
 
       expect(result.current.connected).toBe(true);

@@ -17,8 +17,8 @@ export class AppError extends Error {
  * 网络错误
  */
 export class NetworkError extends AppError {
-  constructor(message: string = 'Network error occurred') {
-    super(message, 'NETWORK_ERROR', 0);
+  constructor(message: string = "Network error occurred") {
+    super(message, "NETWORK_ERROR", 0);
   }
 }
 
@@ -27,7 +27,7 @@ export class NetworkError extends AppError {
  */
 export class APIError extends AppError {
   constructor(message: string, statusCode: number = 500, details?: unknown) {
-    super(message, 'API_ERROR', statusCode, details);
+    super(message, "API_ERROR", statusCode, details);
   }
 }
 
@@ -35,8 +35,8 @@ export class APIError extends AppError {
  * 连接错误
  */
 export class ConnectionError extends AppError {
-  constructor(message: string = 'Failed to connect to server') {
-    super(message, 'CONNECTION_ERROR', 0);
+  constructor(message: string = "Failed to connect to server") {
+    super(message, "CONNECTION_ERROR", 0);
   }
 }
 
@@ -45,7 +45,7 @@ export class ConnectionError extends AppError {
  */
 export class ValidationError extends AppError {
   constructor(message: string, details?: unknown) {
-    super(message, 'VALIDATION_ERROR', 400, details);
+    super(message, "VALIDATION_ERROR", 400, details);
   }
 }
 
@@ -53,7 +53,7 @@ export class ValidationError extends AppError {
  * 认证错误
  */
 export class AuthenticationError extends AppError {
-  constructor(message: string = 'Authentication failed') {
-    super(message, 'AUTH_ERROR', 401);
+  constructor(message: string = "Authentication failed") {
+    super(message, "AUTH_ERROR", 401);
   }
 }

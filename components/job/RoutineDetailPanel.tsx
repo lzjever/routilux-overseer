@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -53,7 +48,10 @@ export function RoutineDetailPanel({
   const { closeDetailPanel } = useUIStore();
   const routineState = useJobStateStore((s) => s.getRoutineState(jobId, routineId));
   const events = useJobEventsStore((s) =>
-    s.getEvents(jobId).filter((e) => e.routine_id === routineId).slice(-20)
+    s
+      .getEvents(jobId)
+      .filter((e) => e.routine_id === routineId)
+      .slice(-20)
   );
   const { breakpoints } = useBreakpointStore();
   const jobBreakpoints = breakpoints.get(jobId) || [];
@@ -168,24 +166,33 @@ export function RoutineDetailPanel({
                 <div className="font-semibold capitalize">{status}</div>
                 {(routineState as any)?.start_time && (
                   <div className="text-xs text-slate-500">
-                    Started {formatDistanceToNow(new Date(((routineState as any).start_time as number) * 1000))} ago
+                    Started{" "}
+                    {formatDistanceToNow(
+                      new Date(((routineState as any).start_time as number) * 1000)
+                    )}{" "}
+                    ago
                   </div>
                 )}
               </div>
             </div>
 
-            {((routineState as any)?.processed_count !== undefined || routineState?.execution_count !== undefined) && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600">Executions</span>
-              <Badge variant="secondary">{((routineState as any)?.processed_count || routineState?.execution_count || 0)}x</Badge>
-            </div>
-          )}
+            {((routineState as any)?.processed_count !== undefined ||
+              routineState?.execution_count !== undefined) && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-600">Executions</span>
+                <Badge variant="secondary">
+                  {(routineState as any)?.processed_count || routineState?.execution_count || 0}x
+                </Badge>
+              </div>
+            )}
 
             {(routineState as any)?.progress !== undefined && (
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
                   <span>Progress</span>
-                  <span className="font-mono">{((routineState as any).progress as number).toFixed(0)}%</span>
+                  <span className="font-mono">
+                    {((routineState as any).progress as number).toFixed(0)}%
+                  </span>
                 </div>
                 <Progress value={(routineState as any).progress as number} className="h-2" />
               </div>
@@ -197,7 +204,8 @@ export function RoutineDetailPanel({
                 <div className="flex-1">
                   <div className="text-xs font-semibold text-cyan-900">Loop Iteration</div>
                   <div className="text-sm font-mono text-cyan-700">
-                    {(routineState as any).current_iteration} / {(routineState as any).max_iterations}
+                    {(routineState as any).current_iteration} /{" "}
+                    {(routineState as any).max_iterations}
                   </div>
                 </div>
               </div>
@@ -215,7 +223,9 @@ export function RoutineDetailPanel({
           </CardHeader>
           <CardContent className="space-y-3">
             {routineSlots.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No input slots available for this routine.</p>
+              <p className="text-xs text-muted-foreground">
+                No input slots available for this routine.
+              </p>
             ) : (
               <>
                 <div className="space-y-1">
@@ -309,7 +319,11 @@ export function RoutineDetailPanel({
                     >
                       <div className="flex items-center gap-2 text-slate-500 mb-1">
                         <Clock className="h-3 w-3" />
-                        {new Date((typeof event.timestamp === 'number' ? event.timestamp : new Date(event.timestamp).getTime() / 1000) * 1000).toLocaleTimeString()}
+                        {new Date(
+                          (typeof event.timestamp === "number"
+                            ? event.timestamp
+                            : new Date(event.timestamp).getTime() / 1000) * 1000
+                        ).toLocaleTimeString()}
                       </div>
                       <div className="text-slate-700">{JSON.stringify(event.data || event)}</div>
                     </div>
@@ -330,29 +344,17 @@ export function RoutineDetailPanel({
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                className="justify-start"
-                disabled={status !== "running"}
-              >
+              <Button variant="outline" className="justify-start" disabled={status !== "running"}>
                 <Pause className="h-4 w-4 mr-2" />
                 Pause
               </Button>
 
-              <Button
-                variant="outline"
-                className="justify-start"
-                disabled={status !== "paused"}
-              >
+              <Button variant="outline" className="justify-start" disabled={status !== "paused"}>
                 <Play className="h-4 w-4 mr-2" />
                 Resume
               </Button>
 
-              <Button
-                variant="outline"
-                className="justify-start"
-                disabled={status !== "paused"}
-              >
+              <Button variant="outline" className="justify-start" disabled={status !== "paused"}>
                 <SkipForward className="h-4 w-4 mr-2" />
                 Step Over
               </Button>

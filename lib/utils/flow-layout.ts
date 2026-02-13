@@ -13,15 +13,15 @@ export function layoutNodes(
   // Set graph options with compact spacing (more commonly used defaults)
   dagreGraph.setGraph({
     rankdir: direction,
-    nodesep: 100,  // Horizontal spacing between nodes at the same rank (compact)
-    ranksep: 80,   // Vertical spacing between ranks (compact)
-    edgesep: 10,   // Spacing between edges
+    nodesep: 100, // Horizontal spacing between nodes at the same rank (compact)
+    ranksep: 80, // Vertical spacing between ranks (compact)
+    edgesep: 10, // Spacing between edges
     ranker: "tight-tree", // Use tight-tree ranker for more compact layout
   });
 
   // Fixed node dimensions (should match actual rendered size)
-  const nodeWidth = 300;  // Increased to match actual node width
-  const nodeHeight = 150;  // Increased to match actual node height
+  const nodeWidth = 300; // Increased to match actual node width
+  const nodeHeight = 150; // Increased to match actual node height
 
   // Add nodes with dimensions
   nodes.forEach((node) => {

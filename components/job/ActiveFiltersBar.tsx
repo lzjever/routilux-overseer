@@ -41,12 +41,7 @@ export function ActiveFiltersBar({
           </Button>
         </Badge>
       ))}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onClearAll}
-        className="h-6 text-xs"
-      >
+      <Button variant="ghost" size="sm" onClick={onClearAll} className="h-6 text-xs">
         Clear all
       </Button>
     </div>

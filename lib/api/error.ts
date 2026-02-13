@@ -37,7 +37,7 @@ const extractMessageFromString = (message: string): string | null => {
   const candidates = [bodySlice, braceSlice, message].filter(Boolean) as string[];
 
   for (const candidate of candidates) {
-    const normalized = candidate.replace(/\\\"/g, "\"").replace(/\\'/g, "'");
+    const normalized = candidate.replace(/\\"/g, '"').replace(/\\'/g, "'");
     try {
       const parsed = JSON.parse(normalized);
       const parsedMessage = extractMessageFromBody(parsed);
@@ -58,10 +58,11 @@ const extractMessageFromBody = (body: unknown): string | null => {
   if (typeof body === "string") return extractMessageFromString(body);
   if (typeof body === "object") {
     const record = body as ApiErrorDetail;
+    const detailObj = typeof record.detail === "object" ? record.detail : null;
     const nestedMessage =
       record.error?.message ||
-      record.detail?.error?.message ||
-      (typeof record.detail === "string" ? record.detail : record.detail?.message) ||
+      detailObj?.error?.message ||
+      (typeof record.detail === "string" ? record.detail : detailObj?.message) ||
       null;
     if (nestedMessage) {
       return extractMessageFromString(nestedMessage) || nestedMessage;
@@ -75,10 +76,7 @@ export function normalizeApiError(error: unknown, fallback: string): NormalizedA
   if (error instanceof ApiError) {
     const bodyMessage = extractMessageFromBody(error.body);
     const message =
-      bodyMessage ||
-      extractMessageFromString(error.message) ||
-      error.statusText ||
-      fallback;
+      bodyMessage || extractMessageFromString(error.message) || error.statusText || fallback;
     const code =
       typeof error.body === "object" && error.body
         ? (error.body as ApiErrorDetail).error?.code

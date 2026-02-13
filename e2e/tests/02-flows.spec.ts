@@ -4,10 +4,10 @@
  * Tests flow listing, viewing, and management functionality.
  */
 
-import { test, expect } from '../fixtures';
-import { FlowsPage, FlowDetailPage } from '../fixtures/page-objects';
+import { test, expect } from "../fixtures/fixtures";
+import { FlowsPage, FlowDetailPage } from "../fixtures/page-objects";
 
-test.describe('Flows Management', () => {
+test.describe("Flows Management", () => {
   let flowsPage: FlowsPage;
   let flowDetailPage: FlowDetailPage;
 
@@ -16,15 +16,15 @@ test.describe('Flows Management', () => {
     flowDetailPage = new FlowDetailPage(page);
 
     // First, connect to the test server
-    await page.goto('/connect');
+    await page.goto("/connect");
     await page.fill('input[name="serverUrl"], input#serverUrl', server.getServerUrl());
     await page.click('button:has-text("Test Connection")');
     await page.waitForTimeout(500);
     await page.click('button:has-text("Connect")');
-    await page.waitForURL('/');
+    await page.waitForURL("/");
   });
 
-  test('should list available routines from factory', async ({ page }) => {
+  test("should list available routines from factory", async ({ page }) => {
     await flowsPage.open();
 
     // Wait for flows to load
@@ -34,14 +34,16 @@ test.describe('Flows Management', () => {
     await expect(page).toHaveURL(/\/flows/);
   });
 
-  test('should display flow list', async ({ page }) => {
+  test("should display flow list", async ({ page }) => {
     await flowsPage.open();
 
     // Should show the flow list container
-    await expect(page.locator('[data-testid="flow-list"], [data-testid="flows-list"]')).toBeVisible();
+    await expect(
+      page.locator('[data-testid="flow-list"], [data-testid="flows-list"]')
+    ).toBeVisible();
   });
 
-  test('should sync flows from registry', async ({ page }) => {
+  test("should sync flows from registry", async ({ page }) => {
     await flowsPage.open();
 
     // Click sync button
@@ -51,7 +53,7 @@ test.describe('Flows Management', () => {
     await expect(page.locator('[data-testid="flow-list"]')).toBeVisible();
   });
 
-  test('should navigate to flow detail page', async ({ page }) => {
+  test("should navigate to flow detail page", async ({ page }) => {
     await flowsPage.open();
 
     // Wait for flows to load
@@ -70,25 +72,25 @@ test.describe('Flows Management', () => {
     }
   });
 
-  test('should display flow canvas on detail page', async ({ page, server }) => {
+  test("should display flow canvas on detail page", async ({ page, server }) => {
     // Create a flow first via API
     const flowData = {
-      name: 'e2e_test_flow',
-      description: 'E2E test flow',
+      name: "e2e_test_flow",
+      description: "E2E test flow",
       routines: [
         {
-          id: 'source',
-          factory_name: 'e2e_data_generator',
-          config: { count: 10 }
-        }
+          id: "source",
+          factory_name: "e2e_data_generator",
+          config: { count: 10 },
+        },
       ],
-      connections: []
+      connections: [],
     };
 
     const response = await fetch(`${server.getServerUrl()}/api/v1/flows`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(flowData)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(flowData),
     });
 
     if (response.ok) {
@@ -101,18 +103,18 @@ test.describe('Flows Management', () => {
     }
   });
 
-  test('should export flow DSL', async ({ page, server }) => {
+  test("should export flow DSL", async ({ page, server }) => {
     const flowData = {
-      name: 'e2e_export_test',
-      description: 'Test flow for export',
+      name: "e2e_export_test",
+      description: "Test flow for export",
       routines: [],
-      connections: []
+      connections: [],
     };
 
     const response = await fetch(`${server.getServerUrl()}/api/v1/flows`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(flowData)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(flowData),
     });
 
     if (response.ok) {
@@ -124,9 +126,11 @@ test.describe('Flows Management', () => {
 
       // Should show DSL dialog or trigger download
       const dslContent = page.locator('[data-testid="dsl-content"], pre');
-      await expect(dslContent).toBeVisible({ timeout: 5000 }).catch(() => {
-        // Download might happen instead
-      });
+      await expect(dslContent)
+        .toBeVisible({ timeout: 5000 })
+        .catch(() => {
+          // Download might happen instead
+        });
     }
   });
 });

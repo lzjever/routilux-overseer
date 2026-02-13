@@ -24,7 +24,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createAPI } from "@/lib/api";
-import { Loader2, Search, Inbox, Send, ChevronDown, ChevronRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import {
+  Loader2,
+  Search,
+  Inbox,
+  Send,
+  ChevronDown,
+  ChevronRight,
+  ArrowLeft,
+  CheckCircle2,
+} from "lucide-react";
 import type { ObjectInfo } from "@/lib/api/generated";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -43,12 +52,7 @@ interface RoutineInterface {
 
 type DialogStep = "select" | "configure";
 
-export function AddRoutineDialog({
-  flowId,
-  serverUrl,
-  onSuccess,
-  trigger,
-}: AddRoutineDialogProps) {
+export function AddRoutineDialog({ flowId, serverUrl, onSuccess, trigger }: AddRoutineDialogProps) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<DialogStep>("select");
   const [routineId, setRoutineId] = useState("");
@@ -195,11 +199,11 @@ export function AddRoutineDialog({
         object_name: selectedRoutine.name,
         config: Object.keys(configObj).length > 0 ? configObj : undefined,
       });
-      
+
       toast.success("Routine added successfully", {
         description: `Added "${routineId}" to flow`,
       });
-      
+
       setOpen(false);
       onSuccess();
     } catch (err) {
@@ -214,9 +218,7 @@ export function AddRoutineDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || <Button size="sm">Add Routine</Button>}
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger || <Button size="sm">Add Routine</Button>}</DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
         {step === "select" ? (
           <>

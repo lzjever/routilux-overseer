@@ -4,32 +4,34 @@
  * Tests worker management functionality.
  */
 
-import { test, expect } from '../fixtures';
-import { WorkersPage } from '../fixtures/page-objects';
+import { test, expect } from "../fixtures/fixtures";
+import { WorkersPage } from "../fixtures/page-objects";
 
-test.describe('Workers Management', () => {
+test.describe("Workers Management", () => {
   let workersPage: WorkersPage;
 
   test.beforeEach(async ({ page, server }) => {
     workersPage = new WorkersPage(page);
 
     // Connect to test server
-    await page.goto('/connect');
+    await page.goto("/connect");
     await page.fill('input[name="serverUrl"], input#serverUrl', server.getServerUrl());
     await page.click('button:has-text("Test Connection")');
     await page.waitForTimeout(500);
     await page.click('button:has-text("Connect")');
-    await page.waitForURL('/');
+    await page.waitForURL("/");
   });
 
-  test('should display workers list page', async ({ page }) => {
+  test("should display workers list page", async ({ page }) => {
     await workersPage.open();
 
     // Should show workers page
-    await expect(page.locator('[data-testid="worker-list"], [data-testid="workers-page"]')).toBeVisible();
+    await expect(
+      page.locator('[data-testid="worker-list"], [data-testid="workers-page"]')
+    ).toBeVisible();
   });
 
-  test('should show empty state when no workers exist', async ({ page }) => {
+  test("should show empty state when no workers exist", async ({ page }) => {
     await workersPage.open();
 
     const emptyState = page.locator('[data-testid="empty-state"]');
@@ -40,31 +42,29 @@ test.describe('Workers Management', () => {
     }
   });
 
-  test('should start a worker for a flow', async ({ page, server }) => {
+  test("should start a worker for a flow", async ({ page, server }) => {
     // Create a flow first
     const flowData = {
-      name: 'e2e_worker_test',
+      name: "e2e_worker_test",
       routines: [
         {
-          id: 'source',
-          factory_name: 'e2e_data_generator',
-          config: { count: 5 }
+          id: "source",
+          factory_name: "e2e_data_generator",
+          config: { count: 5 },
         },
         {
-          id: 'sink',
-          factory_name: 'e2e_data_collector',
-          config: {}
-        }
+          id: "sink",
+          factory_name: "e2e_data_collector",
+          config: {},
+        },
       ],
-      connections: [
-        { from: 'source.output', to: 'sink.input' }
-      ]
+      connections: [{ from: "source.output", to: "sink.input" }],
     };
 
     const flowResponse = await fetch(`${server.getServerUrl()}/api/v1/flows`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(flowData)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(flowData),
     });
 
     if (flowResponse.ok) {
@@ -73,7 +73,9 @@ test.describe('Workers Management', () => {
       await workersPage.open();
 
       // Start worker button should be available
-      const startButton = page.locator(`[data-testid="start-worker-${flow.id}"], button:has-text("Start Worker")`);
+      const startButton = page.locator(
+        `[data-testid="start-worker-${flow.id}"], button:has-text("Start Worker")`
+      );
 
       const isVisible = await startButton.isVisible().catch(() => false);
       if (isVisible) {
@@ -92,18 +94,18 @@ test.describe('Workers Management', () => {
     }
   });
 
-  test('should pause and resume a worker', async ({ page, server }) => {
+  test("should pause and resume a worker", async ({ page, server }) => {
     // This test requires a running worker
     const flowData = {
-      name: 'e2e_worker_pause_test',
+      name: "e2e_worker_pause_test",
       routines: [],
-      connections: []
+      connections: [],
     };
 
     const flowResponse = await fetch(`${server.getServerUrl()}/api/v1/flows`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(flowData)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(flowData),
     });
 
     if (flowResponse.ok) {
@@ -111,9 +113,9 @@ test.describe('Workers Management', () => {
 
       // Start worker
       const startResponse = await fetch(`${server.getServerUrl()}/api/v1/workers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ flow_id: flow.id })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ flow_id: flow.id }),
       });
 
       if (startResponse.ok) {
@@ -140,26 +142,26 @@ test.describe('Workers Management', () => {
     }
   });
 
-  test('should stop a running worker', async ({ page, server }) => {
+  test("should stop a running worker", async ({ page, server }) => {
     const flowData = {
-      name: 'e2e_worker_stop_test',
+      name: "e2e_worker_stop_test",
       routines: [],
-      connections: []
+      connections: [],
     };
 
     const flowResponse = await fetch(`${server.getServerUrl()}/api/v1/flows`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(flowData)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(flowData),
     });
 
     if (flowResponse.ok) {
       const flow = await flowResponse.json();
 
       const startResponse = await fetch(`${server.getServerUrl()}/api/v1/workers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ flow_id: flow.id })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ flow_id: flow.id }),
       });
 
       if (startResponse.ok) {

@@ -4,7 +4,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronDown, ChevronUp, ScrollText, X, Clock, CheckCircle, XCircle, Zap, Info } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  ScrollText,
+  X,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Zap,
+  Info,
+} from "lucide-react";
 import { useJobEventsStore } from "@/lib/stores/jobEventsStore";
 import { cn } from "@/lib/utils";
 
@@ -86,11 +96,7 @@ export function MiniEventLog({ jobId, onFocusRoutine }: MiniEventLogProps) {
             <X className="h-3 w-3 mr-1" />
             Clear
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)}>
             {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
           </Button>
         </div>
@@ -112,13 +118,9 @@ export function MiniEventLog({ jobId, onFocusRoutine }: MiniEventLogProps) {
               <span className={cn("shrink-0", getEventColor(event.event_name))}>
                 {getEventIcon(event.event_name)}
               </span>
-              <span className="text-slate-500 shrink-0">
-                {formatTime(event.timestamp)}
-              </span>
+              <span className="text-slate-500 shrink-0">{formatTime(event.timestamp)}</span>
               {event.routine_id && (
-                <span className="font-semibold text-slate-700 shrink-0">
-                  {event.routine_id}
-                </span>
+                <span className="font-semibold text-slate-700 shrink-0">{event.routine_id}</span>
               )}
               <span className="text-slate-600 truncate flex-1">
                 {String(event.data?.event_name ?? event.data?.slot_name ?? event.event_name ?? "")}

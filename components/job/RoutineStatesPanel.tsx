@@ -18,9 +18,7 @@ export function RoutineStatesPanel({ jobState }: RoutineStatesPanelProps) {
     <Card>
       <CardHeader>
         <CardTitle>Routine States</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          {routineStates.length} routines in flow
-        </p>
+        <p className="text-sm text-muted-foreground">{routineStates.length} routines in flow</p>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -28,14 +26,10 @@ export function RoutineStatesPanel({ jobState }: RoutineStatesPanelProps) {
             <div key={routineId} className="border rounded-lg p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Badge variant={getStatusVariant(state.status)}>
-                    {state.status}
-                  </Badge>
+                  <Badge variant={getStatusVariant(state.status)}>{state.status}</Badge>
                   <span className="font-mono text-sm font-medium">{routineId}</span>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Count: {state.execution_count}
-                </div>
+                <div className="text-sm text-muted-foreground">Count: {state.execution_count}</div>
               </div>
 
               {state.last_execution && (
@@ -72,7 +66,9 @@ export function RoutineStatesPanel({ jobState }: RoutineStatesPanelProps) {
   );
 }
 
-function getStatusVariant(status: string | undefined): "default" | "secondary" | "destructive" | "outline" {
+function getStatusVariant(
+  status: string | undefined
+): "default" | "secondary" | "destructive" | "outline" {
   if (!status) return "outline";
   switch (status.toLowerCase()) {
     case "running":
