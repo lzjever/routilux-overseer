@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trash2 } from "lucide-react";
+import { Trash2, FileText } from "lucide-react";
 import type { FlowResponse } from "@/lib/types/api";
+import { RoutineDocstring } from "@/components/routine/RoutineDocstring";
 
 interface RoutineDetailsProps {
   routines: Record<
@@ -33,6 +34,39 @@ export function RoutineDetails({
 }: RoutineDetailsProps) {
   const [selectedRoutine, setSelectedRoutine] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
+  const [routineDocstring, setRoutineDocstring] = useState<string | null>(null);
+  const [loadingDocstring, setLoadingDocstring] = useState(false);
+
+  // Load docstring when selected routine changes
+  useEffect(() => {
+    const loadDocstring = async () => {
+      if (!selectedRoutine || !serverUrl || !routines[selectedRoutine]) {
+        setRoutineDocstring(null);
+        return;
+      }
+
+      const routine = routines[selectedRoutine];
+      if (!routine.class_name) {
+        setRoutineDocstring(null);
+        return;
+      }
+
+      setLoadingDocstring(true);
+      try {
+        const { createAPI } = await import("@/lib/api");
+        const api = createAPI(serverUrl);
+        const metadata = await api.factory.getObjectMetadata(routine.class_name);
+        setRoutineDocstring(metadata.docstring || null);
+      } catch (error) {
+        console.error("Failed to load routine docstring:", error);
+        setRoutineDocstring(null);
+      } finally {
+        setLoadingDocstring(false);
+      }
+    };
+
+    loadDocstring();
+  }, [selectedRoutine, serverUrl, routines]);
 
   const handleRemove = async (routineId: string) => {
     if (!flowId || !serverUrl) return;
@@ -98,6 +132,19 @@ export function RoutineDetails({
                 <div>
                   <Label>Class Name</Label>
                   <p className="text-sm font-mono">{routines[selectedRoutine].class_name}</p>
+                </div>
+
+                {/* Documentation */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Documentation
+                  </Label>
+                  <RoutineDocstring
+                    docstring={routineDocstring}
+                    loading={loadingDocstring}
+                    maxHeight="300px"
+                  />
                 </div>
 
                 <div>
