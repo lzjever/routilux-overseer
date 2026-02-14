@@ -27,8 +27,9 @@ import type {
   ExecuteResponse,
   routilux__server__models__flow__RoutineInfo,
 } from "@/lib/api/generated";
-import { Loader2, Zap } from "lucide-react";
+import { Loader2, Zap, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { RoutineDocstring } from "@/components/routine/RoutineDocstring";
 
 interface RunOnceDialogProps {
   open: boolean;
@@ -56,6 +57,8 @@ export function RunOnceDialog({
   const [loadingRoutines, setLoadingRoutines] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [routineDocstring, setRoutineDocstring] = useState<string | null>(null);
+  const [loadingDocstring, setLoadingDocstring] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -101,6 +104,36 @@ export function RunOnceDialog({
       setSelectedSlotName(routineSlots[0] || "");
     }
   }, [selectedRoutineId, routines]);
+
+  // Load docstring when routine is selected
+  useEffect(() => {
+    const loadDocstring = async () => {
+      if (!selectedRoutineId || !serverUrl) {
+        setRoutineDocstring(null);
+        return;
+      }
+
+      const selectedRoutine = routines.find((r) => r.routine_id === selectedRoutineId);
+      if (!selectedRoutine?.class_name) {
+        setRoutineDocstring(null);
+        return;
+      }
+
+      setLoadingDocstring(true);
+      try {
+        const api = createAPI(serverUrl);
+        const metadata = await api.factory.getObjectMetadata(selectedRoutine.class_name);
+        setRoutineDocstring(metadata.docstring || null);
+      } catch (loadDocstringError) {
+        console.error("Failed to load routine docstring:", loadDocstringError);
+        setRoutineDocstring(null);
+      } finally {
+        setLoadingDocstring(false);
+      }
+    };
+
+    loadDocstring();
+  }, [selectedRoutineId, serverUrl, routines]);
 
   const handleSubmit = async () => {
     if (!serverUrl || !selectedRoutineId || !selectedSlotName) return;
@@ -199,6 +232,21 @@ export function RunOnceDialog({
               </Select>
             )}
           </div>
+
+          {/* Routine Documentation */}
+          {selectedRoutineId && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Routine Documentation
+              </Label>
+              <RoutineDocstring
+                docstring={routineDocstring}
+                loading={loadingDocstring}
+                maxHeight="150px"
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Slot</Label>
