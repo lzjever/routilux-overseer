@@ -384,7 +384,7 @@ function WorkersPageContent() {
             />
           </Card>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-4" data-testid="workers-list">
             {filteredWorkers.map((worker) => (
               <Card
                 key={worker.worker_id}

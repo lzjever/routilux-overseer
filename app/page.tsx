@@ -32,7 +32,8 @@ export default function HomePage() {
 
   useEffect(() => {
     const loadData = async () => {
-      if (serverUrl) {
+      // Only load data when connected to a server
+      if (serverUrl && connected) {
         setLoading(true);
         try {
           // Load flows and jobs data
@@ -49,7 +50,7 @@ export default function HomePage() {
     };
 
     loadData();
-  }, [serverUrl]);
+  }, [serverUrl, connected]);
 
   const loadHealthStats = useCallback(async () => {
     if (!serverUrl) return;

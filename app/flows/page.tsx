@@ -353,7 +353,7 @@ export default function FlowsPage() {
             />
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" data-testid="flows-list">
             {filteredFlows.map((flow) => (
               <Card
                 key={flow.flow_id}

@@ -73,6 +73,7 @@ export const useConnectionStore = create<ConnectionState>()(
       partialize: (state) => ({
         serverUrl: state.serverUrl,
         lastConnected: state.lastConnected,
+        connected: state.connected, // Persist connection status for better UX
         // Note: apiKey is intentionally NOT persisted for security
       }),
       onRehydrateStorage: () => (state) => {

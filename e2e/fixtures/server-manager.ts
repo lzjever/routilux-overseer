@@ -74,10 +74,8 @@ export class RoutluxServer {
 
     // Spawn the server process
     this.process = spawn(
-      "python",
+      "routilux",
       [
-        "-m",
-        "routilux.cli.main",
         "server",
         "start",
         "--host",
@@ -93,6 +91,7 @@ export class RoutluxServer {
         env: {
           ...process.env,
           PYTHONUNBUFFERED: "1", // Ensure unbuffered output
+          ROUTILUX_DEV_DISABLE_SECURITY: "true", // Disable auth for testing
         },
       }
     );
@@ -184,6 +183,14 @@ export class RoutluxServer {
   }
 
   /**
+   * Get an API client for making requests to the server.
+   */
+  getApiClient() {
+    const axios = require("axios");
+    return axios.create({ baseURL: this.getServerUrl() });
+  }
+
+  /**
    * Wait for the server to be ready by polling the health endpoint.
    */
   private async waitForReady(timeout: number = 30000): Promise<void> {
@@ -223,36 +230,11 @@ export class RoutluxServer {
    * Find the routilux CLI by checking common locations.
    */
   private async findRoutiluxCli(): Promise<string> {
-    // Check if routilux is importable
-    const testScript = `
-import sys
-try:
-  import routilux.cli.main
-  print('OK')
-except ImportError:
-  print('NOT_FOUND')
-  sys.exit(1)
-`;
-
-    const result = await this.runPython("test", testScript);
-    if (result === "OK") {
-      return "routilux"; // Will use -m flag
-    }
-
-    throw new Error(
-      "Routilux CLI not found. Ensure routilux is installed:\n" +
-        "  pip install -e /path/to/routilux"
-    );
-  }
-
-  /**
-   * Run a Python script and return stdout.
-   */
-  private async runPython(name: string, script: string): Promise<string> {
+    // Check if routilux CLI is available
     const { spawn } = require("child_process");
 
     return new Promise((resolve, reject) => {
-      const proc = spawn("python", ["-c", script]);
+      const proc = spawn("routilux", ["--version"]);
       let stdout = "";
       let stderr = "";
 
@@ -266,10 +248,26 @@ except ImportError:
 
       proc.on("close", (code: number) => {
         if (code === 0) {
-          resolve(stdout.trim());
+          resolve("routilux");
         } else {
-          reject(new Error(`Python script failed: ${stderr}`));
+          reject(
+            new Error(
+              "Routilux CLI not found. Ensure routilux is installed:\n" +
+                "  pip install routilux\n" +
+                `  Error: ${stderr}`
+            )
+          );
         }
+      });
+
+      proc.on("error", (err: Error) => {
+        reject(
+          new Error(
+            "Routilux CLI not found. Ensure routilux is installed:\n" +
+              "  pip install routilux\n" +
+              `  Error: ${err.message}`
+          )
+        );
       });
     });
   }

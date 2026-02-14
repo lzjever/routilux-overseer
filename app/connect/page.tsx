@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
 import { createAPI } from "@/lib/api";
+import { configureAPI } from "@/lib/services/api-client";
 import { LogoIcon } from "@/components/ui/Logo";
 import { Loader2 } from "lucide-react";
 
@@ -43,10 +44,13 @@ export default function ConnectPage() {
       console.log("Connection result:", isConnected);
 
       if (isConnected) {
+        // Configure the global API client for other components to use
+        configureAPI(validUrl, key.trim() ? key.trim() : undefined);
         setConnected(true);
         setLastConnected(new Date().toISOString());
         console.log("Connected successfully, redirecting to home...");
-        router.push("/");
+        // Use window.location for a hard navigation that Playwright can detect
+        window.location.href = "/";
       } else {
         setError("Failed to connect to server. Please check the URL and try again.");
         console.error("Connection test failed");

@@ -16,10 +16,22 @@ test.describe("Debugging Features", () => {
     // Connect to test server
     await page.goto("/connect");
     await page.fill('input[name="serverUrl"], input#serverUrl', server.getServerUrl());
-    await page.click('button:has-text("Test Connection")');
-    await page.waitForTimeout(500);
+    // Current UI has a single "Connect" button that tests and connects
     await page.click('button:has-text("Connect")');
-    await page.waitForURL("/");
+
+    // Wait for redirect by checking URL periodically
+    let redirected = false;
+    for (let i = 0; i < 30; i++) {
+      await page.waitForTimeout(500);
+      const url = page.url();
+      if (url === "http://localhost:3000/" || (url.endsWith("/") && !url.includes("/connect"))) {
+        redirected = true;
+        break;
+      }
+    }
+    if (!redirected) {
+      throw new Error("Failed to redirect after connection");
+    }
   });
 
   test("should display event log on job detail", async ({ page, server }) => {

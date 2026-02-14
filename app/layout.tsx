@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { PluginSystemProvider } from "@/components/providers/PluginSystemProvider";
+import { ApiClientProvider } from "@/components/providers/ApiClientProvider";
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
 import { Toaster } from "@/components/ui/sonner";
 import { NetworkDetection } from "@/components/NetworkDetection";
@@ -23,10 +24,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${manrope.variable} ${spaceGrotesk.variable} font-sans`}>
         <PluginSystemProvider>
-          <NetworkDetection />
-          {children}
-          <GlobalSearchModal />
-          <Toaster position="bottom-right" richColors />
+          <ApiClientProvider>
+            <NetworkDetection />
+            {children}
+            <GlobalSearchModal />
+            <Toaster position="bottom-right" richColors />
+          </ApiClientProvider>
         </PluginSystemProvider>
       </body>
     </html>

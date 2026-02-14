@@ -225,7 +225,7 @@ describe("JobsPage", () => {
     it("should display jobs list container", async () => {
       render(<JobsPageContent />);
 
-      expect(await screen.findByTestId("jobs-table-list")).toBeInTheDocument();
+      expect(await screen.findByTestId("jobs-list")).toBeInTheDocument();
     });
 
     it("should display job rows", async () => {

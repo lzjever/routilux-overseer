@@ -86,6 +86,13 @@ export class FlowsPage extends BasePage {
   }
 
   /**
+   * Check if the sync button is enabled.
+   */
+  async isSyncButtonEnabled(): Promise<boolean> {
+    return await this.syncButton.isEnabled();
+  }
+
+  /**
    * Check if the empty state is shown.
    */
   async isEmpty(): Promise<boolean> {

@@ -461,7 +461,7 @@ function JobsPageContent() {
             />
           </Card>
         ) : (
-          <div className="grid gap-4" data-testid="jobs-table-list">
+          <div className="grid gap-4" data-testid="jobs-list">
             {filteredJobs.map((job) => (
               <Card
                 key={job.job_id}
