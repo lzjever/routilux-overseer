@@ -22,6 +22,9 @@ import {
   Clock,
   CheckCircle,
   XCircle,
+  FileText,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -31,6 +34,8 @@ import { useBreakpointStore } from "@/lib/stores/breakpointStore";
 import { useUIStore } from "@/lib/stores/uiStore";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { createAPI } from "@/lib/api";
+import { RoutineDocstring } from "@/components/routine/RoutineDocstring";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface RoutineDetailPanelProps {
   routineId: string;
@@ -60,6 +65,9 @@ export function RoutineDetailPanel({
     return (node?.data as { slots?: { name: string }[] } | undefined)?.slots ?? [];
   });
   const [selectedSlot, setSelectedSlot] = useState<string>("");
+  const [routineDocstring, setRoutineDocstring] = useState<string | null>(null);
+  const [loadingDocstring, setLoadingDocstring] = useState(false);
+  const [docstringOpen, setDocstringOpen] = useState(false);
   const hasBreakpoint = jobBreakpoints.some(
     (bp) => bp.routine_id === routineId && bp.slot_name === selectedSlot
   );
@@ -75,6 +83,33 @@ export function RoutineDetailPanel({
       setSelectedSlot(routineSlots[0].name);
     }
   }, [routineSlots, selectedSlot]);
+
+  // Load routine docstring
+  useEffect(() => {
+    const loadDocstring = async () => {
+      const className = (routineState as any)?._config?.className;
+      if (!className || !serverUrl) {
+        setRoutineDocstring(null);
+        return;
+      }
+
+      setLoadingDocstring(true);
+      try {
+        const api = createAPI(serverUrl);
+        const metadata = await api.factory.getObjectMetadata(className);
+        setRoutineDocstring(metadata.docstring || null);
+      } catch (error) {
+        console.error("Failed to load routine docstring:", error);
+        setRoutineDocstring(null);
+      } finally {
+        setLoadingDocstring(false);
+      }
+    };
+
+    if (routineState) {
+      loadDocstring();
+    }
+  }, [routineState, serverUrl]);
 
   // Get status from routine state
   const status = routineState?.status || "pending";
@@ -148,6 +183,26 @@ export function RoutineDetailPanel({
           </Button>
         </div>
       </div>
+
+      {/* Collapsible Documentation Section */}
+      {(routineDocstring || loadingDocstring) && (
+        <Collapsible open={docstringOpen} onOpenChange={setDocstringOpen} className="border-b">
+          <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2 text-sm hover:bg-slate-50">
+            <span className="flex items-center gap-2 font-medium">
+              <FileText className="h-4 w-4" />
+              Routine Documentation
+            </span>
+            {docstringOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </CollapsibleTrigger>
+          <CollapsibleContent className="px-4 py-2">
+            <RoutineDocstring
+              docstring={routineDocstring}
+              loading={loadingDocstring}
+              maxHeight="200px"
+            />
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       {/* Content */}
       <ScrollArea className="h-[calc(100vh-60px)] p-4 space-y-6">
