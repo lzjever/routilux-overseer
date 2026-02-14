@@ -20,12 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWorkersStore } from "@/lib/stores/workersStore";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, FileText } from "lucide-react";
 import type {
   JobSubmitRequest,
   routilux__server__models__flow__RoutineInfo,
 } from "@/lib/api/generated";
 import { createAPI } from "@/lib/api";
+import { RoutineDocstring } from "@/components/routine/RoutineDocstring";
 
 interface SubmitJobDialogProps {
   open: boolean;
@@ -54,6 +55,8 @@ export function SubmitJobDialog({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingRoutines, setLoadingRoutines] = useState(false);
+  const [routineDocstring, setRoutineDocstring] = useState<string | null>(null);
+  const [loadingDocstring, setLoadingDocstring] = useState(false);
 
   // Load workers when dialog opens
   useEffect(() => {
@@ -97,6 +100,37 @@ export function SubmitJobDialog({
       }
     }
   }, [selectedRoutineId, routines]);
+
+  // Load docstring when routine is selected
+  useEffect(() => {
+    const loadDocstring = async () => {
+      if (!selectedRoutineId || !serverUrl) {
+        setRoutineDocstring(null);
+        return;
+      }
+
+      // Find the selected routine to get its class_name
+      const selectedRoutine = routines.find((r) => r.routine_id === selectedRoutineId);
+      if (!selectedRoutine?.class_name) {
+        setRoutineDocstring(null);
+        return;
+      }
+
+      setLoadingDocstring(true);
+      try {
+        const api = createAPI(serverUrl);
+        const metadata = await api.factory.getObjectMetadata(selectedRoutine.class_name);
+        setRoutineDocstring(metadata.docstring || null);
+      } catch (error) {
+        console.error("Failed to load routine docstring:", error);
+        setRoutineDocstring(null);
+      } finally {
+        setLoadingDocstring(false);
+      }
+    };
+
+    loadDocstring();
+  }, [selectedRoutineId, serverUrl, routines]);
 
   const handleSubmit = async () => {
     if (!serverUrl || !selectedRoutineId || !selectedSlotName) return;
@@ -205,6 +239,21 @@ export function SubmitJobDialog({
               </Select>
             )}
           </div>
+
+          {/* Routine Documentation */}
+          {selectedRoutineId && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Routine Documentation
+              </Label>
+              <RoutineDocstring
+                docstring={routineDocstring}
+                loading={loadingDocstring}
+                maxHeight="150px"
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Slot</Label>
