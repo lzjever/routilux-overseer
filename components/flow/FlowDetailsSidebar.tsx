@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronLeft, ChevronRight, Plus, Inbox, Send, X } from "lucide-react";
@@ -13,6 +13,7 @@ import {
   getAffectedConnections,
 } from "./DeleteConfirmDialog";
 import { useFlowStore } from "@/lib/stores/flowStore";
+import { createAPI } from "@/lib/api";
 import type { FlowResponse } from "@/lib/types/api";
 
 interface FlowDetailsSidebarProps {
@@ -47,6 +48,45 @@ export function FlowDetailsSidebar({
   const [affectedConnections, setAffectedConnections] = useState<ConnectionInfo[]>([]);
 
   const locked = isFlowLocked(flowId);
+
+  // Helper component for truncated docstring preview
+  const RoutineDocstringPreview = ({ className }: { className: string }) => {
+    const [docstring, setDocstring] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+      const loadDocstring = async () => {
+        if (!serverUrl || !className) {
+          setDocstring(null);
+          return;
+        }
+
+        setLoading(true);
+        try {
+          const api = createAPI(serverUrl);
+          const metadata = await api.factory.getObjectMetadata(className);
+          // Get first line or first 100 chars
+          const fullDocstring = metadata.docstring || "";
+          const firstLine = fullDocstring.split("\n")[0];
+          setDocstring(firstLine.length > 100 ? firstLine.slice(0, 100) + "..." : firstLine);
+        } catch (error) {
+          setDocstring(null);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadDocstring();
+    }, [className, serverUrl]);
+
+    if (loading || !docstring) return null;
+
+    return (
+      <p className="text-xs text-muted-foreground truncate mt-0.5" title={docstring}>
+        {docstring}
+      </p>
+    );
+  };
 
   // Handle routine delete click
   const handleRoutineDeleteClick = (routineId: string) => {
@@ -171,6 +211,7 @@ export function FlowDetailsSidebar({
                       <p className="text-xs text-muted-foreground truncate mt-0.5">
                         {routine.class_name || "Unknown"}
                       </p>
+                      <RoutineDocstringPreview className={routine.class_name} />
                       <div className="flex items-center gap-2.5 mt-1.5 text-[10px] text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Inbox className="h-3 w-3 text-blue-500" aria-hidden />
