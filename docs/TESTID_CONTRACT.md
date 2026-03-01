@@ -181,97 +181,103 @@ fireEvent.click(screen.getByText('Connect'));
 ## Current Inventory (by scope)
 
 ### connect
-| testid | Element |
-|--------|---------|
-| `connect-page` | Page container |
-| `connect-card` | Card wrapper |
-| `connect-logo` | Logo area |
-| `connect-form` | Form |
+
+| testid                     | Element          |
+| -------------------------- | ---------------- |
+| `connect-page`             | Page container   |
+| `connect-card`             | Card wrapper     |
+| `connect-logo`             | Logo area        |
+| `connect-form`             | Form             |
 | `connect-input-server-url` | Server URL input |
-| `connect-input-api-key` | API key input |
-| `connect-error-message` | Error text |
-| `connect-button-submit` | Submit button |
-| `connect-spinner` | Loading spinner |
+| `connect-input-api-key`    | API key input    |
+| `connect-error-message`    | Error text       |
+| `connect-button-submit`    | Submit button    |
+| `connect-spinner`          | Loading spinner  |
 
 ### home
-| testid | Element |
-|--------|---------|
-| `home-page` | Page container |
-| `home-card-not-connected` | Not connected card |
-| `home-button-connect` | Connect button |
-| `home-title` | Title |
-| `home-badge-connected` | Connected badge |
-| `home-badge-server-url` | Server URL badge |
-| `home-badge-server-version` | Server version badge |
-| `home-last-sync` | Last sync text |
-| `home-button-start-job` | Start job button |
-| `home-button-create-flow` | Create flow button |
-| `home-button-settings` | Settings button |
-| `home-card-flows` | Flows summary card |
-| `home-stat-flow-count` | Flow count |
-| `home-card-jobs` | Jobs summary card |
-| `home-stat-job-count` | Job count |
-| `home-card-running-jobs` | Running jobs card |
-| `home-stat-running-count` | Running count |
-| `home-card-quick-actions` | Quick actions card |
-| `home-button-quick-start-job` | Quick start job |
-| `home-button-quick-create-flow` | Quick create flow |
+
+| testid                          | Element              |
+| ------------------------------- | -------------------- |
+| `home-page`                     | Page container       |
+| `home-card-not-connected`       | Not connected card   |
+| `home-button-connect`           | Connect button       |
+| `home-title`                    | Title                |
+| `home-badge-connected`          | Connected badge      |
+| `home-badge-server-url`         | Server URL badge     |
+| `home-badge-server-version`     | Server version badge |
+| `home-last-sync`                | Last sync text       |
+| `home-button-start-job`         | Start job button     |
+| `home-button-create-flow`       | Create flow button   |
+| `home-button-settings`          | Settings button      |
+| `home-card-flows`               | Flows summary card   |
+| `home-stat-flow-count`          | Flow count           |
+| `home-card-jobs`                | Jobs summary card    |
+| `home-stat-job-count`           | Job count            |
+| `home-card-running-jobs`        | Running jobs card    |
+| `home-stat-running-count`       | Running count        |
+| `home-card-quick-actions`       | Quick actions card   |
+| `home-button-quick-start-job`   | Quick start job      |
+| `home-button-quick-create-flow` | Quick create flow    |
 
 ### flows
-| testid | Element |
-|--------|---------|
-| `flows-page` | Page container |
-| `flows-not-connected` | Not connected card |
-| `flows-button-refresh` | Refresh button |
-| `flows-button-sync` | Sync button |
-| `flows-button-create` | Create button |
-| `flows-input-search` | Search input (FlowSearchBar) |
-| `flows-error` | Error message area |
-| `flows-toolbar` | Bulk actions toolbar |
-| `flows-loading` | Loading grid |
-| `flows-empty-state` | Empty state card |
-| `flows-list` | List grid |
-| `flows-card-{flowId}` | Flow card |
-| `flows-checkbox-{flowId}` | Row checkbox |
-| `flows-button-view-{flowId}` | View button |
+
+| testid                       | Element                      |
+| ---------------------------- | ---------------------------- |
+| `flows-page`                 | Page container               |
+| `flows-not-connected`        | Not connected card           |
+| `flows-button-refresh`       | Refresh button               |
+| `flows-button-sync`          | Sync button                  |
+| `flows-button-create`        | Create button                |
+| `flows-input-search`         | Search input (FlowSearchBar) |
+| `flows-error`                | Error message area           |
+| `flows-toolbar`              | Bulk actions toolbar         |
+| `flows-loading`              | Loading grid                 |
+| `flows-empty-state`          | Empty state card             |
+| `flows-list`                 | List grid                    |
+| `flows-card-{flowId}`        | Flow card                    |
+| `flows-checkbox-{flowId}`    | Row checkbox                 |
+| `flows-button-view-{flowId}` | View button                  |
 
 ### jobs
-| testid | Element |
-|--------|---------|
-| `jobs-page` | Page container |
-| `jobs-not-connected` | Not connected card |
-| `jobs-button-sync` | Sync button |
-| `jobs-button-refresh` | Refresh button |
+
+| testid                      | Element              |
+| --------------------------- | -------------------- |
+| `jobs-page`                 | Page container       |
+| `jobs-not-connected`        | Not connected card   |
+| `jobs-button-sync`          | Sync button          |
+| `jobs-button-refresh`       | Refresh button       |
 | `jobs-select-status-filter` | Status filter select |
-| `jobs-loading` | Loading state |
-| `jobs-empty-state` | Empty state card |
-| `jobs-list` | List container |
-| `jobs-row-{jobId}` | Job row |
+| `jobs-loading`              | Loading state        |
+| `jobs-empty-state`          | Empty state card     |
+| `jobs-list`                 | List container       |
+| `jobs-row-{jobId}`          | Job row              |
 
 ### workers
-| testid | Element |
-|--------|---------|
-| `workers-page` | Page container |
-| `workers-button-sync` | Sync button |
-| `workers-button-refresh` | Refresh button |
-| `workers-loading` | Loading state |
-| `workers-empty-state` | Empty state card |
-| `workers-list` | List container |
-| `workers-card-{workerId}` | Worker card |
-| `workers-button-pause-{workerId}` | Pause button |
-| `workers-button-resume-{workerId}` | Resume button |
-| `workers-button-stop-{workerId}` | Stop button |
+
+| testid                             | Element          |
+| ---------------------------------- | ---------------- |
+| `workers-page`                     | Page container   |
+| `workers-button-sync`              | Sync button      |
+| `workers-button-refresh`           | Refresh button   |
+| `workers-loading`                  | Loading state    |
+| `workers-empty-state`              | Empty state card |
+| `workers-list`                     | List container   |
+| `workers-card-{workerId}`          | Worker card      |
+| `workers-button-pause-{workerId}`  | Pause button     |
+| `workers-button-resume-{workerId}` | Resume button    |
+| `workers-button-stop-{workerId}`   | Stop button      |
 
 ### nav (Navbar)
-| testid | Element |
-|--------|---------|
-| `navbar` | Nav container |
-| `nav-link-home` | Home link |
-| `nav-links` | Links container |
-| `nav-link-{label}` | e.g. nav-link-flows, nav-link-jobs |
-| `nav-button-search` | Search button |
-| `nav-connection-status` | Connection status area |
-| `nav-status-connected` | Connected indicator |
-| `nav-server-badge` | Server badge |
-| `nav-status-disconnected` | Disconnected indicator |
-| `nav-button-settings` | Settings button |
+
+| testid                    | Element                            |
+| ------------------------- | ---------------------------------- |
+| `navbar`                  | Nav container                      |
+| `nav-link-home`           | Home link                          |
+| `nav-links`               | Links container                    |
+| `nav-link-{label}`        | e.g. nav-link-flows, nav-link-jobs |
+| `nav-button-search`       | Search button                      |
+| `nav-connection-status`   | Connection status area             |
+| `nav-status-connected`    | Connected indicator                |
+| `nav-server-badge`        | Server badge                       |
+| `nav-status-disconnected` | Disconnected indicator             |
+| `nav-button-settings`     | Settings button                    |

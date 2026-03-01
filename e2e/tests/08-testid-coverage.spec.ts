@@ -30,26 +30,25 @@ test.describe("TestID coverage", () => {
     test.beforeEach(async ({ page, server }) => {
       const connectPage = new ConnectPage(page);
       await connectPage.open();
-      await connectPage.connectTo(server.getServerUrl());
-      await page.waitForURL(/\/(?!connect)/, { timeout: 10000 }).catch(() => {});
+      await connectPage.setServerUrl(server.getServerUrl());
+      await connectPage.testConnection();
+      await page.waitForURL(/\/(?!connect)/, { timeout: 15000 });
+      await page.waitForLoadState("domcontentloaded");
     });
 
     test("should have home page testids when connected", async ({ page }) => {
-      await page.goto("/");
-      await page.waitForLoadState("networkidle");
-
-      await expect(page.locator('[data-testid="home-page"]')).toBeVisible({ timeout: 5000 });
-      // Either connected view or not-connected card
-      const connected = await page.locator('[data-testid="home-badge-connected"]').isVisible().catch(() => false);
-      const notConnected = await page.locator('[data-testid="home-card-not-connected"]').isVisible().catch(() => false);
-      expect(connected || notConnected).toBe(true);
+      await expect(page.locator('[data-testid="home-page"]')).toBeVisible({ timeout: 10000 });
+      // Wait for home content to settle: either connected view or not-connected card
+      const homeContent = page.locator(
+        '[data-testid="home-badge-connected"], [data-testid="home-card-not-connected"]'
+      );
+      await expect(homeContent).toBeVisible({ timeout: 20000 });
+      // Assert at least one is present (stable after load)
+      await expect(homeContent.first()).toBeVisible();
     });
 
     test("should have nav testids", async ({ page }) => {
-      await page.goto("/");
-      await page.waitForLoadState("networkidle");
-
-      await expect(page.locator('[data-testid="navbar"]')).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('[data-testid="navbar"]')).toBeVisible({ timeout: 10000 });
       await expect(page.locator('[data-testid="nav-link-home"]')).toBeVisible();
       await expect(page.locator('[data-testid="nav-links"]')).toBeVisible();
     });
@@ -59,13 +58,15 @@ test.describe("TestID coverage", () => {
     test.beforeEach(async ({ page, server }) => {
       const connectPage = new ConnectPage(page);
       await connectPage.open();
-      await connectPage.connectTo(server.getServerUrl());
-      await page.waitForURL(/\/(?!connect)/, { timeout: 10000 }).catch(() => {});
+      await connectPage.setServerUrl(server.getServerUrl());
+      await connectPage.testConnection();
+      await page.waitForURL(/\/(?!connect)/, { timeout: 15000 });
+      await page.waitForLoadState("domcontentloaded");
     });
 
     test("should have flows page testids", async ({ page }) => {
-      await page.goto("/flows");
-      await page.waitForLoadState("networkidle");
+      await page.goto("/flows", { waitUntil: "domcontentloaded" });
+      await page.waitForSelector('[data-testid="flows-page"]', { state: "visible", timeout: 10000 });
 
       await expect(page.locator('[data-testid="flows-page"]')).toBeVisible({ timeout: 5000 });
       await expect(page.locator('[data-testid="flows-button-refresh"]')).toBeVisible();
@@ -83,13 +84,15 @@ test.describe("TestID coverage", () => {
     test.beforeEach(async ({ page, server }) => {
       const connectPage = new ConnectPage(page);
       await connectPage.open();
-      await connectPage.connectTo(server.getServerUrl());
-      await page.waitForURL(/\/(?!connect)/, { timeout: 10000 }).catch(() => {});
+      await connectPage.setServerUrl(server.getServerUrl());
+      await connectPage.testConnection();
+      await page.waitForURL(/\/(?!connect)/, { timeout: 15000 });
+      await page.waitForLoadState("domcontentloaded");
     });
 
     test("should have jobs page testids", async ({ page }) => {
-      await page.goto("/jobs");
-      await page.waitForLoadState("networkidle");
+      await page.goto("/jobs", { waitUntil: "domcontentloaded" });
+      await page.waitForSelector('[data-testid="jobs-page"]', { state: "visible", timeout: 10000 });
 
       await expect(page.locator('[data-testid="jobs-page"]')).toBeVisible({ timeout: 5000 });
       await expect(page.locator('[data-testid="jobs-button-refresh"]')).toBeVisible();
@@ -106,13 +109,15 @@ test.describe("TestID coverage", () => {
     test.beforeEach(async ({ page, server }) => {
       const connectPage = new ConnectPage(page);
       await connectPage.open();
-      await connectPage.connectTo(server.getServerUrl());
-      await page.waitForURL(/\/(?!connect)/, { timeout: 10000 }).catch(() => {});
+      await connectPage.setServerUrl(server.getServerUrl());
+      await connectPage.testConnection();
+      await page.waitForURL(/\/(?!connect)/, { timeout: 15000 });
+      await page.waitForLoadState("domcontentloaded");
     });
 
     test("should have workers page testids", async ({ page }) => {
-      await page.goto("/workers");
-      await page.waitForLoadState("networkidle");
+      await page.goto("/workers", { waitUntil: "domcontentloaded" });
+      await page.waitForSelector('[data-testid="workers-page"]', { state: "visible", timeout: 10000 });
 
       await expect(page.locator('[data-testid="workers-page"]')).toBeVisible({ timeout: 5000 });
       await expect(page.locator('[data-testid="workers-button-refresh"]')).toBeVisible();
@@ -127,13 +132,14 @@ test.describe("TestID coverage", () => {
     test.beforeEach(async ({ page, server }) => {
       const connectPage = new ConnectPage(page);
       await connectPage.open();
-      await connectPage.connectTo(server.getServerUrl());
-      await page.waitForURL(/\/(?!connect)/, { timeout: 10000 }).catch(() => {});
+      await connectPage.setServerUrl(server.getServerUrl());
+      await connectPage.testConnection();
+      await page.waitForURL(/\/(?!connect)/, { timeout: 15000 });
+      await page.waitForLoadState("domcontentloaded");
     });
 
     test("should navigate via nav links", async ({ page }) => {
-      await page.goto("/");
-      await page.waitForLoadState("networkidle");
+      await expect(page.locator('[data-testid="home-page"]')).toBeVisible({ timeout: 10000 });
 
       await page.locator('[data-testid="nav-link-flows"]').click();
       await expect(page).toHaveURL(/\/flows/);

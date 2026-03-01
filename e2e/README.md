@@ -8,18 +8,18 @@ All selectors should use `data-testid` attributes. The naming standard is docume
 
 ### Quick reference
 
-| Pattern | Example | Usage |
-|--------|---------|--------|
-| Page container | `{scope}-page` | `flows-page`, `jobs-page`, `workers-page` |
-| List container | `{scope}-list` | `flows-list`, `jobs-list`, `workers-list` |
-| Empty state | `{scope}-empty-state` | `flows-empty-state`, `jobs-empty-state` |
-| Loading | `{scope}-loading` | `flows-loading`, `jobs-loading` |
-| Not connected | `{scope}-not-connected` | `flows-not-connected`, `jobs-not-connected` |
-| Button | `{scope}-button-{action}` | `connect-button-submit`, `flows-button-refresh` |
+| Pattern           | Example                                   | Usage                                                                |
+| ----------------- | ----------------------------------------- | -------------------------------------------------------------------- |
+| Page container    | `{scope}-page`                            | `flows-page`, `jobs-page`, `workers-page`                            |
+| List container    | `{scope}-list`                            | `flows-list`, `jobs-list`, `workers-list`                            |
+| Empty state       | `{scope}-empty-state`                     | `flows-empty-state`, `jobs-empty-state`                              |
+| Loading           | `{scope}-loading`                         | `flows-loading`, `jobs-loading`                                      |
+| Not connected     | `{scope}-not-connected`                   | `flows-not-connected`, `jobs-not-connected`                          |
+| Button            | `{scope}-button-{action}`                 | `connect-button-submit`, `flows-button-refresh`                      |
 | Per-item card/row | `{scope}-card-{id}` or `{scope}-row-{id}` | `flows-card-{flowId}`, `jobs-row-{jobId}`, `workers-card-{workerId}` |
-| Per-item actions | `{scope}-button-{action}-{id}` | `workers-button-pause-{workerId}`, `flows-button-view-{flowId}` |
-| Input | `{scope}-input-{name}` | `connect-input-server-url`, `flows-input-search` |
-| Nav | `nav-link-{page}` | `nav-link-home`, `nav-link-flows` |
+| Per-item actions  | `{scope}-button-{action}-{id}`            | `workers-button-pause-{workerId}`, `flows-button-view-{flowId}`      |
+| Input             | `{scope}-input-{name}`                    | `connect-input-server-url`, `flows-input-search`                     |
+| Nav               | `nav-link-{page}`                         | `nav-link-home`, `nav-link-flows`                                    |
 
 ### Running tests
 
