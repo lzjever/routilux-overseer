@@ -465,6 +465,7 @@ function WorkersPageContent() {
                       <Button
                         variant="outline"
                         size="sm"
+                        data-testid={`workers-button-pause-${worker.worker_id}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           handlePause(worker.worker_id);
@@ -483,6 +484,7 @@ function WorkersPageContent() {
                       <Button
                         variant="outline"
                         size="sm"
+                        data-testid={`workers-button-resume-${worker.worker_id}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleResume(worker.worker_id);
@@ -503,6 +505,7 @@ function WorkersPageContent() {
                       <Button
                         variant="destructive"
                         size="sm"
+                        data-testid={`workers-button-stop-${worker.worker_id}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleStop(worker.worker_id);

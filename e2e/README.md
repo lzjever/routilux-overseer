@@ -1,119 +1,44 @@
-# E2E Tests for Routlux Overseer
+# E2E Tests
 
-End-to-end tests using Playwright to verify the routilux-overseer application works correctly with a real routilux server.
+Playwright end-to-end tests for routilux-overseer. Tests require the overseer app running (e.g. `npm run dev` on port 3000) and optionally a routilux server for API contract tests.
 
-## Quick Start
+## TestID Standard
 
-```bash
-# Install dependencies
-npm install
+All selectors should use `data-testid` attributes. The naming standard is documented in **[docs/TESTID_CONTRACT.md](../docs/TESTID_CONTRACT.md)**.
 
-# Install Playwright browsers
-npx playwright install
+### Quick reference
 
-# Start the overseer dev server (in another terminal)
-cd .. && npm run dev
+| Pattern | Example | Usage |
+|--------|---------|--------|
+| Page container | `{scope}-page` | `flows-page`, `jobs-page`, `workers-page` |
+| List container | `{scope}-list` | `flows-list`, `jobs-list`, `workers-list` |
+| Empty state | `{scope}-empty-state` | `flows-empty-state`, `jobs-empty-state` |
+| Loading | `{scope}-loading` | `flows-loading`, `jobs-loading` |
+| Not connected | `{scope}-not-connected` | `flows-not-connected`, `jobs-not-connected` |
+| Button | `{scope}-button-{action}` | `connect-button-submit`, `flows-button-refresh` |
+| Per-item card/row | `{scope}-card-{id}` or `{scope}-row-{id}` | `flows-card-{flowId}`, `jobs-row-{jobId}`, `workers-card-{workerId}` |
+| Per-item actions | `{scope}-button-{action}-{id}` | `workers-button-pause-{workerId}`, `flows-button-view-{flowId}` |
+| Input | `{scope}-input-{name}` | `connect-input-server-url`, `flows-input-search` |
+| Nav | `nav-link-{page}` | `nav-link-home`, `nav-link-flows` |
 
-# Run tests
-npx playwright test
-```
-
-## Prerequisites
-
-1. **routilux CLI installed**:
-
-```bash
-pip install -e /path/to/routilux
-```
-
-2. **Overseer dev server running**:
+### Running tests
 
 ```bash
-npm run dev  # Runs on http://localhost:3000
-```
+# From project root
+npm run test:e2e
 
-3. **Node.js 18+ and Python 3.10+**
+# From e2e directory (uses local playwright.config)
+cd e2e && npx playwright test
 
-## Test Structure
+# With local routilux server for API contract tests
+ROUTILUX_WORKSPACE=/path/to/routilux npm run test:e2e
 
-```
-e2e/
-├── fixtures/              # Test infrastructure
-│   ├── test-routines/     # Test routines for routilux server
-│   ├── page-objects/      # Page Object Models
-│   ├── server-manager.ts  # Server lifecycle management
-│   └── fixtures.ts        # Playwright test fixtures
-├── tests/                 # Test cases
-│   ├── 01-connection.spec.ts
-│   ├── 02-flows.spec.ts
-│   ├── 03-jobs.spec.ts
-│   ├── 04-workers.spec.ts
-│   ├── 05-debugging.spec.ts
-│   └── journeys/          # End-to-end user journeys
-└── playwright.config.ts    # Playwright configuration
-```
-
-## Running Tests
-
-### All tests
-
-```bash
-npx playwright test
-```
-
-### Specific test file
-
-```bash
+# Run a single spec
 npx playwright test tests/01-connection.spec.ts
 ```
 
-### With UI (interactive)
+### Structure
 
-```bash
-npx playwright test --ui
-```
-
-### Debug mode
-
-```bash
-npx playwright test --debug
-```
-
-### View test report
-
-```bash
-npx playwright show-report
-```
-
-## Test Routines
-
-The test suite includes specialized routines for testing:
-
-| Category       | Routines                                                                                |
-| -------------- | --------------------------------------------------------------------------------------- |
-| **Sources**    | `e2e_data_generator`, `e2e_number_source`, `e2e_delayed_source`                         |
-| **Processors** | `e2e_data_transformer`, `e2e_data_filter`, `e2e_data_aggregator`, `e2e_error_simulator` |
-| **Sinks**      | `e2e_data_collector`, `e2e_batch_collector`, `e2e_counter_sink`, `e2e_assertion_sink`   |
-
-## Environment Variables
-
-| Variable            | Description             | Default                 |
-| ------------------- | ----------------------- | ----------------------- |
-| `OVERSEER_BASE_URL` | URL of the overseer app | `http://localhost:3000` |
-
-## Documentation
-
-- [Test Plan](../docs/e2e/TEST_PLAN.md) - Complete test documentation
-- [Bug Report](../docs/e2e/BUG_REPORT.md) - Issues found in routilux CLI
-
-## Troubleshooting
-
-**Server not starting**: Ensure routilux is installed and importable
-
-```bash
-python -c "import routilux.cli.main; print('OK')"
-```
-
-**Tests timing out**: Check if overseer dev server is running on port 3000
-
-**Port conflicts**: Tests automatically find available ports starting from 20555
+- `tests/` – spec files (01-connection, 02-flows, 03-jobs, 04-workers, 05-debugging, 06-visual-regression, 07-api-contract, journeys/)
+- `fixtures/` – Playwright fixtures, page objects, server manager
+- `snapshots/` – visual regression snapshots

@@ -37,16 +37,14 @@ test.describe("Workers Management", () => {
   test("should display workers list page", async ({ page }) => {
     await workersPage.open();
 
-    // Should show workers page
-    await expect(
-      page.locator('[data-testid="worker-list"], [data-testid="workers-page"]')
-    ).toBeVisible();
+    // Should show workers page container (standard testid: workers-page)
+    await expect(page.locator('[data-testid="workers-page"]')).toBeVisible();
   });
 
   test("should show empty state when no workers exist", async ({ page }) => {
     await workersPage.open();
 
-    const emptyState = page.locator('[data-testid="empty-state"]');
+    const emptyState = page.locator('[data-testid="workers-empty-state"]');
     const isVisible = await emptyState.isVisible().catch(() => false);
 
     if (isVisible) {
@@ -55,79 +53,72 @@ test.describe("Workers Management", () => {
   });
 
   test("should start a worker for a flow", async ({ page, server }) => {
-    // Create a flow first
-    const flowData = {
-      name: "e2e_worker_test",
-      routines: [
-        {
-          id: "source",
-          factory_name: "e2e_data_generator",
-          config: { count: 5 },
+    const flowId = `e2e_worker_test_${Date.now()}`;
+    const flowPayload = {
+      flow_id: flowId,
+      dsl_dict: {
+        flow_id: flowId,
+        routines: {
+          source: { class: "e2e_data_generator", config: { count: 5 } },
+          sink: { class: "e2e_data_generator", config: {} },
         },
-        {
-          id: "sink",
-          factory_name: "e2e_data_collector",
-          config: {},
-        },
-      ],
-      connections: [{ from: "source.output", to: "sink.input" }],
+        connections: [{ from: "source.output", to: "sink.trigger" }],
+      },
     };
 
     const flowResponse = await fetch(`${server.getServerUrl()}/api/v1/flows`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(flowData),
+      body: JSON.stringify(flowPayload),
     });
 
     if (flowResponse.ok) {
       const flow = await flowResponse.json();
+      const fid = flow.flow_id ?? flowId;
+
+      const workerResponse = await fetch(`${server.getServerUrl()}/api/v1/workers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ flow_id: fid }),
+      });
+      if (!workerResponse.ok) return;
+
+      const worker = await workerResponse.json();
+      const workerId = worker.worker_id ?? worker.id;
 
       await workersPage.open();
+      await page.waitForTimeout(1500);
 
-      // Start worker button should be available
-      const startButton = page.locator(
-        `[data-testid="start-worker-${flow.id}"], button:has-text("Start Worker")`
-      );
-
-      const isVisible = await startButton.isVisible().catch(() => false);
-      if (isVisible) {
-        await startButton.first().click();
-        await page.waitForTimeout(1000);
-
-        // Worker should appear in list
-        const workerItems = page.locator('[data-testid^="worker-"]');
-        const count = await workerItems.count();
-
-        if (count > 0) {
-          const status = await page.locator('[data-testid="worker-status"]').first().textContent();
-          expect(status).toBeTruthy();
-        }
-      }
+      const workerCard = page.locator(`[data-testid="workers-card-${workerId}"]`);
+      await expect(workerCard).toBeVisible({ timeout: 5000 });
     }
   });
 
   test("should pause and resume a worker", async ({ page, server }) => {
-    // This test requires a running worker
-    const flowData = {
-      name: "e2e_worker_pause_test",
-      routines: [],
-      connections: [],
+    const flowId = `e2e_worker_pause_${Date.now()}`;
+    const flowPayload = {
+      flow_id: flowId,
+      dsl_dict: {
+        flow_id: flowId,
+        routines: { source: { class: "e2e_data_generator", config: {} } },
+        connections: [],
+      },
     };
 
     const flowResponse = await fetch(`${server.getServerUrl()}/api/v1/flows`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(flowData),
+      body: JSON.stringify(flowPayload),
     });
 
     if (flowResponse.ok) {
       const flow = await flowResponse.json();
+      const fid = flow.flow_id ?? flowId;
 
-      // Start worker
       const startResponse = await fetch(`${server.getServerUrl()}/api/v1/workers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ flow_id: flow.id }),
+        body: JSON.stringify({ flow_id: fid }),
       });
 
       if (startResponse.ok) {
@@ -136,16 +127,15 @@ test.describe("Workers Management", () => {
         await workersPage.open();
         await page.waitForTimeout(1000);
 
-        // Try pause button if exists
-        const pauseButton = page.locator(`[data-testid="pause-worker-${worker.id}"]`);
+        const workerId = worker.worker_id ?? worker.id;
+        const pauseButton = page.locator(`[data-testid="workers-button-pause-${workerId}"]`);
         const isPauseVisible = await pauseButton.isVisible().catch(() => false);
 
         if (isPauseVisible) {
           await pauseButton.click();
           await page.waitForTimeout(500);
 
-          // Try resume
-          const resumeButton = page.locator(`[data-testid="resume-worker-${worker.id}"]`);
+          const resumeButton = page.locator(`[data-testid="workers-button-resume-${workerId}"]`);
           await resumeButton.click().catch(() => {
             // Worker might have auto-completed
           });
@@ -155,25 +145,30 @@ test.describe("Workers Management", () => {
   });
 
   test("should stop a running worker", async ({ page, server }) => {
-    const flowData = {
-      name: "e2e_worker_stop_test",
-      routines: [],
-      connections: [],
+    const flowId = `e2e_worker_stop_${Date.now()}`;
+    const flowPayload = {
+      flow_id: flowId,
+      dsl_dict: {
+        flow_id: flowId,
+        routines: { source: { class: "e2e_data_generator", config: {} } },
+        connections: [],
+      },
     };
 
     const flowResponse = await fetch(`${server.getServerUrl()}/api/v1/flows`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(flowData),
+      body: JSON.stringify(flowPayload),
     });
 
     if (flowResponse.ok) {
       const flow = await flowResponse.json();
+      const fid = flow.flow_id ?? flowId;
 
       const startResponse = await fetch(`${server.getServerUrl()}/api/v1/workers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ flow_id: flow.id }),
+        body: JSON.stringify({ flow_id: fid }),
       });
 
       if (startResponse.ok) {
@@ -181,8 +176,8 @@ test.describe("Workers Management", () => {
 
         await workersPage.open();
 
-        // Stop button
-        const stopButton = page.locator(`[data-testid="stop-worker-${worker.id}"]`);
+        const workerId = worker.worker_id ?? worker.id;
+        const stopButton = page.locator(`[data-testid="workers-button-stop-${workerId}"]`);
         const isVisible = await stopButton.isVisible().catch(() => false);
 
         if (isVisible) {
