@@ -48,7 +48,7 @@ test.describe("API Contract Tests", () => {
           flow_id: flowId,
           routines: {
             source: {
-              class: "DataSource",
+              class: "e2e_data_generator",
               config: { name: "Test Source" },
             },
           },
@@ -72,7 +72,7 @@ test.describe("API Contract Tests", () => {
         dsl_dict: {
           flow_id: flowId,
           routines: {
-            source: { class: "DataSource", config: { name: "Source" } },
+            source: { class: "e2e_data_generator", config: { name: "Source" } },
           },
           connections: [],
         },
@@ -108,7 +108,7 @@ test.describe("API Contract Tests", () => {
         dsl_dict: {
           flow_id: flowId,
           routines: {
-            source: { class: "DataSource" },
+            source: { class: "e2e_data_generator" },
           },
           connections: [],
         },
@@ -132,7 +132,7 @@ test.describe("API Contract Tests", () => {
         dsl_dict: {
           flow_id: testFlowId,
           routines: {
-            source: { class: "DataSource", config: { name: "Source" } },
+            source: { class: "e2e_data_generator", config: { name: "Source" } },
           },
           connections: [],
         },
@@ -219,7 +219,7 @@ test.describe("API Contract Tests", () => {
         dsl_dict: {
           flow_id: testFlowId,
           routines: {
-            source: { class: "DataSource", config: { name: "Source" } },
+            source: { class: "e2e_data_generator", config: { name: "Source" } },
           },
           connections: [],
         },
@@ -402,7 +402,7 @@ test.describe("API Contract Tests", () => {
         dsl_dict: {
           flow_id: "overseer-test-flow",
           routines: {
-            source: { class: "DataSource" },
+            source: { class: "e2e_data_generator" },
           },
           connections: [],
         },
@@ -430,7 +430,7 @@ test.describe("API Contract Tests", () => {
         dsl_dict: {
           flow_id: "worker-display-test",
           routines: {
-            source: { class: "DataSource" },
+            source: { class: "e2e_data_generator" },
           },
           connections: [],
         },

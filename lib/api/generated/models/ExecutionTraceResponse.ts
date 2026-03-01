@@ -2,11 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ExecutionEventResponse } from "./ExecutionEventResponse";
+import type { ExecutionEventResponse } from './ExecutionEventResponse';
 /**
  * Response model for execution trace.
  */
 export type ExecutionTraceResponse = {
-  events: Array<ExecutionEventResponse>;
-  total: number;
+    events: Array<ExecutionEventResponse>;
+    total: number;
 };
+

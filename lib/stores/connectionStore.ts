@@ -5,6 +5,7 @@ export interface ConnectionState {
   // State
   connected: boolean;
   serverUrl: string;
+  serverVersion: string | null; // Routilux server version (from GET /)
   apiKey: string | null;
   connecting: boolean;
   error: string | null;
@@ -13,6 +14,7 @@ export interface ConnectionState {
 
   // Actions
   setServerUrl: (url: string) => void;
+  setServerVersion: (version: string | null) => void;
   setApiKey: (apiKey: string | null) => void;
   setConnecting: (connecting: boolean) => void;
   setConnected: (connected: boolean) => void;
@@ -29,6 +31,7 @@ export const useConnectionStore = create<ConnectionState>()(
       // Initial state
       connected: false,
       serverUrl: "http://localhost:20555",
+      serverVersion: null,
       apiKey: null,
       connecting: false,
       error: null,
@@ -37,6 +40,7 @@ export const useConnectionStore = create<ConnectionState>()(
 
       // Actions
       setServerUrl: (url) => set({ serverUrl: url }),
+      setServerVersion: (version) => set({ serverVersion: version }),
       setApiKey: (apiKey) => set({ apiKey }),
 
       setConnecting: (connecting) => set({ connecting }),
@@ -61,6 +65,7 @@ export const useConnectionStore = create<ConnectionState>()(
           connected: false,
           connecting: false,
           error: null,
+          serverVersion: null,
         }),
 
       setHydrated: (hydrated) => set({ hydrated }),
@@ -72,6 +77,7 @@ export const useConnectionStore = create<ConnectionState>()(
       // Only persist non-sensitive data; apiKey is kept in memory only
       partialize: (state) => ({
         serverUrl: state.serverUrl,
+        serverVersion: state.serverVersion,
         lastConnected: state.lastConnected,
         connected: state.connected, // Persist connection status for better UX
         // Note: apiKey is intentionally NOT persisted for security

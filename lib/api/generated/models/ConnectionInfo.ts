@@ -10,36 +10,37 @@
  * **Example Response**:
  * ```json
  * {
- * "connection_id": "conn_0",
- * "source_routine": "data_source",
- * "source_event": "output",
- * "target_routine": "data_processor",
- * "target_slot": "input"
- * }
- * ```
- *
- * **Connection ID**: Auto-generated identifier for this connection.
- * Used when deleting connections by index.
- */
-export type ConnectionInfo = {
-  /**
-   * Auto-generated identifier for this connection. Format: 'conn_{index}'. Used when deleting connections.
-   */
-  connection_id: string;
-  /**
-   * ID of the routine that emits data (source).
-   */
-  source_routine: string;
-  /**
-   * Name of the event that emits data from the source routine.
-   */
-  source_event: string;
-  /**
-   * ID of the routine that receives data (target).
-   */
-  target_routine: string;
-  /**
-   * Name of the slot that receives data in the target routine.
-   */
-  target_slot: string;
-};
+     * "connection_id": "conn_0",
+     * "source_routine": "data_source",
+     * "source_event": "output",
+     * "target_routine": "data_processor",
+     * "target_slot": "input"
+     * }
+     * ```
+     *
+     * **Connection ID**: Auto-generated identifier for this connection.
+     * Used when deleting connections by index.
+     */
+    export type ConnectionInfo = {
+        /**
+         * Auto-generated identifier for this connection. Format: 'conn_{index}'. Used when deleting connections.
+         */
+        connection_id: string;
+        /**
+         * ID of the routine that emits data (source).
+         */
+        source_routine: string;
+        /**
+         * Name of the event that emits data from the source routine.
+         */
+        source_event: string;
+        /**
+         * ID of the routine that receives data (target).
+         */
+        target_routine: string;
+        /**
+         * Name of the slot that receives data in the target routine.
+         */
+        target_slot: string;
+    };
+

@@ -6,8 +6,9 @@
  * Request to mark a Job as failed.
  */
 export type JobFailRequest = {
-  /**
-   * Error message
-   */
-  error: string;
+    /**
+     * Error message
+     */
+    error: string;
 };
+

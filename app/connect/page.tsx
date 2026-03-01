@@ -14,8 +14,15 @@ import { Loader2 } from "lucide-react";
 
 export default function ConnectPage() {
   const router = useRouter();
-  const { serverUrl, apiKey, setServerUrl, setApiKey, setConnected, setLastConnected } =
-    useConnectionStore();
+  const {
+    serverUrl,
+    apiKey,
+    setServerUrl,
+    setApiKey,
+    setConnected,
+    setLastConnected,
+    setServerVersion,
+  } = useConnectionStore();
 
   const [url, setUrl] = useState(serverUrl || "http://localhost:20555");
   const [key, setKey] = useState(apiKey || "");
@@ -44,6 +51,14 @@ export default function ConnectPage() {
       console.log("Connection result:", isConnected);
 
       if (isConnected) {
+        // Fetch server info (version) for display
+        try {
+          const info = await api.getServerInfo();
+          const version = info?.version ?? null;
+          setServerVersion(typeof version === "string" ? version : null);
+        } catch {
+          setServerVersion(null);
+        }
         // Configure the global API client for other components to use
         configureAPI(validUrl, key.trim() ? key.trim() : undefined);
         setConnected(true);

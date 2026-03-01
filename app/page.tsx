@@ -20,7 +20,7 @@ import { Activity, Zap, ArrowRight, Play, Plug, Settings, RefreshCw } from "luci
 
 export default function HomePage() {
   const router = useRouter();
-  const { connected, serverUrl } = useConnectionStore();
+  const { connected, serverUrl, serverVersion } = useConnectionStore();
   const { flows } = useFlowStore();
   const { jobs } = useJobStore();
   const { lastFlowSync, lastJobSync, lastWorkerSync } = useDiscoveryStore();
@@ -157,6 +157,11 @@ export default function HomePage() {
                     data-testid="home-badge-server-url"
                   >
                     {serverUrl}
+                  </Badge>
+                )}
+                {serverVersion && (
+                  <Badge variant="outline" className="h-5" data-testid="home-badge-server-version">
+                    Server {serverVersion}
                   </Badge>
                 )}
                 {(lastFlowSync || lastJobSync || lastWorkerSync) && (

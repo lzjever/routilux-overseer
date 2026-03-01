@@ -12,6 +12,7 @@ import type {
   AddRoutineRequest,
   AddConnectionRequest,
 } from "./generated";
+import { DefaultService } from "./generated/services/DefaultService";
 import { FlowsService } from "./generated/services/FlowsService";
 import { JobsService } from "./generated/services/JobsService";
 import { BreakpointsService } from "./generated/services/BreakpointsService";
@@ -399,6 +400,10 @@ export function createAPI(baseURL: string, apiKey?: string) {
       } catch {
         return false;
       }
+    },
+
+    getServerInfo: async () => {
+      return await DefaultService.rootGet();
     },
 
     setApiKey: (key: string | null) => {

@@ -1,5 +1,8 @@
-// Re-export all types from generated API (RoutineInfo, SlotQueueStatus, JobMonitoringData, etc.)
+// Re-export all types from generated API (SlotQueueStatus, JobMonitoringData, etc.)
 export type * from "../api/generated";
+// Alias for flow RoutineInfo (generated name is routilux__server__models__flow__RoutineInfo)
+import type { routilux__server__models__flow__RoutineInfo } from "../api/generated";
+export type RoutineInfo = routilux__server__models__flow__RoutineInfo;
 
 /**
  * Execution record for timeline/history views

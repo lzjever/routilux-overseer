@@ -1,6 +1,6 @@
 {
   "name": "routilux-overseer",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "The Ultimate Audit, Management & Debugging Platform for Routilux Workflows",
   "private": true,
   "scripts": {

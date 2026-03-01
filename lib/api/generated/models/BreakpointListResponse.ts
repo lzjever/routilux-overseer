@@ -2,11 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BreakpointResponse } from "./BreakpointResponse";
+import type { BreakpointResponse } from './BreakpointResponse';
 /**
  * Response model for breakpoint list.
  */
 export type BreakpointListResponse = {
-  breakpoints: Array<BreakpointResponse>;
-  total: number;
+    breakpoints: Array<BreakpointResponse>;
+    total: number;
 };
+
