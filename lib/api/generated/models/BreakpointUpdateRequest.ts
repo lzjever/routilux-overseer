@@ -6,6 +6,5 @@
  * Request model for updating a breakpoint (enable/disable).
  */
 export type BreakpointUpdateRequest = {
-    enabled: boolean;
+  enabled: boolean;
 };
-

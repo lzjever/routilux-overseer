@@ -67,7 +67,9 @@ test.describe("Flows Management", () => {
     const notConnectedVisible = await notConnected.isVisible().catch(() => false);
 
     // At least one should be visible
-    expect(pageVisible || listVisible || emptyVisible || loadingVisible || notConnectedVisible).toBe(true);
+    expect(
+      pageVisible || listVisible || emptyVisible || loadingVisible || notConnectedVisible
+    ).toBe(true);
   });
 
   test("should sync flows from registry", async ({ page }) => {

@@ -192,7 +192,11 @@ export function RoutineDetailPanel({
               <FileText className="h-4 w-4" />
               Routine Documentation
             </span>
-            {docstringOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {docstringOpen ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
           </CollapsibleTrigger>
           <CollapsibleContent className="px-4 py-2">
             <RoutineDocstring

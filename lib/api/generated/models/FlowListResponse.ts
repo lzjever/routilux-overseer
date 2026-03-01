@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { FlowResponse } from './FlowResponse';
+import type { FlowResponse } from "./FlowResponse";
 /**
  * Response model for flow list.
  *
@@ -11,25 +11,24 @@ import type { FlowResponse } from './FlowResponse';
  * **Example Response**:
  * ```json
  * {
-     * "flows": [
-         * {
-             * "flow_id": "flow_1",
-             * "routines": {...},
-             * "connections": [...]
-             * }
-             * ],
-             * "total": 10
-             * }
-             * ```
-             */
-            export type FlowListResponse = {
-                /**
-                 * List of all flows in the system. Each flow contains complete information about routines and connections.
-                 */
-                flows: Array<FlowResponse>;
-                /**
-                 * Total number of flows in the system.
-                 */
-                total: number;
-            };
-
+ * "flows": [
+ * {
+ * "flow_id": "flow_1",
+ * "routines": {...},
+ * "connections": [...]
+ * }
+ * ],
+ * "total": 10
+ * }
+ * ```
+ */
+export type FlowListResponse = {
+  /**
+   * List of all flows in the system. Each flow contains complete information about routines and connections.
+   */
+  flows: Array<FlowResponse>;
+  /**
+   * Total number of flows in the system.
+   */
+  total: number;
+};

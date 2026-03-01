@@ -57,7 +57,9 @@ test.describe("Jobs Management", () => {
     const notConnectedVisible = await notConnected.isVisible().catch(() => false);
 
     // At least one should be visible
-    expect(pageVisible || listVisible || emptyVisible || loadingVisible || notConnectedVisible).toBe(true);
+    expect(
+      pageVisible || listVisible || emptyVisible || loadingVisible || notConnectedVisible
+    ).toBe(true);
   });
 
   test("should show empty state when no jobs exist", async ({ page }) => {
@@ -161,9 +163,11 @@ test.describe("Jobs Management", () => {
 
       // Job should be in list - check for the jobs list
       const jobsList = page.locator('[data-testid="jobs-list"]');
-      await expect(jobsList).toBeVisible({ timeout: 10000 }).catch(() => {
-        // If jobs list is not visible, check for empty state
-      });
+      await expect(jobsList)
+        .toBeVisible({ timeout: 10000 })
+        .catch(() => {
+          // If jobs list is not visible, check for empty state
+        });
     }
   });
 

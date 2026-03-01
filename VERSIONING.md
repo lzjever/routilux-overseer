@@ -15,7 +15,7 @@ routilux-overseer uses **semantic versioning** in the form **x.y.z** (major.mino
 
 ## Summary
 
-| Part | Rule |
-|------|------|
+| Part    | Rule                                                                                |
+| ------- | ----------------------------------------------------------------------------------- |
 | **x.y** | Release aligned with routilux x.y; regenerate API client when routilux x.y changes. |
-| **z** | Patch releases are independent; no server API breaks. |
+| **z**   | Patch releases are independent; no server API breaks.                               |

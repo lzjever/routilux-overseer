@@ -22,6 +22,7 @@ Currently, the UI displays routine `class_name` but not the docstring. The Facto
 ## Task 1: Create Reusable Docstring Display Component
 
 **Files:**
+
 - Create: `components/routine/RoutineDocstring.tsx`
 - Create: `components/routine/RoutineDocstring.test.tsx`
 
@@ -139,6 +140,7 @@ git commit -m "feat: add RoutineDocstring component for displaying routine docum
 ## Task 2: Add Docstring to SubmitJobDialog
 
 **Files:**
+
 - Modify: `components/job/SubmitJobDialog.tsx`
 - Modify: `components/job/SubmitJobDialog.test.tsx`
 
@@ -243,6 +245,7 @@ git commit -m "feat: display routine docstring in SubmitJobDialog"
 ## Task 3: Add Docstring to RunOnceDialog
 
 **Files:**
+
 - Modify: `components/flow/RunOnceDialog.tsx`
 
 **Step 1: Add state for docstring loading**
@@ -336,6 +339,7 @@ git commit -m "feat: display routine docstring in RunOnceDialog"
 ## Task 4: Add Docstring to RoutineDetails Component
 
 **Files:**
+
 - Modify: `components/flow/RoutineDetails.tsx`
 
 **Step 1: Add state and loading logic**
@@ -427,6 +431,7 @@ git commit -m "feat: display routine docstring in RoutineDetails component"
 ## Task 5: Add Docstring Tooltip in FlowDetailsSidebar
 
 **Files:**
+
 - Modify: `components/flow/FlowDetailsSidebar.tsx`
 
 **Step 1: Add a helper component for truncated docstring preview**
@@ -503,6 +508,7 @@ git commit -m "feat: add docstring preview in FlowDetailsSidebar routine list"
 ## Task 6: Add Docstring to RoutineDetailPanel (Job Execution View)
 
 **Files:**
+
 - Modify: `components/job/RoutineDetailPanel.tsx`
 
 **Step 1: Add state for docstring**
@@ -643,12 +649,12 @@ After implementation, verify:
 
 ## Files Summary
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `components/routine/RoutineDocstring.tsx` | Create | Reusable docstring display component |
-| `components/routine/RoutineDocstring.test.tsx` | Create | Unit tests for docstring component |
-| `components/job/SubmitJobDialog.tsx` | Modify | Add docstring display for job submission |
-| `components/flow/RunOnceDialog.tsx` | Modify | Add docstring display for run once |
-| `components/flow/RoutineDetails.tsx` | Modify | Add docstring display in routine info |
-| `components/flow/FlowDetailsSidebar.tsx` | Modify | Add docstring preview in routine list |
-| `components/job/RoutineDetailPanel.tsx` | Modify | Add collapsible docstring section |
+| File                                           | Action | Purpose                                  |
+| ---------------------------------------------- | ------ | ---------------------------------------- |
+| `components/routine/RoutineDocstring.tsx`      | Create | Reusable docstring display component     |
+| `components/routine/RoutineDocstring.test.tsx` | Create | Unit tests for docstring component       |
+| `components/job/SubmitJobDialog.tsx`           | Modify | Add docstring display for job submission |
+| `components/flow/RunOnceDialog.tsx`            | Modify | Add docstring display for run once       |
+| `components/flow/RoutineDetails.tsx`           | Modify | Add docstring display in routine info    |
+| `components/flow/FlowDetailsSidebar.tsx`       | Modify | Add docstring preview in routine list    |
+| `components/job/RoutineDetailPanel.tsx`        | Modify | Add collapsible docstring section        |

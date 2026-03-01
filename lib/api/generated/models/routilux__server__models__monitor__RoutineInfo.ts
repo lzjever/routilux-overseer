@@ -6,29 +6,28 @@
  * Routine metadata information.
  */
 export type routilux__server__models__monitor__RoutineInfo = {
-    /**
-     * Routine ID
-     */
-    routine_id: string;
-    /**
-     * Routine class name
-     */
-    routine_type: string;
-    /**
-     * Activation policy type and configuration
-     */
-    activation_policy: Record<string, any>;
-    /**
-     * Routine configuration (_config)
-     */
-    config: Record<string, any>;
-    /**
-     * List of slot names
-     */
-    slots: Array<string>;
-    /**
-     * List of event names
-     */
-    events: Array<string>;
+  /**
+   * Routine ID
+   */
+  routine_id: string;
+  /**
+   * Routine class name
+   */
+  routine_type: string;
+  /**
+   * Activation policy type and configuration
+   */
+  activation_policy: Record<string, any>;
+  /**
+   * Routine configuration (_config)
+   */
+  config: Record<string, any>;
+  /**
+   * List of slot names
+   */
+  slots: Array<string>;
+  /**
+   * List of event names
+   */
+  events: Array<string>;
 };
-
