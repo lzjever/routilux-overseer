@@ -123,10 +123,9 @@ test.describe("API Contract Tests", () => {
   test.describe("Worker API Contract", () => {
     let testFlowId: string;
 
-    test.beforeAll(async ({ server }) => {
+    test.beforeEach(async ({ server }) => {
       const api = server.getApiClient();
       testFlowId = `worker-test-flow-${Date.now()}`;
-
       await api.post("/api/v1/flows", {
         flow_id: testFlowId,
         dsl_dict: {
@@ -210,10 +209,9 @@ test.describe("API Contract Tests", () => {
     let testFlowId: string;
     let testWorkerId: string;
 
-    test.beforeAll(async ({ server }) => {
+    test.beforeEach(async ({ server }) => {
       const api = server.getApiClient();
       testFlowId = `job-test-flow-${Date.now()}`;
-
       await api.post("/api/v1/flows", {
         flow_id: testFlowId,
         dsl_dict: {
@@ -244,33 +242,52 @@ test.describe("API Contract Tests", () => {
 
     test("should submit job with JobSubmitRequest structure", async ({ server }) => {
       const api = server.getApiClient();
-
+      // Create flow and submit in same test to ensure flow is registered
+      const flowId = `job-submit-flow-${Date.now()}`;
+      await api.post("/api/v1/flows", {
+        flow_id: flowId,
+        dsl_dict: {
+          flow_id: flowId,
+          routines: {
+            source: { class: "e2e_data_generator", config: { name: "Source" } },
+          },
+          connections: [],
+        },
+      });
       const response = await api.post("/api/v1/jobs", {
-        flow_id: testFlowId,
-        worker_id: testWorkerId,
+        flow_id: flowId,
         routine_id: "source",
         slot_name: "trigger",
-        data: { test: "data" },
+        data: { count: 2 },
         metadata: { source: "contract-test" },
       });
 
       expect(response.status).toBe(201);
       expect(response.data).toHaveProperty("job_id");
-      expect(response.data).toHaveProperty("worker_id", testWorkerId);
-      expect(response.data).toHaveProperty("flow_id", testFlowId);
+      expect(response.data).toHaveProperty("worker_id");
+      expect(response.data).toHaveProperty("flow_id", flowId);
       expect(response.data).toHaveProperty("status");
       expect(response.data).toHaveProperty("created_at");
     });
 
     test("should get job by ID with correct structure", async ({ server }) => {
       const api = server.getApiClient();
-
-      // Submit job
+      const flowId = `job-get-flow-${Date.now()}`;
+      await api.post("/api/v1/flows", {
+        flow_id: flowId,
+        dsl_dict: {
+          flow_id: flowId,
+          routines: {
+            source: { class: "e2e_data_generator", config: { name: "Source" } },
+          },
+          connections: [],
+        },
+      });
       const submitResponse = await api.post("/api/v1/jobs", {
-        flow_id: testFlowId,
+        flow_id: flowId,
         routine_id: "source",
         slot_name: "trigger",
-        data: {},
+        data: { count: 1 },
       });
       const jobId = submitResponse.data.job_id;
 

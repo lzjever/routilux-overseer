@@ -69,32 +69,31 @@ export class RoutluxServer {
 
     console.log(`🚀 Starting routilux server on ${this.config.host}:${this.config.port}`);
 
-    // Resolve the routilux CLI path
-    const cliPath = await this.findRoutiluxCli();
+    // Resolve the routilux CLI (use workspace uv run when ROUTILUX_WORKSPACE is set)
+    const { cmd, args: cliArgs, cwd: cliCwd } = await this.findRoutiluxCli();
 
-    // Spawn the server process
-    this.process = spawn(
-      "routilux",
-      [
-        "server",
-        "start",
-        "--host",
-        this.config.host,
-        "--port",
-        this.config.port.toString(),
-        "--routines-dir",
-        this.config.routinesDir,
-        "--log-level",
-        this.config.logLevel,
-      ],
-      {
-        env: {
-          ...process.env,
-          PYTHONUNBUFFERED: "1", // Ensure unbuffered output
-          ROUTILUX_DEV_DISABLE_SECURITY: "true", // Disable auth for testing
-        },
-      }
-    );
+    const serverArgs = [
+      ...cliArgs,
+      "server",
+      "start",
+      "--host",
+      this.config.host,
+      "--port",
+      this.config.port.toString(),
+      "--routines-dir",
+      this.config.routinesDir,
+      "--log-level",
+      this.config.logLevel,
+    ];
+
+    this.process = spawn(cmd, serverArgs, {
+      cwd: cliCwd,
+      env: {
+        ...process.env,
+        PYTHONUNBUFFERED: "1",
+        ROUTILUX_DEV_DISABLE_SECURITY: "true",
+      },
+    });
 
     // Capture output for debugging
     this.process.stdout?.on("data", (data) => {
@@ -227,20 +226,18 @@ export class RoutluxServer {
   }
 
   /**
-   * Find the routilux CLI by checking common locations.
+   * Find the routilux CLI. If ROUTILUX_WORKSPACE is set, use `uv run routilux` from that dir (for monorepo).
    */
-  private async findRoutiluxCli(): Promise<string> {
-    // Check if routilux CLI is available
-    const { spawn } = require("child_process");
+  private async findRoutiluxCli(): Promise<{ cmd: string; args: string[]; cwd?: string }> {
+    const workspace = process.env.ROUTILUX_WORKSPACE;
+    if (workspace) {
+      return { cmd: "uv", args: ["run", "routilux"], cwd: workspace };
+    }
 
+    const { spawn } = require("child_process");
     return new Promise((resolve, reject) => {
       const proc = spawn("routilux", ["--version"]);
-      let stdout = "";
       let stderr = "";
-
-      proc.stdout?.on("data", (data: Buffer) => {
-        stdout += data.toString();
-      });
 
       proc.stderr?.on("data", (data: Buffer) => {
         stderr += data.toString();
@@ -248,12 +245,11 @@ export class RoutluxServer {
 
       proc.on("close", (code: number) => {
         if (code === 0) {
-          resolve("routilux");
+          resolve({ cmd: "routilux", args: [] });
         } else {
           reject(
             new Error(
-              "Routilux CLI not found. Ensure routilux is installed:\n" +
-                "  pip install routilux\n" +
+              "Routilux CLI not found. Set ROUTILUX_WORKSPACE to the routilux repo path, or: pip install routilux\n" +
                 `  Error: ${stderr}`
             )
           );
@@ -263,8 +259,7 @@ export class RoutluxServer {
       proc.on("error", (err: Error) => {
         reject(
           new Error(
-            "Routilux CLI not found. Ensure routilux is installed:\n" +
-              "  pip install routilux\n" +
+            "Routilux CLI not found. Set ROUTILUX_WORKSPACE to the routilux repo path, or: pip install routilux\n" +
               `  Error: ${err.message}`
           )
         );

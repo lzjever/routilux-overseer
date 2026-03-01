@@ -20,8 +20,9 @@ class DataGenerator(Routine):
 
     def setup(self):
         """Set up the routine with input slot and output event."""
-        self.add_slot("trigger", handler=self.generate)
-        self.add_event("output", schema=["data", "metadata"])
+        self.add_slot("trigger")
+        self.add_event("output", output_params=["data", "metadata"])
+        self.set_logic(self.generate)
 
     def generate(self, count: int = 10, pattern: str = "sequential", **kwargs) -> dict[str, Any]:
         """Generate test data.
@@ -71,8 +72,9 @@ class NumberSource(Routine):
     """
 
     def setup(self):
-        self.add_slot("trigger", handler=self.generate)
-        self.add_event("numbers", schema=["values", "start", "end", "step"])
+        self.add_slot("trigger")
+        self.add_event("numbers", output_params=["values", "start", "end", "step"])
+        self.set_logic(self.generate)
 
     def generate(
         self,
@@ -115,8 +117,9 @@ class DelayedSource(Routine):
     """
 
     def setup(self):
-        self.add_slot("trigger", handler=self.generate)
-        self.add_event("output", schema=["data", "delay"])
+        self.add_slot("trigger")
+        self.add_event("output", output_params=["data", "delay"])
+        self.set_logic(self.generate)
 
     def generate(self, delay_ms: int = 1000, **kwargs) -> dict[str, Any]:
         """Generate data after a delay.
