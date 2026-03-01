@@ -43,12 +43,12 @@ describe("Smoke Tests", () => {
     });
 
     it("should import error handling without errors", async () => {
-      const { handleError, AppError, APIError, NetworkError } = await import("@/lib/errors");
+      const { getApiErrorMessage, parseApiErrorBody, isNetworkError } =
+        await import("@/lib/errors");
 
-      expect(handleError).toBeDefined();
-      expect(AppError).toBeDefined();
-      expect(APIError).toBeDefined();
-      expect(NetworkError).toBeDefined();
+      expect(getApiErrorMessage).toBeDefined();
+      expect(parseApiErrorBody).toBeDefined();
+      expect(isNetworkError).toBeDefined();
     });
 
     it("should import logger without errors", async () => {
@@ -169,36 +169,23 @@ describe("Smoke Tests", () => {
     });
   });
 
-  describe("Error Classes", () => {
-    it("should create AppError with correct properties", async () => {
-      const { AppError } = await import("@/lib/errors");
+  describe("Error utilities", () => {
+    it("should return user message from structured error body", async () => {
+      const { getApiErrorMessage } = await import("@/lib/errors");
 
-      const error = new AppError("Test error", "TEST_ERROR", 500);
-
-      expect(error.message).toBe("Test error");
-      expect(error.code).toBe("TEST_ERROR");
-      expect(error.statusCode).toBe(500);
-      expect(error.name).toBe("AppError");
+      expect(getApiErrorMessage({ code: "FLOW_NOT_FOUND", message: "Not found" })).toBe(
+        "Flow not found."
+      );
+      expect(getApiErrorMessage({ code: "UNAUTHORIZED" })).toBe("Authentication required.");
+      expect(getApiErrorMessage(null, "Fallback")).toBe("Fallback");
     });
 
-    it("should create APIError with correct properties", async () => {
-      const { APIError } = await import("@/lib/errors");
+    it("should detect network-like errors", async () => {
+      const { isNetworkError } = await import("@/lib/errors");
 
-      const error = new APIError("API error", 404);
-
-      expect(error.message).toBe("API error");
-      expect(error.statusCode).toBe(404);
-      expect(error.code).toBe("API_ERROR");
-    });
-
-    it("should create NetworkError with correct properties", async () => {
-      const { NetworkError } = await import("@/lib/errors");
-
-      const error = new NetworkError("Network failed");
-
-      expect(error.message).toBe("Network failed");
-      expect(error.statusCode).toBe(0);
-      expect(error.code).toBe("NETWORK_ERROR");
+      expect(isNetworkError(new Error("Failed to fetch"))).toBe(true);
+      expect(isNetworkError(new Error("Connection refused"))).toBe(true);
+      expect(isNetworkError(new Error("Something else"))).toBe(false);
     });
   });
 

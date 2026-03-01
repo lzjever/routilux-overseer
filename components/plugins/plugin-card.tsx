@@ -1,9 +1,12 @@
+"use client";
+
 import { PluginInfo } from "@/lib/plugins/types";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Trash2, Power, PowerOff } from "lucide-react";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 
 interface PluginCardProps {
   plugin: PluginInfo;
@@ -12,6 +15,7 @@ interface PluginCardProps {
 }
 
 export function PluginCard({ plugin, onToggle, onUninstall }: PluginCardProps) {
+  const confirm = useConfirm();
   const { plugin: p, status, builtin } = plugin;
   const isEnabled = status === "enabled";
 
@@ -20,13 +24,16 @@ export function PluginCard({ plugin, onToggle, onUninstall }: PluginCardProps) {
   };
 
   const handleUninstall = async () => {
-    if (builtin) {
-      // Built-in plugins cannot be uninstalled
-      return;
-    }
-    if (confirm(`Are you sure you want to uninstall "${p.name}"?`)) {
-      await onUninstall(p.id);
-    }
+    if (builtin) return;
+    const ok = await confirm.openConfirm({
+      title: `Uninstall "${p.name}"?`,
+      description: "You can install it again later.",
+      confirmLabel: "Uninstall",
+      cancelLabel: "Cancel",
+      variant: "destructive",
+    });
+    if (!ok) return;
+    await onUninstall(p.id);
   };
 
   return (

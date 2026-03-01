@@ -4,7 +4,8 @@
 import { EventBus } from "./event-bus";
 import { StorageAPI } from "./storage-api";
 import { OverseerPlugin, PluginContext, PluginInfo, PluginStatus } from "./types";
-import { createAPI } from "@/lib/api";
+import { getAPI } from "@/lib/services/api-client";
+import { getConfirm } from "@/lib/confirm-bridge";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useJobStore } from "@/lib/stores/jobStore";
@@ -26,7 +27,7 @@ class PluginManager {
   private initContext(): PluginContext {
     if (this.context) return this.context;
 
-    const api = createAPI(useConnectionStore.getState().serverUrl || "");
+    const api = getAPI();
 
     this.context = {
       events: this.eventBus,
@@ -49,10 +50,7 @@ class PluginManager {
           // TODO: 实现 toast 通知
           console.log(`[${type.toUpperCase()}] ${message}`);
         },
-        confirm: async (message: string): Promise<boolean> => {
-          // TODO: 实现确认对话框
-          return window.confirm(message);
-        },
+        confirm: (message: string) => getConfirm()(message),
       },
       state: {
         getConnection: () => ({

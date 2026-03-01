@@ -9,6 +9,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trash2, FileText } from "lucide-react";
 import type { FlowResponse } from "@/lib/types/api";
 import { RoutineDocstring } from "@/components/routine/RoutineDocstring";
+import { toast } from "sonner";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 
 interface RoutineDetailsProps {
   routines: Record<
@@ -32,6 +34,7 @@ export function RoutineDetails({
   serverUrl,
   onRoutineRemoved,
 }: RoutineDetailsProps) {
+  const confirm = useConfirm();
   const [selectedRoutine, setSelectedRoutine] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   const [routineDocstring, setRoutineDocstring] = useState<string | null>(null);
@@ -70,8 +73,14 @@ export function RoutineDetails({
 
   const handleRemove = async (routineId: string) => {
     if (!flowId || !serverUrl) return;
-    if (!confirm(`Are you sure you want to remove routine "${routineId}"?`)) return;
-
+    const ok = await confirm.openConfirm({
+      title: `Remove routine "${routineId}"?`,
+      description: "This action cannot be undone.",
+      confirmLabel: "Remove",
+      cancelLabel: "Cancel",
+      variant: "destructive",
+    });
+    if (!ok) return;
     setRemoving(routineId);
     try {
       const { createAPI } = await import("@/lib/api");
@@ -82,7 +91,7 @@ export function RoutineDetails({
       }
       onRoutineRemoved?.();
     } catch (error) {
-      alert(
+      toast.error(
         `Failed to remove routine: ${error instanceof Error ? error.message : "Unknown error"}`
       );
     } finally {

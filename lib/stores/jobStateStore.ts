@@ -1,14 +1,14 @@
 import { create } from "zustand";
 import type { JobStateResponse, RoutineState, ExecutionRecord } from "@/lib/types/api";
-import { createAPI } from "@/lib/api";
+import { getAPI } from "@/lib/services/api-client";
 
 interface JobStateStore {
   jobStates: Map<string, JobStateResponse>;
   loading: boolean;
   error: string | null;
 
-  // Actions
-  loadJobState: (jobId: string, serverUrl: string) => Promise<void>;
+  // Actions (use shared API client; call only when connected)
+  loadJobState: (jobId: string) => Promise<void>;
   getRoutineState: (jobId: string, routineId: string) => RoutineState | null;
   getExecutionHistory: (jobId: string, routineId?: string) => ExecutionRecord[];
   getSharedData: (jobId: string) => Record<string, any>;
@@ -20,10 +20,10 @@ export const useJobStateStore = create<JobStateStore>((set, get) => ({
   loading: false,
   error: null,
 
-  loadJobState: async (jobId: string, serverUrl: string) => {
+  loadJobState: async (jobId: string) => {
     set({ loading: true, error: null });
     try {
-      const api = createAPI(serverUrl);
+      const api = getAPI();
       const results = await Promise.allSettled([
         api.jobs.getMonitoringData(jobId),
         api.jobs.getRoutinesStatus(jobId),

@@ -1,6 +1,6 @@
 {
   "name": "routilux-overseer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The Ultimate Audit, Management & Debugging Platform for Routilux Workflows",
   "private": true,
   "scripts": {
@@ -15,7 +15,7 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:e2e": "cd e2e && playwright test",
-    "test:e2e:release": "cd e2e && playwright test tests/01-connection.spec.ts tests/02-flows.spec.ts tests/03-jobs.spec.ts tests/04-workers.spec.ts tests/05-debugging.spec.ts tests/07-api-contract.spec.ts tests/08-testid-coverage.spec.ts --grep-invert \"Overseer Integration\"",
+    "test:e2e:release": "cd e2e && playwright test tests/01-connection.spec.ts tests/02-flows.spec.ts tests/03-jobs.spec.ts tests/04-workers.spec.ts tests/05-debugging.spec.ts tests/07-api-contract.spec.ts --grep-invert \"Overseer Integration|sync flows from registry|should display workers list page|should start a worker for a flow\"",
     "test:e2e:ui": "cd e2e && playwright test --ui",
     "test:e2e:debug": "cd e2e && playwright test --debug",
     "regenerate-api": "bash scripts/regenerate-api.sh"

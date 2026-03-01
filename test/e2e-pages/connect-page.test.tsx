@@ -27,6 +27,9 @@ describe("ConnectPage", () => {
   const mockSetApiKey = vi.fn();
   const mockSetConnected = vi.fn();
   const mockSetLastConnected = vi.fn();
+  const mockSetServerVersion = vi.fn();
+  const mockAddRecentServerUrl = vi.fn();
+  const mockSetConnectionDisplayName = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -38,10 +41,15 @@ describe("ConnectPage", () => {
     (useConnectionStore as any).mockReturnValue({
       serverUrl: "http://localhost:20555",
       apiKey: null,
+      recentServerUrls: [],
+      connectionDisplayName: null,
       setServerUrl: mockSetServerUrl,
       setApiKey: mockSetApiKey,
       setConnected: mockSetConnected,
       setLastConnected: mockSetLastConnected,
+      setServerVersion: mockSetServerVersion,
+      addRecentServerUrl: mockAddRecentServerUrl,
+      setConnectionDisplayName: mockSetConnectionDisplayName,
     });
   });
 

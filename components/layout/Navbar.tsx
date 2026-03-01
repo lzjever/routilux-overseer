@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { connected, serverUrl, disconnect } = useConnectionStore();
+  const { connected, serverUrl, connectionDisplayName, disconnect } = useConnectionStore();
   const { open } = useSearchStore();
 
   const handleDisconnect = () => {
@@ -114,8 +114,9 @@ export function Navbar() {
                     variant="outline"
                     className="text-xs font-mono"
                     data-testid="nav-server-badge"
+                    title={serverUrl}
                   >
-                    {new URL(serverUrl).host}
+                    {connectionDisplayName || (serverUrl ? new URL(serverUrl).host : "")}
                   </Badge>
                 </>
               ) : (

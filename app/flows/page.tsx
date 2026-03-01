@@ -32,9 +32,14 @@ import { createAPI } from "@/lib/api";
 import type { HealthReadinessSummary } from "@/lib/types/api";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
+import { isNetworkError } from "@/lib/errors";
 
 export default function FlowsPage() {
   const router = useRouter();
+  const confirm = useConfirm();
   const { connected, serverUrl } = useConnectionStore();
   const { flows, loading, loadFlows, error: flowError } = useFlowStore();
   const {
@@ -53,12 +58,12 @@ export default function FlowsPage() {
     activeWorkers?: number;
   } | null>(null);
   const [healthLoading, setHealthLoading] = useState(false);
+  const [createWizardOpen, setCreateWizardOpen] = useState(false);
 
   useEffect(() => {
     if (serverUrl && connected) {
       loadFlows(serverUrl);
-      // Discover flows on mount
-      discoverFlowsAction(serverUrl);
+      discoverFlowsAction();
     }
   }, [serverUrl, connected, loadFlows, discoverFlowsAction]);
 
@@ -88,17 +93,19 @@ export default function FlowsPage() {
     if (!serverUrl || syncing) return;
     setSyncing(true);
     try {
-      const count = await syncFlowsAction(serverUrl);
+      const count = await syncFlowsAction();
       console.log(`Sync completed, synced ${count} flows, reloading flows list...`);
       // Wait a bit to ensure server has processed the sync
       await new Promise((resolve) => setTimeout(resolve, 500));
       // Reload flows after sync
       await loadFlows(serverUrl);
-      // Show success message
-      alert(`Successfully synced ${count} flow${count !== 1 ? "s" : ""} from registry`);
+      toast.success(`Successfully synced ${count} flow${count !== 1 ? "s" : ""} from registry`);
     } catch (error) {
       console.error("Sync error:", error);
-      alert(`Failed to sync flows: ${error instanceof Error ? error.message : "Unknown error"}`);
+      if (isNetworkError(error)) useConnectionStore.getState().setConnectionLost(true);
+      toast.error(
+        `Failed to sync flows: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     } finally {
       setSyncing(false);
     }
@@ -106,24 +113,27 @@ export default function FlowsPage() {
 
   const handleBulkDelete = async () => {
     if (!serverUrl || bulkDeleting || selectedFlows.size === 0) return;
-    if (
-      !confirm(
-        `Are you sure you want to delete ${selectedFlows.size} flow${selectedFlows.size !== 1 ? "s" : ""}?`
-      )
-    ) {
-      return;
-    }
+    const ok = await confirm.openConfirm({
+      title: `Delete ${selectedFlows.size} flow${selectedFlows.size !== 1 ? "s" : ""}?`,
+      description: "This action cannot be undone.",
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      variant: "destructive",
+    });
+    if (!ok) return;
     setBulkDeleting(true);
     try {
       const api = createAPI(serverUrl);
       await Promise.all(Array.from(selectedFlows).map((flowId) => api.flows.delete(flowId)));
       setSelectedFlows(new Set());
       await loadFlows(serverUrl);
-      alert(
+      toast.success(
         `Successfully deleted ${selectedFlows.size} flow${selectedFlows.size !== 1 ? "s" : ""}`
       );
     } catch (error) {
-      alert(`Failed to delete flows: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast.error(
+        `Failed to delete flows: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     } finally {
       setBulkDeleting(false);
     }
@@ -246,6 +256,8 @@ export default function FlowsPage() {
               {serverUrl && (
                 <CreateFlowWizard
                   serverUrl={serverUrl}
+                  open={createWizardOpen}
+                  onOpenChange={setCreateWizardOpen}
                   onSuccess={() => {
                     if (serverUrl) {
                       loadFlows(serverUrl);
@@ -261,11 +273,13 @@ export default function FlowsPage() {
               )}
             </div>
           </div>
-          {lastFlowSync && (
-            <div className="text-xs text-muted-foreground mt-2">
-              Last synced: {lastFlowSync.toLocaleString()}
-            </div>
-          )}
+          <div className="text-xs text-muted-foreground mt-2">
+            {lastFlowSync ? (
+              <>Last synced: {lastFlowSync.toLocaleString()}</>
+            ) : (
+              <>Sync imports flows created in code or loaded from server files.</>
+            )}
+          </div>
         </div>
 
         {/* Search Bar */}
@@ -333,21 +347,18 @@ export default function FlowsPage() {
               description={
                 searchQuery
                   ? `No flows match "${searchQuery}". Try a different search term.`
-                  : "There are no flows available on the server. Create a new flow or sync from registry."
+                  : "Import flows created in code or loaded from server files."
               }
               action={
-                !searchQuery
-                  ? serverUrl
-                    ? {
-                        label: "Create Flow",
-                        onClick: () => {
-                          // Trigger wizard - this will be handled by CreateFlowWizard
-                        },
-                      }
-                    : {
-                        label: "Sync from Registry",
-                        onClick: handleSync,
-                      }
+                !searchQuery && serverUrl
+                  ? { label: "Sync from Registry", onClick: handleSync }
+                  : !searchQuery
+                    ? { label: "Sync from Registry", onClick: handleSync }
+                    : undefined
+              }
+              secondaryAction={
+                !searchQuery && serverUrl
+                  ? { label: "Create flow", onClick: () => setCreateWizardOpen(true) }
                   : undefined
               }
             />
@@ -397,6 +408,13 @@ export default function FlowsPage() {
                   <CardDescription className="text-xs">
                     {Object.keys(flow.routines).length} routines • {flow.connections.length}{" "}
                     connections
+                    {lastFlowSync ? (
+                      <span className="block mt-1 text-muted-foreground/80">
+                        Last synced: {formatDistanceToNow(lastFlowSync, { addSuffix: true })}
+                      </span>
+                    ) : (
+                      <span className="block mt-1 text-muted-foreground/80">—</span>
+                    )}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

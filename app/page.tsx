@@ -17,6 +17,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { Activity, Zap, ArrowRight, Play, Plug, Settings, RefreshCw } from "lucide-react";
+import { isNetworkError } from "@/lib/errors";
 
 export default function HomePage() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function HomePage() {
   const [healthLoading, setHealthLoading] = useState(false);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [healthUpdatedAt, setHealthUpdatedAt] = useState<string | null>(null);
+  const [firstRunHintDismissed, setFirstRunHintDismissed] = useState(true); // default true to avoid flash
 
   useEffect(() => {
     const loadData = async () => {
@@ -43,6 +45,7 @@ export default function HomePage() {
           ]);
         } catch (error) {
           console.error("Failed to load data:", error);
+          if (isNetworkError(error)) useConnectionStore.getState().setConnectionLost(true);
         } finally {
           setLoading(false);
         }
@@ -74,6 +77,17 @@ export default function HomePage() {
       loadHealthStats();
     }
   }, [serverUrl, connected, loadHealthStats]);
+
+  useEffect(() => {
+    try {
+      setFirstRunHintDismissed(
+        typeof window !== "undefined" &&
+          localStorage.getItem("overseer_first_run_hint_dismissed") === "true"
+      );
+    } catch {
+      setFirstRunHintDismissed(false);
+    }
+  }, []);
 
   // Show connection prompt if not connected
   if (!connected) {
@@ -119,7 +133,7 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-app">
+      <div className="min-h-screen flex flex-col bg-app" data-testid="home-page">
         <Navbar />
         <div className="w-full px-4 py-8">
           <div className="grid gap-4 md:grid-cols-4 mb-8">
@@ -197,6 +211,37 @@ export default function HomePage() {
               </Button>
             </div>
           </div>
+
+          {flowCount === 0 && !firstRunHintDismissed && (
+            <div
+              className="flex items-center justify-between gap-4 rounded-lg border bg-muted/50 px-4 py-3 text-sm"
+              data-testid="home-first-run-hint"
+            >
+              <p className="text-muted-foreground">
+                Create your first flow or sync flows from the server.
+              </p>
+              <div className="flex items-center gap-2">
+                <Button asChild size="sm" variant="secondary">
+                  <Link href="/flows">Go to Flows</Link>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    try {
+                      localStorage.setItem("overseer_first_run_hint_dismissed", "true");
+                    } catch {
+                      // ignore
+                    }
+                    setFirstRunHintDismissed(true);
+                  }}
+                  data-testid="home-first-run-hint-dismiss"
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Statistics Cards */}
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

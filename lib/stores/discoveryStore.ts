@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { createAPI } from "@/lib/api";
+import { getAPI } from "@/lib/services/api-client";
 import type { FlowListResponse, JobListResponse } from "@/lib/api/generated";
 
 interface DiscoveryState {
@@ -19,13 +19,13 @@ interface DiscoveryState {
   // Auto-sync preference
   autoSync: boolean;
 
-  // Actions
-  discoverFlows: (serverUrl: string) => Promise<void>;
-  syncFlows: (serverUrl: string) => Promise<number>; // Returns count of synced items
-  discoverJobs: (serverUrl: string) => Promise<void>;
-  syncJobs: (serverUrl: string) => Promise<number>; // Returns count of synced items
-  discoverWorkers: (serverUrl: string) => Promise<void>;
-  syncWorkers: (serverUrl: string) => Promise<number>; // Returns count of synced items
+  // Actions (use shared API client; call only when connected)
+  discoverFlows: () => Promise<void>;
+  syncFlows: () => Promise<number>; // Returns count of synced items
+  discoverJobs: () => Promise<void>;
+  syncJobs: () => Promise<number>; // Returns count of synced items
+  discoverWorkers: () => Promise<void>;
+  syncWorkers: () => Promise<number>; // Returns count of synced items
   setAutoSync: (enabled: boolean) => void;
   clear: () => void;
 }
@@ -65,9 +65,9 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   autoSync: loadAutoSync(),
 
   // Discover flows (read-only)
-  discoverFlows: async (serverUrl: string) => {
+  discoverFlows: async () => {
     try {
-      const api = createAPI(serverUrl);
+      const api = getAPI();
       const response = await api.discovery.discoverFlows();
       if (response && response.flows) {
         const flowIds = response.flows.map((f) => f.flow_id);
@@ -80,10 +80,10 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   },
 
   // Sync flows from registry to API store
-  syncFlows: async (serverUrl: string) => {
+  syncFlows: async () => {
     set({ syncingFlows: true });
     try {
-      const api = createAPI(serverUrl);
+      const api = getAPI();
       const response = await api.discovery.syncFlows();
       if (!response) {
         console.warn("Sync flows returned null response");
@@ -111,9 +111,9 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   },
 
   // Discover jobs (read-only)
-  discoverJobs: async (serverUrl: string) => {
+  discoverJobs: async () => {
     try {
-      const api = createAPI(serverUrl);
+      const api = getAPI();
       const response = await api.discovery.discoverJobs();
       if (response && response.jobs) {
         const jobIds = response.jobs.map((j) => j.job_id);
@@ -126,10 +126,10 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   },
 
   // Sync jobs from registry to API store
-  syncJobs: async (serverUrl: string) => {
+  syncJobs: async () => {
     set({ syncingJobs: true });
     try {
-      const api = createAPI(serverUrl);
+      const api = getAPI();
       const response = await api.discovery.syncJobs();
       if (response && response.jobs) {
         const jobIds = response.jobs.map((j) => j.job_id);
@@ -150,9 +150,9 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   },
 
   // Discover workers (read-only)
-  discoverWorkers: async (serverUrl: string) => {
+  discoverWorkers: async () => {
     try {
-      const api = createAPI(serverUrl);
+      const api = getAPI();
       const response = await api.discovery.syncWorkers();
       const workers = response?.workers || response?.items || [];
       if (Array.isArray(workers)) {
@@ -168,10 +168,10 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   },
 
   // Sync workers from runtime to registry
-  syncWorkers: async (serverUrl: string) => {
+  syncWorkers: async () => {
     set({ syncingWorkers: true });
     try {
-      const api = createAPI(serverUrl);
+      const api = getAPI();
       const response = await api.discovery.syncWorkers();
       const workers = response?.workers || response?.items || [];
       const workerIds = Array.isArray(workers)

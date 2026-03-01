@@ -5,35 +5,22 @@
  */
 
 import { test, expect } from "../fixtures/fixtures";
-import { JobsPage, JobDetailPage } from "../fixtures/page-objects";
+import { ConnectPage, JobsPage, JobDetailPage } from "../fixtures/page-objects";
 
 test.describe("Jobs Management", () => {
   let jobsPage: JobsPage;
   let jobDetailPage: JobDetailPage;
 
   test.beforeEach(async ({ page, server }) => {
+    const connectPage = new ConnectPage(page);
     jobsPage = new JobsPage(page);
     jobDetailPage = new JobDetailPage(page);
 
-    // Connect to test server
-    await page.goto("/connect");
-    await page.fill('input[name="serverUrl"], input#serverUrl', server.getServerUrl());
-    // Current UI has a single "Connect" button that tests and connects
-    await page.click('button:has-text("Connect")');
-
-    // Wait for redirect by checking URL periodically
-    let redirected = false;
-    for (let i = 0; i < 30; i++) {
-      await page.waitForTimeout(500);
-      const url = page.url();
-      if (url === "http://localhost:3000/" || (url.endsWith("/") && !url.includes("/connect"))) {
-        redirected = true;
-        break;
-      }
-    }
-    if (!redirected) {
-      throw new Error("Failed to redirect after connection");
-    }
+    await connectPage.open();
+    await connectPage.setServerUrl(server.getServerUrl());
+    await connectPage.testConnection();
+    await page.waitForURL(/\/(?!connect)/, { timeout: 20000 });
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test("should display jobs list page", async ({ page }) => {

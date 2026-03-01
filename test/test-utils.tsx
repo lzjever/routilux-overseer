@@ -1,10 +1,18 @@
 import { render, RenderOptions } from "@testing-library/react";
-import { ReactElement } from "react";
+import { ReactElement, ReactNode } from "react";
 import { vi } from "vitest";
+import { ConfirmDialogProvider } from "@/components/ui/ConfirmDialog";
 
-// Custom render function with providers if needed
+function AllProviders({ children }: { children: ReactNode }) {
+  return <ConfirmDialogProvider>{children}</ConfirmDialogProvider>;
+}
+
+// Custom render function with providers (ConfirmDialog, etc.)
 export function renderWithProviders(ui: ReactElement, options?: Omit<RenderOptions, "wrapper">) {
-  return render(ui, options);
+  return render(ui, {
+    ...options,
+    wrapper: ({ children }) => <AllProviders>{children}</AllProviders>,
+  });
 }
 
 // Mock data generators

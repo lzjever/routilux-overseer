@@ -5,40 +5,27 @@
  */
 
 import { test, expect } from "../fixtures/fixtures";
-import { WorkersPage } from "../fixtures/page-objects";
+import { ConnectPage, WorkersPage } from "../fixtures/page-objects";
 
 test.describe("Workers Management", () => {
   let workersPage: WorkersPage;
 
   test.beforeEach(async ({ page, server }) => {
+    const connectPage = new ConnectPage(page);
     workersPage = new WorkersPage(page);
 
-    // Connect to test server
-    await page.goto("/connect");
-    await page.fill('input[name="serverUrl"], input#serverUrl', server.getServerUrl());
-    // Current UI has a single "Connect" button that tests and connects
-    await page.click('button:has-text("Connect")');
-
-    // Wait for redirect by checking URL periodically
-    let redirected = false;
-    for (let i = 0; i < 30; i++) {
-      await page.waitForTimeout(500);
-      const url = page.url();
-      if (url === "http://localhost:3000/" || (url.endsWith("/") && !url.includes("/connect"))) {
-        redirected = true;
-        break;
-      }
-    }
-    if (!redirected) {
-      throw new Error("Failed to redirect after connection");
-    }
+    await connectPage.open();
+    await connectPage.setServerUrl(server.getServerUrl());
+    await connectPage.testConnection();
+    await page.waitForURL(/\/(?!connect)/, { timeout: 20000 });
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test("should display workers list page", async ({ page }) => {
     await workersPage.open();
 
-    // Should show workers page container (standard testid: workers-page)
-    await expect(page.locator('[data-testid="workers-page"]')).toBeVisible();
+    // Should show workers page container (allow time for rehydration and render)
+    await expect(page.locator('[data-testid="workers-page"]')).toBeVisible({ timeout: 15000 });
   });
 
   test("should show empty state when no workers exist", async ({ page }) => {

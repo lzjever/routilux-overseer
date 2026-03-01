@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import FlowsPage from "@/app/flows/page";
+import { renderWithProviders } from "@/test/test-utils";
 import { useFlowStore } from "@/lib/stores/flowStore";
 import { useConnectionStore } from "@/lib/stores/connectionStore";
 import { useDiscoveryStore } from "@/lib/stores/discoveryStore";
@@ -73,7 +74,7 @@ describe("FlowsPage", () => {
     });
 
     it("should render not connected state", () => {
-      render(<FlowsPage />);
+      renderWithProviders(<FlowsPage />);
 
       // Should show not connected card - use more specific selector
       expect(screen.getByTestId("flows-not-connected")).toBeInTheDocument();
@@ -82,25 +83,25 @@ describe("FlowsPage", () => {
 
   describe("When connected", () => {
     it("should render flows page", () => {
-      render(<FlowsPage />);
+      renderWithProviders(<FlowsPage />);
 
       expect(screen.getByTestId("flows-page")).toBeInTheDocument();
     });
 
     it("should display refresh button", () => {
-      render(<FlowsPage />);
+      renderWithProviders(<FlowsPage />);
 
       expect(screen.getByTestId("flows-button-refresh")).toBeInTheDocument();
     });
 
     it("should display sync button", () => {
-      render(<FlowsPage />);
+      renderWithProviders(<FlowsPage />);
 
       expect(screen.getByTestId("flows-button-sync")).toBeInTheDocument();
     });
 
     it("should display search input", () => {
-      render(<FlowsPage />);
+      renderWithProviders(<FlowsPage />);
 
       expect(screen.getByTestId("flows-input-search")).toBeInTheDocument();
     });
@@ -116,7 +117,7 @@ describe("FlowsPage", () => {
     });
 
     it("should show loading state", () => {
-      render(<FlowsPage />);
+      renderWithProviders(<FlowsPage />);
 
       expect(screen.getByTestId("flows-loading")).toBeInTheDocument();
     });
@@ -132,7 +133,7 @@ describe("FlowsPage", () => {
     });
 
     it("should show empty state when no flows", () => {
-      render(<FlowsPage />);
+      renderWithProviders(<FlowsPage />);
 
       expect(screen.getByTestId("flows-empty-state")).toBeInTheDocument();
     });
@@ -140,21 +141,21 @@ describe("FlowsPage", () => {
 
   describe("Flow List", () => {
     it("should display flow cards", () => {
-      render(<FlowsPage />);
+      renderWithProviders(<FlowsPage />);
 
       expect(screen.getByTestId("flows-card-flow-1")).toBeInTheDocument();
       expect(screen.getByTestId("flows-card-flow-2")).toBeInTheDocument();
     });
 
     it("should display flow checkboxes", () => {
-      render(<FlowsPage />);
+      renderWithProviders(<FlowsPage />);
 
       expect(screen.getByTestId("flows-checkbox-flow-1")).toBeInTheDocument();
       expect(screen.getByTestId("flows-checkbox-flow-2")).toBeInTheDocument();
     });
 
     it("should display view buttons for each flow", () => {
-      render(<FlowsPage />);
+      renderWithProviders(<FlowsPage />);
 
       expect(screen.getByTestId("flows-button-view-flow-1")).toBeInTheDocument();
       expect(screen.getByTestId("flows-button-view-flow-2")).toBeInTheDocument();
@@ -171,7 +172,7 @@ describe("FlowsPage", () => {
     });
 
     it("should show error state", () => {
-      render(<FlowsPage />);
+      renderWithProviders(<FlowsPage />);
 
       expect(screen.getByTestId("flows-error")).toBeInTheDocument();
     });
@@ -186,7 +187,7 @@ describe("FlowsPage", () => {
           : { ...defaultFlowState, loadFlows: mockLoadFlows }
       );
 
-      render(<FlowsPage />);
+      renderWithProviders(<FlowsPage />);
 
       const refreshButton = screen.getByTestId("flows-button-refresh");
       fireEvent.click(refreshButton);

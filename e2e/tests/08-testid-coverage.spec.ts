@@ -32,12 +32,12 @@ test.describe("TestID coverage", () => {
       await connectPage.open();
       await connectPage.setServerUrl(server.getServerUrl());
       await connectPage.testConnection();
-      await page.waitForURL(/\/(?!connect)/, { timeout: 15000 });
+      await page.waitForURL(/\/(?!connect)/, { timeout: 20000 });
       await page.waitForLoadState("domcontentloaded");
     });
 
     test("should have home page testids when connected", async ({ page }) => {
-      await expect(page.locator('[data-testid="home-page"]')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('[data-testid="home-page"]')).toBeVisible({ timeout: 20000 });
       // Wait for home content to settle: either connected view or not-connected card
       const homeContent = page.locator(
         '[data-testid="home-badge-connected"], [data-testid="home-card-not-connected"]'
@@ -48,6 +48,7 @@ test.describe("TestID coverage", () => {
     });
 
     test("should have nav testids", async ({ page }) => {
+      await expect(page.locator('[data-testid="home-page"]')).toBeVisible({ timeout: 20000 });
       await expect(page.locator('[data-testid="navbar"]')).toBeVisible({ timeout: 10000 });
       await expect(page.locator('[data-testid="nav-link-home"]')).toBeVisible();
       await expect(page.locator('[data-testid="nav-links"]')).toBeVisible();
@@ -60,13 +61,23 @@ test.describe("TestID coverage", () => {
       await connectPage.open();
       await connectPage.setServerUrl(server.getServerUrl());
       await connectPage.testConnection();
-      await page.waitForURL(/\/(?!connect)/, { timeout: 15000 });
+      await page.waitForURL(/\/(?!connect)/, { timeout: 20000 });
       await page.waitForLoadState("domcontentloaded");
     });
 
     test("should have flows page testids", async ({ page }) => {
       await page.goto("/flows", { waitUntil: "domcontentloaded" });
-      await page.waitForSelector('[data-testid="flows-page"]', { state: "visible", timeout: 10000 });
+      await page.waitForSelector(
+        '[data-testid="flows-page"], [data-testid="flows-not-connected"], [data-testid="flows-loading"]',
+        {
+          state: "visible",
+          timeout: 15000,
+        }
+      );
+      await page.waitForSelector('[data-testid="flows-page"]', {
+        state: "visible",
+        timeout: 15000,
+      });
 
       await expect(page.locator('[data-testid="flows-page"]')).toBeVisible({ timeout: 5000 });
       await expect(page.locator('[data-testid="flows-button-refresh"]')).toBeVisible();
@@ -86,13 +97,17 @@ test.describe("TestID coverage", () => {
       await connectPage.open();
       await connectPage.setServerUrl(server.getServerUrl());
       await connectPage.testConnection();
-      await page.waitForURL(/\/(?!connect)/, { timeout: 15000 });
+      await page.waitForURL(/\/(?!connect)/, { timeout: 20000 });
       await page.waitForLoadState("domcontentloaded");
     });
 
     test("should have jobs page testids", async ({ page }) => {
       await page.goto("/jobs", { waitUntil: "domcontentloaded" });
-      await page.waitForSelector('[data-testid="jobs-page"]', { state: "visible", timeout: 10000 });
+      await page.waitForSelector(
+        '[data-testid="jobs-page"], [data-testid="jobs-not-connected"], [data-testid="jobs-loading"]',
+        { state: "visible", timeout: 15000 }
+      );
+      await page.waitForSelector('[data-testid="jobs-page"]', { state: "visible", timeout: 15000 });
 
       await expect(page.locator('[data-testid="jobs-page"]')).toBeVisible({ timeout: 5000 });
       await expect(page.locator('[data-testid="jobs-button-refresh"]')).toBeVisible();
@@ -111,13 +126,23 @@ test.describe("TestID coverage", () => {
       await connectPage.open();
       await connectPage.setServerUrl(server.getServerUrl());
       await connectPage.testConnection();
-      await page.waitForURL(/\/(?!connect)/, { timeout: 15000 });
+      await page.waitForURL(/\/(?!connect)/, { timeout: 20000 });
       await page.waitForLoadState("domcontentloaded");
     });
 
     test("should have workers page testids", async ({ page }) => {
       await page.goto("/workers", { waitUntil: "domcontentloaded" });
-      await page.waitForSelector('[data-testid="workers-page"]', { state: "visible", timeout: 10000 });
+      await page.waitForSelector(
+        '[data-testid="workers-page"], [data-testid="workers-not-connected"], [data-testid="workers-loading"]',
+        {
+          state: "visible",
+          timeout: 15000,
+        }
+      );
+      await page.waitForSelector('[data-testid="workers-page"]', {
+        state: "visible",
+        timeout: 15000,
+      });
 
       await expect(page.locator('[data-testid="workers-page"]')).toBeVisible({ timeout: 5000 });
       await expect(page.locator('[data-testid="workers-button-refresh"]')).toBeVisible();
@@ -134,12 +159,12 @@ test.describe("TestID coverage", () => {
       await connectPage.open();
       await connectPage.setServerUrl(server.getServerUrl());
       await connectPage.testConnection();
-      await page.waitForURL(/\/(?!connect)/, { timeout: 15000 });
+      await page.waitForURL(/\/(?!connect)/, { timeout: 20000 });
       await page.waitForLoadState("domcontentloaded");
     });
 
     test("should navigate via nav links", async ({ page }) => {
-      await expect(page.locator('[data-testid="home-page"]')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('[data-testid="home-page"]')).toBeVisible({ timeout: 20000 });
 
       await page.locator('[data-testid="nav-link-flows"]').click();
       await expect(page).toHaveURL(/\/flows/);

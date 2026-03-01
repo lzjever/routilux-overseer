@@ -19,9 +19,12 @@ import { ArrowLeft, Loader2, Pause, PlayCircle, XCircle, Send, RefreshCw } from 
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { createAPI } from "@/lib/api";
+import { toast } from "sonner";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 
 export default function WorkerDetailPage() {
   const router = useRouter();
+  const confirm = useConfirm();
   const params = useParams();
   const workerId = params.workerId as string;
   const { connected, serverUrl, hydrated } = useConnectionStore();
@@ -169,17 +172,20 @@ export default function WorkerDetailPage() {
 
   const handleStop = async () => {
     if (!serverUrl) return;
-    if (
-      !confirm(
-        "Are you sure you want to stop this worker? All jobs in progress may be interrupted."
-      )
-    )
-      return;
-
+    const ok = await confirm.openConfirm({
+      title: "Stop worker?",
+      description: "All jobs in progress on this worker may be interrupted.",
+      confirmLabel: "Stop",
+      cancelLabel: "Cancel",
+      variant: "destructive",
+    });
+    if (!ok) return;
     setActionLoading(true);
     try {
       await stopWorker(workerId, serverUrl);
       router.push("/workers");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to stop worker");
     } finally {
       setActionLoading(false);
     }

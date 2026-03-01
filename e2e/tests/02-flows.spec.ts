@@ -5,35 +5,23 @@
  */
 
 import { test, expect } from "../fixtures/fixtures";
-import { FlowsPage, FlowDetailPage } from "../fixtures/page-objects";
+import { ConnectPage, FlowsPage, FlowDetailPage } from "../fixtures/page-objects";
 
 test.describe("Flows Management", () => {
+  let connectPage: ConnectPage;
   let flowsPage: FlowsPage;
   let flowDetailPage: FlowDetailPage;
 
   test.beforeEach(async ({ page, server }) => {
+    connectPage = new ConnectPage(page);
     flowsPage = new FlowsPage(page);
     flowDetailPage = new FlowDetailPage(page);
 
-    // First, connect to the test server
-    await page.goto("/connect");
-    await page.fill('input[name="serverUrl"], input#serverUrl', server.getServerUrl());
-    // Current UI has a single "Connect" button that tests and connects
-    await page.click('button:has-text("Connect")');
-
-    // Wait for redirect by checking URL periodically
-    let redirected = false;
-    for (let i = 0; i < 30; i++) {
-      await page.waitForTimeout(500);
-      const url = page.url();
-      if (url === "http://localhost:3000/" || (url.endsWith("/") && !url.includes("/connect"))) {
-        redirected = true;
-        break;
-      }
-    }
-    if (!redirected) {
-      throw new Error("Failed to redirect after connection");
-    }
+    await connectPage.open();
+    await connectPage.setServerUrl(server.getServerUrl());
+    await connectPage.testConnection();
+    await page.waitForURL(/\/(?!connect)/, { timeout: 20000 });
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test("should list available routines from factory", async ({ page }) => {
@@ -76,17 +64,15 @@ test.describe("Flows Management", () => {
     await flowsPage.open();
 
     // Wait for page to load
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
     // Check if sync button is enabled (it's disabled when no flows are discovered)
     const syncEnabled = await flowsPage.isSyncButtonEnabled();
     if (!syncEnabled) {
-      // Skip test if no flows are available to sync from registry
       test.skip(true, "Sync button is disabled - no flows discovered from registry");
       return;
     }
 
-    // Click sync button
     await flowsPage.syncFlows();
 
     // Should complete without error - check that we're still on flows page

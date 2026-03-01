@@ -31,12 +31,22 @@ interface CreateFlowWizardProps {
   serverUrl: string;
   onSuccess: () => void;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 type CreationMethod = "scratch" | "import" | "clone" | "template";
 
-export function CreateFlowWizard({ serverUrl, onSuccess, trigger }: CreateFlowWizardProps) {
-  const [open, setOpen] = useState(false);
+export function CreateFlowWizard({
+  serverUrl,
+  onSuccess,
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+}: CreateFlowWizardProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [method, setMethod] = useState<CreationMethod>("scratch");
   const [flowId, setFlowId] = useState("");
   const [dslContent, setDslContent] = useState("");

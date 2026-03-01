@@ -50,6 +50,7 @@ import { formatDistanceToNow } from "date-fns";
 import { createAPI } from "@/lib/api";
 import type { HealthReadinessSummary } from "@/lib/types/api";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 function JobsPageContent() {
   const router = useRouter();
@@ -126,9 +127,8 @@ function JobsPageContent() {
         connectWebSocket(serverUrl);
       }
 
-      // Discover jobs on mount
       if (connected) {
-        discoverJobsAction(serverUrl);
+        discoverJobsAction();
       }
     }
 
@@ -160,7 +160,7 @@ function JobsPageContent() {
     try {
       await loadJobsWithFilters();
       // Also refresh discovery
-      await discoverJobsAction(serverUrl);
+      await discoverJobsAction();
     } finally {
       setIsRefreshing(false);
     }
@@ -170,13 +170,14 @@ function JobsPageContent() {
     if (!serverUrl || syncing) return;
     setSyncing(true);
     try {
-      const count = await syncJobsAction(serverUrl);
+      const count = await syncJobsAction();
       // Reload jobs after sync
       await loadJobsWithFilters();
-      // Show success message
-      alert(`Successfully synced ${count} job${count !== 1 ? "s" : ""} from registry`);
+      toast.success(`Successfully synced ${count} job${count !== 1 ? "s" : ""} from registry`);
     } catch (error) {
-      alert(`Failed to sync jobs: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast.error(
+        `Failed to sync jobs: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     } finally {
       setSyncing(false);
     }
@@ -185,8 +186,7 @@ function JobsPageContent() {
   const handleBulkCancel = async () => {
     if (!serverUrl || bulkCancelling || selectedJobs.size === 0) return;
     // Note: cancel API is no longer available at Job level
-    // To cancel jobs, navigate to the Worker page and stop the worker
-    alert(
+    toast.info(
       "Job cancellation is no longer available at Job level. Please navigate to the Worker page to manage jobs."
     );
     setSelectedJobs(new Set());
@@ -447,17 +447,10 @@ function JobsPageContent() {
               title={jobs.size === 0 ? "No jobs yet" : "No jobs match filters"}
               description={
                 jobs.size === 0
-                  ? "Get started by creating a job from one of your flows."
+                  ? "Jobs will appear here when you run flows."
                   : "Try adjusting your filters to see more jobs."
               }
-              action={
-                jobs.size === 0
-                  ? {
-                      label: "Start a Job",
-                      href: "/flows",
-                    }
-                  : undefined
-              }
+              action={jobs.size === 0 ? { label: "Go to Flows", href: "/flows" } : undefined}
             />
           </Card>
         ) : (

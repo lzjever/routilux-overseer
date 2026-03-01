@@ -36,9 +36,12 @@ import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { createAPI } from "@/lib/api";
 import type { HealthReadinessSummary } from "@/lib/types/api";
+import { toast } from "sonner";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 
 function WorkersPageContent() {
   const router = useRouter();
+  const confirm = useConfirm();
   const searchParams = useSearchParams();
   const { connected, serverUrl } = useConnectionStore();
   const { workers, loading, loadWorkers, stopWorker, pauseWorker, resumeWorker } =
@@ -111,19 +114,22 @@ function WorkersPageContent() {
 
   const handleStop = async (workerId: string) => {
     if (!serverUrl) return;
-    if (
-      !confirm(
-        "Are you sure you want to stop this worker? All jobs in progress may be interrupted."
-      )
-    )
-      return;
-
+    const ok = await confirm.openConfirm({
+      title: "Stop worker?",
+      description: "All jobs in progress on this worker may be interrupted.",
+      confirmLabel: "Stop",
+      cancelLabel: "Cancel",
+      variant: "destructive",
+    });
+    if (!ok) return;
     setActionLoading(workerId);
     try {
       await stopWorker(workerId, serverUrl);
       await loadWorkersWithFilters();
     } catch (error) {
-      alert(`Failed to stop worker: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast.error(
+        `Failed to stop worker: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     } finally {
       setActionLoading(null);
     }
@@ -133,11 +139,13 @@ function WorkersPageContent() {
     if (!serverUrl || syncingWorkers) return;
     setSyncingWorkers(true);
     try {
-      await syncWorkersAction(serverUrl);
+      await syncWorkersAction();
       await loadWorkersWithFilters();
-      alert("Workers synced from runtime.");
+      toast.success("Workers synced from runtime.");
     } catch (error) {
-      alert(`Failed to sync workers: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast.error(
+        `Failed to sync workers: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     } finally {
       setSyncingWorkers(false);
     }
@@ -150,7 +158,9 @@ function WorkersPageContent() {
       await pauseWorker(workerId, serverUrl);
       await loadWorkersWithFilters();
     } catch (error) {
-      alert(`Failed to pause worker: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast.error(
+        `Failed to pause worker: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     } finally {
       setActionLoading(null);
     }
@@ -163,7 +173,9 @@ function WorkersPageContent() {
       await resumeWorker(workerId, serverUrl);
       await loadWorkersWithFilters();
     } catch (error) {
-      alert(`Failed to resume worker: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toast.error(
+        `Failed to resume worker: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     } finally {
       setActionLoading(null);
     }
@@ -205,7 +217,7 @@ function WorkersPageContent() {
       <div className="min-h-screen flex flex-col bg-app">
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
-          <Card className="max-w-md surface-panel">
+          <Card className="max-w-md surface-panel" data-testid="workers-not-connected">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plug className="h-5 w-5" />
@@ -370,17 +382,10 @@ function WorkersPageContent() {
               title={workers.size === 0 ? "No workers yet" : "No workers match filters"}
               description={
                 workers.size === 0
-                  ? "Get started by creating a worker from one of your flows."
+                  ? "Workers will appear here when you run flows."
                   : "Try adjusting your filters to see more workers."
               }
-              action={
-                workers.size === 0
-                  ? {
-                      label: "Create a Worker",
-                      href: "/flows",
-                    }
-                  : undefined
-              }
+              action={workers.size === 0 ? { label: "Go to Flows", href: "/flows" } : undefined}
             />
           </Card>
         ) : (

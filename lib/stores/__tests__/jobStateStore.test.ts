@@ -2,9 +2,8 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useJobStateStore } from "../jobStateStore";
 import { mockJobState } from "@/test/test-utils";
 
-// Mock the API client
-vi.mock("@/lib/api", () => ({
-  createAPI: vi.fn((serverUrl: string) => ({
+vi.mock("@/lib/services/api-client", () => ({
+  getAPI: vi.fn(() => ({
     jobs: {
       getMonitoringData: vi.fn(() =>
         Promise.resolve({
@@ -36,7 +35,7 @@ vi.mock("@/lib/api", () => ({
       ),
       getData: vi.fn(() =>
         Promise.resolve({
-          data: mockJobState.shared_data,
+          data: { key1: "value1", key2: { nested: "value2" } },
         })
       ),
       get: vi.fn(() =>
@@ -65,7 +64,7 @@ describe("JobStateStore", () => {
       expect(loading).toBe(false);
       expect(error).toBe(null);
 
-      await loadJobState("test-job-1", "http://localhost:20555");
+      await loadJobState("test-job-1");
 
       const state = useJobStateStore.getState();
       expect(state.loading).toBe(false);
@@ -80,7 +79,7 @@ describe("JobStateStore", () => {
     it("should set loading to true during load", async () => {
       const { loadJobState } = useJobStateStore.getState();
 
-      const loadPromise = loadJobState("test-job-1", "http://localhost:20555");
+      const loadPromise = loadJobState("test-job-1");
 
       // While loading
       const stateDuringLoad = useJobStateStore.getState();
@@ -103,7 +102,7 @@ describe("JobStateStore", () => {
   describe("getRoutineState", () => {
     beforeEach(async () => {
       const { loadJobState } = useJobStateStore.getState();
-      await loadJobState("test-job-1", "http://localhost:20555");
+      await loadJobState("test-job-1");
     });
 
     it("should return routine state for existing routine", () => {
@@ -134,7 +133,7 @@ describe("JobStateStore", () => {
   describe("getExecutionHistory", () => {
     beforeEach(async () => {
       const { loadJobState } = useJobStateStore.getState();
-      await loadJobState("test-job-1", "http://localhost:20555");
+      await loadJobState("test-job-1");
     });
 
     it("should return all execution history when no routine filter", () => {
@@ -156,7 +155,7 @@ describe("JobStateStore", () => {
   describe("getSharedData", () => {
     beforeEach(async () => {
       const { loadJobState } = useJobStateStore.getState();
-      await loadJobState("test-job-1", "http://localhost:20555");
+      await loadJobState("test-job-1");
     });
 
     it("should return shared data for existing job", () => {
@@ -179,7 +178,7 @@ describe("JobStateStore", () => {
   describe("getCurrentRoutineId", () => {
     beforeEach(async () => {
       const { loadJobState } = useJobStateStore.getState();
-      await loadJobState("test-job-1", "http://localhost:20555");
+      await loadJobState("test-job-1");
     });
 
     it("should return current routine ID for existing job", () => {

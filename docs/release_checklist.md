@@ -11,7 +11,8 @@ Use this when releasing a new **x.y** (coupled with routilux) or **z** (patch) v
 3. **Tests**
    - `npm run test:run`
    - `npm run build`
-   - Optionally: `npm run test:e2e` (requires **overseer dev server** on port 3000 and routilux server; see e2e/README.md).
+   - For product release: start overseer dev server on port 3000, then `ROUTILUX_WORKSPACE=/path/to/routilux npm run test:e2e:release` (runs release-critical E2E subset; see e2e/README.md).
+   - Optionally: full `npm run test:e2e` (requires routilux server; includes visual regression and testid coverage).
 4. **Lint**
    - `npm run lint`, `npm run format:check`.
 

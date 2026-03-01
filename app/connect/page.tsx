@@ -17,15 +17,20 @@ export default function ConnectPage() {
   const {
     serverUrl,
     apiKey,
+    recentServerUrls,
+    connectionDisplayName,
     setServerUrl,
     setApiKey,
     setConnected,
     setLastConnected,
     setServerVersion,
+    addRecentServerUrl,
+    setConnectionDisplayName,
   } = useConnectionStore();
 
   const [url, setUrl] = useState(serverUrl || "http://localhost:20555");
   const [key, setKey] = useState(apiKey || "");
+  const [displayName, setDisplayName] = useState(connectionDisplayName || "");
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,12 +64,12 @@ export default function ConnectPage() {
         } catch {
           setServerVersion(null);
         }
-        // Configure the global API client for other components to use
         configureAPI(validUrl, key.trim() ? key.trim() : undefined);
         setConnected(true);
         setLastConnected(new Date().toISOString());
+        addRecentServerUrl(validUrl);
+        setConnectionDisplayName(displayName.trim() || null);
         console.log("Connected successfully, redirecting to home...");
-        // Use window.location for a hard navigation that Playwright can detect
         window.location.href = "/";
       } else {
         setError("Failed to connect to server. Please check the URL and try again.");
@@ -118,7 +123,35 @@ export default function ConnectPage() {
                 disabled={connecting}
                 className="font-mono"
               />
+              {(recentServerUrls?.length ?? 0) > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                  <span className="text-muted-foreground">Recent:</span>
+                  {(recentServerUrls ?? []).map((recentUrl) => (
+                    <button
+                      key={recentUrl}
+                      type="button"
+                      onClick={() => setUrl(recentUrl)}
+                      className="rounded bg-muted px-2 py-0.5 font-mono text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                      data-testid={`connect-recent-${recentUrl}`}
+                    >
+                      {recentUrl}
+                    </button>
+                  ))}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">Default: http://localhost:20555</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="connectionName">Connection name (optional)</Label>
+              <Input
+                id="connectionName"
+                data-testid="connect-input-display-name"
+                type="text"
+                placeholder="e.g. Local, Staging"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                disabled={connecting}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="apiKey">API Key (optional)</Label>

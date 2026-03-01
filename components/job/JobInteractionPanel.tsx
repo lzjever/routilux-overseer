@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useJobStateStore } from "@/lib/stores/jobStateStore";
 import { Loader2, Send } from "lucide-react";
+import { toast } from "sonner";
 
 interface JobInteractionPanelProps {
   jobId: string;
@@ -43,13 +44,13 @@ export function JobInteractionPanel({ jobId, serverUrl, jobStatus }: JobInteract
 
       // Refresh job state
       const { loadJobState } = useJobStateStore.getState();
-      await loadJobState(jobId, serverUrl);
+      await loadJobState(jobId);
 
       setSharedDataKey("");
       setSharedDataValue("");
     } catch (error) {
       console.error("Failed to update shared data:", error);
-      alert("Failed to update shared data. This feature requires Routilux API extension.");
+      toast.error("Failed to update shared data. This feature requires Routilux API extension.");
     } finally {
       setLoading(false);
     }

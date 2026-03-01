@@ -5,7 +5,9 @@ import { PluginSystemProvider } from "@/components/providers/PluginSystemProvide
 import { ApiClientProvider } from "@/components/providers/ApiClientProvider";
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
 import { Toaster } from "@/components/ui/sonner";
+import { ConfirmDialogProvider } from "@/components/ui/ConfirmDialog";
 import { NetworkDetection } from "@/components/NetworkDetection";
+import { ConnectionLostBanner } from "@/components/ConnectionLostBanner";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-body" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
@@ -25,10 +27,13 @@ export default function RootLayout({
       <body className={`${manrope.variable} ${spaceGrotesk.variable} font-sans`}>
         <PluginSystemProvider>
           <ApiClientProvider>
-            <NetworkDetection />
-            {children}
-            <GlobalSearchModal />
-            <Toaster position="bottom-right" richColors />
+            <ConfirmDialogProvider>
+              <NetworkDetection />
+              <ConnectionLostBanner />
+              {children}
+              <GlobalSearchModal />
+              <Toaster position="bottom-right" richColors />
+            </ConfirmDialogProvider>
           </ApiClientProvider>
         </PluginSystemProvider>
       </body>

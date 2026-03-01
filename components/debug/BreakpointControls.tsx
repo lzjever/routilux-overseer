@@ -8,6 +8,7 @@ import { Plus, Trash2, Power, PowerOff, Bug } from "lucide-react";
 import { useBreakpointStore } from "@/lib/stores/breakpointStore";
 import { BreakpointCreateRequest } from "@/lib/api/generated";
 import { useFlowStore } from "@/lib/stores/flowStore";
+import { toast } from "sonner";
 
 interface BreakpointControlsProps {
   jobId: string;
@@ -52,7 +53,7 @@ export function BreakpointControls({
       setNewBpSlot("");
     } catch (error) {
       console.error("Failed to add breakpoint:", error);
-      alert("Failed to add breakpoint");
+      toast.error("Failed to add breakpoint");
     }
   };
 

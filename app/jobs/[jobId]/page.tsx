@@ -57,7 +57,7 @@ export default function JobDetailPage() {
   // Load complete job state and monitoring data
   useEffect(() => {
     if (job && serverUrl) {
-      loadJobState(jobId, serverUrl);
+      loadJobState(jobId);
       loadJobMonitoringData(jobId, serverUrl);
       loadJobMetrics(jobId, serverUrl);
     }
@@ -69,7 +69,7 @@ export default function JobDetailPage() {
       clearInterval(historyPollingRef.current);
     }
     const interval = setInterval(() => {
-      loadJobState(jobId, serverUrl);
+      loadJobState(jobId);
     }, 5000);
     historyPollingRef.current = interval;
     return () => {
