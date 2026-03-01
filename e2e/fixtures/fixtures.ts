@@ -77,8 +77,12 @@ export const test = base.extend<{
 
   // Server fixture - uses existing or starts new
   server: async ({ serverPort }, use) => {
-    // Check if server is already running
-    const isRunning = await isServerRunning("127.0.0.1", serverPort);
+    let isRunning = await isServerRunning("127.0.0.1", serverPort);
+    // Re-verify after a short delay to avoid reusing a server that is shutting down from a previous test
+    if (isRunning) {
+      await new Promise((r) => setTimeout(r, 150));
+      isRunning = await isServerRunning("127.0.0.1", serverPort);
+    }
 
     if (isRunning) {
       console.log(`📡 Using existing server on 127.0.0.1:${serverPort}`);
